@@ -1,0 +1,60 @@
+{% load static %} {% load sass_tags %}
+<div class="sidebar-wrapper">
+  <div>
+    <div class="logo-wrapper">
+      <a href="/"><img class="img-fluid for-light" src="{% static 'assets/images/logo/small-logo.png' %}" alt="" /><img
+          class="img-fluid for-dark" src="{% static 'assets/images/logo/small-white-logo.png' %}" alt="" /></a>
+      <div class="back-btn"><i class="fa fa-angle-left"></i></div>
+    </div>
+    <div class="logo-icon-wrapper">
+      <a href="/"><img class="img-fluid" src="{% static 'assets/images/logo-icon.png' %}" alt="" /></a>
+    </div>
+    <nav class="sidebar-main">
+      <div class="left-arrow" id="left-arrow">
+        <i data-feather="arrow-left"></i>
+      </div>
+      <div id="sidebar-menu">
+        <ul class="sidebar-links" id="simple-bar">
+            <li class="back-btn">
+                <a href="/"><img class="img-fluid" src="{% static 'assets/images/logo-icon.png' %}"
+                        alt="" /></a>
+                <div class="mobile-back text-end">
+                    <span>Back</span><i class="fa fa-angle-right ps-2" aria-hidden="true"> </i>
+                </div>
+            </li>
+          <li class="sidebar-list">
+            <a class="sidebar-link {% if url_name == 'dashboard' %}active{% endif %} sidebar-title link-nav"
+              href="{% url 'dashboard' %}">
+              <i data-feather="home"></i><span>Dashboard </span></a>
+          <li class="sidebar-list">
+            <a class="sidebar-link {% if url_name == 'transaksi' %}active{% endif %}  sidebar-title link-nav"
+              href="{% url 'transaksi' %}">
+              <i data-feather="file-text"></i><span>Transaksi</span></a>
+          </li>
+          <li class="sidebar-list">
+            <a class="sidebar-link {% if url_name == 'hutang' %}active{% endif %}  sidebar-title link-nav"
+              href="{% url 'hutang' %}">
+              <i data-feather="file-text"></i><span>Hutang Piutang</span></a>
+          </li>
+          <li class="sidebar-list">
+            <a class="sidebar-link {% if url_name == 'hutang' %}active{% endif %}  sidebar-title link-nav"
+              href="{% url 'profit' %}">
+              <i data-feather="file-text"></i><span>Profit</span></a>
+          </li>
+          <li class="sidebar-list">
+            <a class="sidebar-link {% if url_name == 'hutang' %}active{% endif %}  sidebar-title link-nav"
+              href="{% url 'tabungan' %}">
+              <i data-feather="file-text"></i><span>Tabungan</span></a>
+          </li>
+          <li class="sidebar-list">
+            <a class="sidebar-link sidebar-title link-nav" href="#">
+              <i data-feather="file-text"></i><span>Laporan</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="right-arrow" id="right-arrow">
+        <i data-feather="arrow-right"></i>
+      </div>
+    </nav>
+  </div>
+</div>

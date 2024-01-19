@@ -1,0 +1,236 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<!-- Plugins css Ends-->
+{% endblock css %}
+{% block content %}
+<div class="page-body">
+  {% include 'layout/breadcrumb.html' %}
+
+  <!-- Container-fluid starts-->
+  <div class="container-fluid list-products">
+    <div class="row">
+      <!-- Individual column searching (text inputs) Starts-->
+      <div class="col-sm-12">
+        <div class="card">
+          <div class="card-header pb-0">
+            <div class="order-place" style="text-align: right;">
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Tambah Transaksi
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- <div class="table-responsive"> -->
+              <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+                <thead>
+                  <tr>
+                    <th rowspan="2">NO</th>
+                    <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
+                    <th rowspan="2" scope="col" class="text-center">KATEGORI</th>
+                    <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
+                    <th colspan="2" scope="col" class="text-center">JENIS</th>
+                    <th rowspan="2" scope="col" class="text-center">OPSI</th>
+                  </tr>
+                  <tr>
+                    <th scope="col" class="text-center">PEMASUKAN</th>
+                    <th scope="col" class="text-center">PENGELUARAN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td>25/04/2011</td>
+                    <td>Tunai</td>
+                    <td>bayar Kontrakan</td>
+                    <td>Rp. 20.000.000</td>
+                    <td>-</td>
+                    <td>
+                      <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit_transaksi_75">
+                        <i class="fa fa-cog"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_transaksi_75">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_transaksi_75">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>25/04/2011</td>
+                    <td>Tunai</td>
+                    <td>bayar Kontrakan</td>
+                    <td>Rp. 20.000.000</td>
+                    <td>-</td>
+                    <td>
+                      <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit_transaksi_75">
+                        <i class="fa fa-cog"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_transaksi_75">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_transaksi_75">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>25/04/2011</td>
+                    <td>Tunai</td>
+                    <td>bayar Kontrakan</td>
+                    <td>Rp. 20.000.000</td>
+                    <td>-</td>
+                    <td>
+                      <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit_transaksi_75">
+                        <i class="fa fa-cog"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_transaksi_75">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_transaksi_75">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>25/04/2011</td>
+                    <td>Tunai</td>
+                    <td>bayar Kontrakan</td>
+                    <td>Rp. 20.000.000</td>
+                    <td>-</td>
+                    <td>
+                      <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit_transaksi_75">
+                        <i class="fa fa-cog"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_transaksi_75">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_transaksi_75">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>25/04/2011</td>
+                    <td>Tunai</td>
+                    <td>bayar Kontrakan</td>
+                    <td>Rp. 20.000.000</td>
+                    <td>-</td>
+                    <td>
+                      <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit_transaksi_75">
+                        <i class="fa fa-cog"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_transaksi_75">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_transaksi_75">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>25/04/2011</td>
+                    <td>Tunai</td>
+                    <td>bayar Kontrakan</td>
+                    <td>Rp. 20.000.000</td>
+                    <td>-</td>
+                    <td>
+                      <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit_transaksi_75">
+                        <i class="fa fa-cog"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_transaksi_75">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_transaksi_75">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <form class="theme-form" method="post">
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0" >Tanggal</label>
+                          <input class="form-control" type="date" 
+                            placeholder="Tangga">
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0" >Jenis</label>
+                          <select class="form-select" aria-label="Default select example">
+                            <option selected>--pilih--</option>
+                            <option value="1">One</option>
+                            <option value="2">Two</option>
+                            <option value="3">Three</option>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0" >Kategori</label>
+                          <select class="form-select" aria-label="Default select example">
+                            <option selected>--pilih--</option>
+                            <option value="1">One</option>
+                            <option value="2">Two</option>
+                            <option value="3">Three</option>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0" >Nominal</label>
+                          <input class="form-control" type="number" 
+                            placeholder="Nominal">
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0" >Keterangan</label>
+                          <textarea class="form-control" name="" id="" cols="30" rows="5"></textarea>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="card-footer border-0 pt-0" style="text-align: right;">
+                      <button class="btn btn-warning" type="reset">Cancel</button>
+                      <button class="btn btn-primary" type="submit">Submit</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<!-- Individual column searching (text inputs) Ends-->
+<!-- Container-fluid Ends-->
+</div>
+{% endblock content %}
+{% block scriptcontent %}
+<!-- Plugins JS start-->
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
+<script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
+<script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
+<script src="{% static 'assets/js/ecommerce.js' %}"></script>
+<script src="{% static 'assets/js/product-list-custom.js' %}"></script>
+<!-- Plugins JS Ends-->
+{% endblock scriptcontent %}

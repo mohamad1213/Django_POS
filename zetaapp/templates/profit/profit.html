@@ -1,0 +1,203 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<!-- Plugins css Ends-->
+{% endblock css %}
+{% block content %}
+<div class="page-body">
+  {% include 'layout/breadcrumb.html' %}
+
+  <!-- Container-fluid starts-->
+  <div class="container-fluid list-products">
+    <div class="row">
+      <!-- Individual column searching (text inputs) Starts-->
+      <div class="col-sm-12">
+        <div class="card">
+          <div class="card-header pb-0">
+            <div class="order-place" style="text-align: right;">
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Tambah Transaksi
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+            <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+              <thead>
+                <tr>
+                  <th>NO</th>
+                  <th scope="col" class="text-center">TANGGAL</th>
+                  <th scope="col" class="text-center">NAMA SUPLAYER</th>
+                  <!-- <th rowspan="2" scope="col" class="text-center">KETERANGAN</th> -->
+                  <th scope="col" class="text-center">Jual</th>
+                  <th scope="col" class="text-center">Beli</th>
+                  <th scope="col" class="text-center">JUMLAH(Kg)</th>
+                  <th scope="col" class="text-center">PROFIT</th>
+                  <th rowspan="2" scope="col" class="text-center">OPSI</th>
+                </tr>
+                <tr>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in data %}
+                <tr class="text-center">
+                  <td>{{forloop.counter}}</td>
+                  <td>{{u.date|date:"m-d-Y"}}</td>
+                  <td>{{u.nama_suplayer}}</td>
+                  <!-- <td>{{u.description}}</td> -->
+                  <td class="text-center">
+                    {{u.harga_jual}}
+                  </td>
+                  <td class="text-center">
+                    {{u.harga_beli}}
+                  </td>
+                  <td class="text-center">
+                    {{u.jumlah_brg}}
+                  </td>
+                  <td class="text-center">{{u.calculate_profit}}</td>
+                  <td>
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#edit_tr">
+                      <i class="fa fa-cog"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                      data-target="#hapus_tr">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
+                      data-target="#lihat_tr">
+                      <i class="fa fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <form class="form theme-form" action="/hutang/{{u.pk}}/update/" method="POST" enctype="multipart/form-data">
+                        {% load crispy_forms_tags %} 
+                        {% csrf_token %}
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0">Tanggal</label>
+                          {{form.date}}
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0">Nama Suplayer</label>
+                          {{form.nama_suplayer}}
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0">Harga Jual</label>
+                          {{form.harga_jual}}
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0">Harga Beli</label>
+                          {{form.harga_beli}}
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0">Kg</label>
+                          {{form.jumlah_brg}}
+                        </div>
+                        <div class="mb-3">
+                          <label class="col-form-label pt-0">Keterangan</label>
+                          {{form.description}}
+                        </div>
+                        {% if form.errors %}
+                        <div class="alert alert-danger" id="msg">
+                          {{ form.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="card-footer border-0 pt-0" style="text-align: right;">
+                          <button class="btn btn-warning" type="reset">Cancel</button>
+                          <button class="btn btn-primary" type="submit">Submit</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+              aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form class="form theme-form" method="POST" enctype="multipart/form-data">
+                      {% load crispy_forms_tags %}
+                      {% csrf_token %}
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Tanggal</label>
+                        {{form.date}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Nama Suplayer</label>
+                        {{form.nama_suplayer}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Harga Jual</label>
+                        {{form.harga_jual}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Harga Beli</label>
+                        {{form.harga_beli}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Kg</label>
+                        {{form.jumlah_brg}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Keterangan</label>
+                        {{form.description}}
+                      </div>
+                      {% if form.errors %}
+                      <div class="alert alert-danger" id="msg">
+                        {{ form.errors }}
+                      </div>
+                      {% endif %}
+                      <div class="card-footer border-0 pt-0" style="text-align: right;">
+                        <button class="btn btn-warning" type="reset">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Individual column searching (text inputs) Ends-->
+<!-- Container-fluid Ends-->
+</div>
+{% endblock content %}
+{% block scriptcontent %}
+<!-- Plugins JS start-->
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
+<script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
+<script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
+<script src="{% static 'assets/js/ecommerce.js' %}"></script>
+<script src="{% static 'assets/js/product-list-custom.js' %}"></script>
+<!-- Plugins JS Ends-->
+{% endblock scriptcontent %}

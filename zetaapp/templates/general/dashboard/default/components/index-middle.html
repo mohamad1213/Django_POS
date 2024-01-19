@@ -1,0 +1,110 @@
+{% load static %}
+{% load sass_tags %}
+<div class="row">
+  <div class="col-xl-6 col-md-12 box-col-12">
+    <div class="card o-hidden">
+      <div class="card-header pb-0">
+        <div class="media">
+          <div class="media-body">
+            <h5>Total Earning</h5>
+          </div>
+          <div class="icon-box onhover-dropdown"><i data-feather="more-horizontal"></i>
+            <div class="icon-box-show onhover-show-div">
+              <ul>
+                <li> <a>
+                    Done</a></li>
+                <li> <a>
+                    Pending</a></li>
+                <li> <a>
+                    Rejected</a></li>
+                <li> <a>In Progress</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bar-chart-widget">
+        <div class="top-content bg-primary"></div>
+        <div class="bottom-content card-body">
+          <div class="row">
+            <div class="col-12">
+              <div id="chart-widget5"> </div>
+            </div>
+          </div>
+          <div class="row text-center">
+            <div class="col-4 b-r-light">
+              <div>
+                <!-- <span class="font-primary">{{sisa_cashflow_tahunan}}<i class="icon-angle-up f-12 ms-1"></i></span> -->
+                {% if total_pengeluaran_tahunan > total_pemasukan_tahunan %}
+                <span class="font-primary">{{sisa_cashflow_tahunan}}<i class="icon-angle-down f-12 ms-1"></i></span>
+                {% else %}
+                <span class="font-primary">{{sisa_cashflow_tahunan}}<i class="icon-angle-up f-12 ms-1"></i></span>
+                {% endif %}
+                <span class="text-muted block-bottom">Year</span>
+                <h4 class="num m-0"><span class="color-bottom">Rp. {{sisa_cashflow_tahunan}}</span></h4>
+              </div>
+            </div>
+            <div class="col-4 b-r-light">
+              <div><span class="font-primary">15%<i class="icon-angle-up f-12 ms-1"></i></span><span
+                  class="text-muted block-bottom">Month</span>
+                <h4 class="num m-0"><span class="color-bottom">Rp. {{sisa_cashflow_bulanan}}</span></h4>
+              </div>
+            </div>
+            <div class="col-4">
+              <div><span class="font-primary">34%<i class="icon-angle-up f-12 ms-1"></i></span><span
+                  class="text-muted block-bottom">Today</span>
+                <h4 class="num m-0"><span class="color-bottom">Rp. {{sisa_cashflow_harian}}</span></h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4 xl-50 box-col-12">
+    <div class="card user-status">
+      <div class="card-header pb-0">
+        <div class="media">
+          <div class="media-body">
+            <h5>Transaksi Terakhir</h5>
+          </div>
+          <a href="{% url 'transaksi' %}" class="btn btn-primary btn-sm">Semua Transaksi
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="feather feather-arrow-right icon-xs ml-2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg></a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive mb-0">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Tanggal</th>
+                <th scope="col">Kategori</th>
+                <th scope="col">Keterangan</th>
+                <th scope="col">Nominal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in data %}
+              <tr>
+                <td>{{u.tanggal}}</td>
+                <td>{{u.kategori}}</td>
+                <td>{{u.keterangan}}</td>
+                {% if u.transaksi_choice == "P" %}
+                <td><span class="text-success">{{u.jumlah|floatformat:"0g"}}</span></td>
+                {% else %}
+                <td><span class="text-danger">{{u.jumlah|floatformat:"0g"}}</span></td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
