@@ -26,8 +26,7 @@
             </div>
           </div>
           <div class="card-body">
-            <div class="table-responsive">
-            <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+            <table class="table table-bordered display table-striped dataTable no-footer" id="product-list">
               <thead>
                 <tr>
                   <th>NO</th>
@@ -38,7 +37,7 @@
                   <th scope="col" class="text-center">Beli</th>
                   <th scope="col" class="text-center">JUMLAH(Kg)</th>
                   <th scope="col" class="text-center">PROFIT</th>
-                  <th rowspan="2" scope="col" class="text-center">OPSI</th>
+                  <th scope="col" class="text-center">OPSI</th>
                 </tr>
                 <tr>
                 </tr>
@@ -47,7 +46,7 @@
                 {% for u in data %}
                 <tr class="text-center">
                   <td>{{forloop.counter}}</td>
-                  <td>{{u.date|date:"m-d-Y"}}</td>
+                  <td>{{u.date|date:"d-m-Y"}}</td>
                   <td>{{u.nama_suplayer}}</td>
                   <!-- <td>{{u.description}}</td> -->
                   <td class="text-center">
@@ -191,9 +190,17 @@
 </div>
 {% endblock content %}
 {% block scriptcontent %}
+<script>
+  $(document).ready(function () {
+    $('#example').DataTable({
+      scrollX: true,
+    });
+  });
+</script>
 <!-- Plugins JS start-->
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/dataTables.custom.js' %}"></script>
 <script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
 <script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
 <script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>

@@ -1,0 +1,200 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<!-- Plugins css Ends-->
+{% endblock css %}
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h5>Input Laporan</h5>
+                        <a href="{% url 'generate_pdf' %}" class="btn btn btn-primary me-2" type="button"
+                            onclick="myFunction()">Print</a>
+
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">NO</th>
+                                    <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
+                                    <th rowspan="2" scope="col" class="text-center">KATEGORI</th>
+                                    <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
+                                    <th colspan="2" scope="col" class="text-center">JENIS</th>
+                                    <th rowspan="2" scope="col" class="text-center">OPSI</th>
+                                </tr>
+                                <tr>
+                                    <th scope="col" class="text-center">PEMASUKAN</th>
+                                    <th scope="col" class="text-center">PENGELUARAN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in data %}
+                                <tr class="text-center">
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{u.tanggal|date:"d-m-Y"}}</td>
+                                    <td>{{u.kategori}}</td>
+                                    <td>{{u.keterangan}}</td>
+                                    <td class="text-center">
+                                        {% if u.transaksi_choice == "P" %}
+                                        Rp. {{u.jumlah|floatformat:"0g" }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if u.transaksi_choice == "L" %}
+                                        Rp. {{u.jumlah|floatformat:"0g" }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#edit_tr">
+                                            <i class="fa fa-cog"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                                            data-target="#hapus_tr">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
+                                            data-target="#lihat_tr">
+                                            <i class="fa fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- <form method="get">
+                            <div class="row">
+                                <div class="col-sm-6 col-md-6">
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-3 col-form-label">Mulai Tanggal</label>
+                                        <small class="col-sm-1 col-form-label">:</small>
+                                        <div class="col-sm-8">
+                                            <input class="form-control" type="date" name="tanggal_dari"
+                                                value="{{ tanggal_dari }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-6">
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-3 col-form-label">Sampai Tanggal</label>
+                                        <small class="col-sm-1 col-form-label">:</small>
+                                        <div class="col-sm-8">
+                                            <input class="form-control" type="date" name="tanggal_sampai"
+                                                value="{{ tanggal_sampai }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-6">
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-3 col-form-label">Kategori </label>
+                                        <small class="col-sm-1 col-form-label">:</small>
+                                        <div class="col-sm-8">
+                                            <input class="form-control" type="text" name="kategori"
+                                                value="{{ kategori_id }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> -->
+                    <!-- <div class="card-footer border-0 pt-0" style="text-align: right;">
+                                <button class="btn btn-primary" type="submit">Submit</button>
+                            </div>
+                        </form> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <!-- Individual column searching (text inputs) Starts-->
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <!-- <div class="table-responsive"> -->
+                <div class="table-responsive table-hover">
+                    <table class="table-sm">
+                        <thead class="thead-dark" style="background-color: #416A7C;">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">NO</th>
+                                    <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
+                                    <th rowspan="2" scope="col" class="text-center">KATEGORI</th>
+                                    <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
+                                    <th colspan="2" scope="col" class="text-center">JENIS</th>
+                                    <th rowspan="2" scope="col" class="text-center">OPSI</th>
+                                </tr>
+                                <tr>
+                                    <th scope="col" class="text-center">PEMASUKAN</th>
+                                    <th scope="col" class="text-center">PENGELUARAN</th>
+                                </tr>
+                            </thead>
+                            {% for u in data %}
+                        <tbody>
+                            <tr class="text-center">
+                                <td>{{forloop.counter}}</td>
+                                <td>{{u.tanggal|date:"m-d-Y"}}</td>
+                                <td>{{u.kategori}}</td>
+                                <td>{{u.keterangan}}</td>
+                                <td class="text-center">
+                                    {% if u.transaksi_choice == "P" %}
+                                    Rp. {{u.jumlah|floatformat:"0g" }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if u.transaksi_choice == "L" %}
+                                    Rp. {{u.jumlah|floatformat:"0g" }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#edit_tr">
+                                        <i class="fa fa-cog"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+{% block scriptcontent %}
+
+<script>
+    function myFunction() {
+        window.print();
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#tableid').DataTable({
+            "order": [[1, 'asc']],  // Order by the second column (TANGGAL).
+            "pageLength": 25
+        });
+    });
+</script>
+
+{% endblock %}
+{% endblock content %}

@@ -21,6 +21,28 @@ class Kategori(models.Model):
     def __str__(self):
         return self.nama
 
+
+class Karyawan(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+class HutPegawai(models.Model):
+    HUTANG = 'H'
+    PIUTANG = 'P'
+
+    JENIS_CHOICES = [
+        (HUTANG, 'Hutang'),
+        (PIUTANG, 'Piutang'),
+    ]
+    pegawai = models.ForeignKey('Karyawan', on_delete=models.CASCADE)
+    jumlah = models.DecimalField(max_digits=20, decimal_places=2)
+    tanggal = models.DateTimeField()
+    hutang_choice= models.CharField(max_length=1, choices=JENIS_CHOICES)
+
+    keterangan = models.TextField(blank=True, null=True)
+    
 class Transaksi(models.Model):
     PEMASUKAN = 'P'
     PENGELUARAN = 'L'
@@ -31,7 +53,7 @@ class Transaksi(models.Model):
     ]
     owner = models.ForeignKey(User,null=True, on_delete = models.DO_NOTHING,related_name='transaksi')
     jumlah = models.DecimalField(max_digits=20, decimal_places=2)
-    tanggal = models.DateField()
+    tanggal = models.DateTimeField()
     keterangan = models.TextField(blank=True, null=True)
     transaksi_choice= models.CharField(max_length=1, choices=JENIS_CHOICES)
     kategori = models.ForeignKey(Kategori, on_delete=models.CASCADE)
@@ -94,3 +116,12 @@ class Tabungan(models.Model):
     description = models.TextField()
     date = models.DateField()
 
+class Pegawai(models.Model):
+    nama = models.CharField(max_length=100)
+    nip = models.CharField(max_length=20, unique=True)
+    jabatan = models.CharField(max_length=50)
+    gaji = models.DecimalField(max_digits=10, decimal_places=2)
+    tanggal_masuk = models.DateField()
+
+    def __str__(self):
+        return self.nama

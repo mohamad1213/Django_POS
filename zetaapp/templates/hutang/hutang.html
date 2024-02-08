@@ -45,7 +45,7 @@
                 {% for u in data %}
                 <tr class="text-center">
                   <td>{{forloop.counter}}</td>
-                  <td>{{u.tanggal|date:"m-d-Y"}}</td>
+                  <td>{{u.tanggal|date:"d-m-Y"}}</td>
                   <td>{{u.keterangan}}</td>
                   <td class="text-center">
                     {%  if u.hutang_choice == "H" %}

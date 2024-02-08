@@ -29,25 +29,30 @@
           <li class="sidebar-list">
             <a class="sidebar-link {% if url_name == 'transaksi' %}active{% endif %}  sidebar-title link-nav"
               href="{% url 'transaksi' %}">
-              <i data-feather="file-text"></i><span>Transaksi</span></a>
+              <i data-feather="activity"></i><span>Transaksi</span></a>
           </li>
           <li class="sidebar-list">
             <a class="sidebar-link {% if url_name == 'hutang' %}active{% endif %}  sidebar-title link-nav"
               href="{% url 'hutang' %}">
-              <i data-feather="file-text"></i><span>Hutang Piutang</span></a>
+              <i data-feather="refresh-ccw"></i><span>Hutang Piutang Ortu</span></a>
           </li>
           <li class="sidebar-list">
-            <a class="sidebar-link {% if url_name == 'hutang' %}active{% endif %}  sidebar-title link-nav"
+            <a class="sidebar-link {% if url_name == 'hutangpeg' %}active{% endif %}  sidebar-title link-nav"
+              href="{% url 'hutangpeg' %}">
+              <i data-feather="repeat"></i><span>Hutang Piutang Pegawai</span></a>
+          </li>
+          <li class="sidebar-list">
+            <a class="sidebar-link {% if url_name == 'profit' %}active{% endif %}  sidebar-title link-nav"
               href="{% url 'profit' %}">
-              <i data-feather="file-text"></i><span>Profit</span></a>
+              <i data-feather="trending-up"></i></i><span>Profit</span></a>
           </li>
           <li class="sidebar-list">
-            <a class="sidebar-link {% if url_name == 'hutang' %}active{% endif %}  sidebar-title link-nav"
+            <a class="sidebar-link {% if url_name == 'tabungan' %}active{% endif %}  sidebar-title link-nav"
               href="{% url 'tabungan' %}">
-              <i data-feather="file-text"></i><span>Tabungan</span></a>
+              <i data-feather="bar-chart-2"></i><span>Tabungan</span></a>
           </li>
           <li class="sidebar-list">
-            <a class="sidebar-link sidebar-title link-nav" href="#">
+            <a class="sidebar-link sidebar-title link-nav" href="{% url 'laporan' %}">
               <i data-feather="file-text"></i><span>Laporan</span></a>
           </li>
         </ul>

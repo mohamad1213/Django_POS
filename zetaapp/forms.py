@@ -3,6 +3,10 @@ from django import forms
 from django.forms import ModelForm
 
 from .models import *
+# forms.py
+
+class ExcelUploadForm(forms.Form):
+    excel_file = forms.FileField(widget=forms.FileInput(attrs={'name':'excel_file'}))
 
 class TaskForm(forms.ModelForm):
     title = forms.CharField(max_length=200, widget= forms.Textarea(attrs={'placeholder':'Enter new task here. . .'}))
@@ -16,7 +20,7 @@ class TransaksiForms(ModelForm):
         model = Transaksi
         exclude = ['owner']
         widgets = {
-            'jumlah': forms.NumberInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.jumlah.value}}'}),
+            'jumlah': forms.TextInput({'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'rupiah','id':"rupiah"}),
             'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.date.value|date:"d-m-Y"}}'}),
             'keterangan': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
         }
@@ -40,6 +44,23 @@ class HutangForms(ModelForm):
         super(HutangForms, self).__init__(*args, **kwargs)
         self.fields['hutang_choice'].empty_label = 'Select item ...'
         self.fields['hutang_choice'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.hutang.value}}'})
+
+class HutangPegForms(ModelForm):
+    class Meta:
+        model = HutPegawai
+        fields = ['jumlah', 'tanggal','keterangan','pegawai','hutang_choice']
+        widgets = {
+            'jumlah': forms.TextInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.jumlah.value}}'}),
+            'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.date.value|date:"d-m-Y"}}'}),
+            'keterangan': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
+        }
+    def __init__(self, *args, **kwargs):
+        super(HutangPegForms, self).__init__(*args, **kwargs)
+        self.fields['pegawai'].empty_label = 'Select item ...'
+        self.fields['pegawai'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.hutang.value}}'})
+        self.fields['hutang_choice'].empty_label = 'Select item ...'
+        self.fields['hutang_choice'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.hutang.value}}'})
+
 
 class ProfitForms(ModelForm):
     class Meta:

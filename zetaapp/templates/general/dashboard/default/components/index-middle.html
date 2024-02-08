@@ -1,63 +1,31 @@
 {% load static %}
 {% load sass_tags %}
 <div class="row">
-  <div class="col-xl-6 col-md-12 box-col-12">
-    <div class="card o-hidden">
-      <div class="card-header pb-0">
+  <div class="col-xl-3 col-md-6 dash-xl-50 dash-32 box-col-6">
+    <div class="card revenue-category">
+      <div class="card-header card-no-border">
         <div class="media">
           <div class="media-body">
-            <h5>Total Earning</h5>
+            <h5 class="mb-0">Analisis Keuangan</h5>
           </div>
           <div class="icon-box onhover-dropdown"><i data-feather="more-horizontal"></i>
             <div class="icon-box-show onhover-show-div">
               <ul>
                 <li> <a>
-                    Done</a></li>
+                    Pemasukan</a></li>
                 <li> <a>
-                    Pending</a></li>
-                <li> <a>
-                    Rejected</a></li>
-                <li> <a>In Progress</a></li>
+                    Pengeluaran</a></li>
               </ul>
             </div>
           </div>
         </div>
       </div>
-      <div class="bar-chart-widget">
-        <div class="top-content bg-primary"></div>
-        <div class="bottom-content card-body">
-          <div class="row">
-            <div class="col-12">
-              <div id="chart-widget5"> </div>
-            </div>
-          </div>
-          <div class="row text-center">
-            <div class="col-4 b-r-light">
-              <div>
-                <!-- <span class="font-primary">{{sisa_cashflow_tahunan}}<i class="icon-angle-up f-12 ms-1"></i></span> -->
-                {% if total_pengeluaran_tahunan > total_pemasukan_tahunan %}
-                <span class="font-primary">{{sisa_cashflow_tahunan}}<i class="icon-angle-down f-12 ms-1"></i></span>
-                {% else %}
-                <span class="font-primary">{{sisa_cashflow_tahunan}}<i class="icon-angle-up f-12 ms-1"></i></span>
-                {% endif %}
-                <span class="text-muted block-bottom">Year</span>
-                <h4 class="num m-0"><span class="color-bottom">Rp. {{sisa_cashflow_tahunan}}</span></h4>
-              </div>
-            </div>
-            <div class="col-4 b-r-light">
-              <div><span class="font-primary">15%<i class="icon-angle-up f-12 ms-1"></i></span><span
-                  class="text-muted block-bottom">Month</span>
-                <h4 class="num m-0"><span class="color-bottom">Rp. {{sisa_cashflow_bulanan}}</span></h4>
-              </div>
-            </div>
-            <div class="col-4">
-              <div><span class="font-primary">34%<i class="icon-angle-up f-12 ms-1"></i></span><span
-                  class="text-muted block-bottom">Today</span>
-                <h4 class="num m-0"><span class="color-bottom">Rp. {{sisa_cashflow_harian}}</span></h4>
-              </div>
-            </div>
-          </div>
+      <div class="card-body">
+        <div class="donut-inner">
+          <h5>{{count.count}}</h5>
+          <h6>Transaksi</h6>
         </div>
+        <div id="revenue"> </div>
       </div>
     </div>
   </div>
@@ -69,12 +37,12 @@
             <h5>Transaksi Terakhir</h5>
           </div>
           <a href="{% url 'transaksi' %}" class="btn btn-primary btn-sm">Semua Transaksi
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="feather feather-arrow-right icon-xs ml-2">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg></a>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="feather feather-arrow-right icon-xs ml-2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg></a>
         </div>
       </div>
       <div class="card-body">
@@ -91,7 +59,7 @@
             <tbody>
               {% for u in data %}
               <tr>
-                <td>{{u.tanggal}}</td>
+                <td>{{u.tanggal|date:"j M Y"  }} </td>
                 <td>{{u.kategori}}</td>
                 <td>{{u.keterangan}}</td>
                 {% if u.transaksi_choice == "P" %}
@@ -108,3 +76,76 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    // Ganti 'daily', 'monthly', atau 'yearly' sesuai dengan kebutuhan Anda
+    fetch(`/analisis_chart/`)
+      .then(response => response.json())
+      .then(data => {
+        var options = {
+          labels: data.labels_don,
+          series: data.values_don,
+          dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+              return val + "%"
+            },
+          },
+          chart: {
+            type: 'donut',
+            height: 320,
+          },
+          legend: {
+            position: 'bottom'
+          },
+          dataLabels: {
+            enabled: false,
+          },
+          states: {
+            hover: {
+              filter: {
+                type: 'darken',
+                value: 1,
+              }
+            }
+          },
+          stroke: {
+            width: 0,
+          },
+          yaxis: {
+            labels: {
+              formatter: function (value) {
+                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+              }
+            },
+          },
+          responsive: [
+            {
+              breakpoint: 1661,
+              options: {
+                chart: {
+                  height: 310,
+                }
+              }
+            },
+            {
+              breakpoint: 481,
+              options: {
+                chart: {
+                  height: 280,
+                }
+              }
+            }
+
+          ],
+          colors: [zetaAdminConfig.primary, zetaAdminConfig.secondary, zetaAdminConfig.success, zetaAdminConfig.info, zetaAdminConfig.warning],
+        };
+        var chart = new ApexCharts(document.querySelector("#revenue"), options);
+        chart.render();
+        // revenue chart end
+      });
+
+  });
+</script>

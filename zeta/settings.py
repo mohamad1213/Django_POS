@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'zeta.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ppj',   # Replace with your actual database name
+        'NAME': 'ppj2',   # Replace with your actual database name
         'USER': 'postgres',   # Replace with your actual database user
         'PASSWORD': 'tatam123',   # Replace with your actual database password
         'HOST': 'localhost',   # Set to the hostname where your PostgreSQL server is running
