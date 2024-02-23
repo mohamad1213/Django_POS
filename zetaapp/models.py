@@ -14,7 +14,8 @@ class Task(models.Model):
     
 
 from django.db import models
-
+class ExcelUpload(models.Model):
+    excel_files = models.FileField()
 class Kategori(models.Model):
     nama = models.CharField(max_length=255)
 
@@ -73,6 +74,9 @@ class Transaksi(models.Model):
 
     def __str__(self):
         return f"{self.get_transaksi_choice_display()} - {self.jumlah} on {self.tanggal}"
+
+    def __str__(self):
+        return self.keterangan
 
 class HutangPiutang(models.Model):
     HUTANG = 'H'

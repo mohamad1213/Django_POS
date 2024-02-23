@@ -15,26 +15,7 @@
   <!-- Container-fluid starts-->
   <div class="container-fluid list-products">
     {% load static %}
-{% load sass_tags %}
-<div class="row">
-  <div class="col-xl-12 col-md-12 dash-xl-50 dash-32 box-col-12">
-    <div class="card revenue-category">
-      <div class="card-header card-no-border">
-        <div class="media">
-          <div class="media-body">
-            <h5 class="mb-0">Analisis Keuangan</h5>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="donut-inner">
-          <h5>{{count.count}}</h5>
-          <h6>Transaksi</h6>
-        </div>
-        <div id="revenue"> </div>
-      </div>
-    </div>
-  </div>
+    {% load sass_tags %}
     <div class="row">
       <!-- Individual column searching (text inputs) Starts-->
       <div class="col-sm-12">
@@ -47,7 +28,6 @@
             </div>
           </div>
           <div class="card-body">
-
             <!-- <div class="table-responsive"> -->
             <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
               <thead>
@@ -72,75 +52,74 @@
                   <td>{{u.pegawai}}</td>
                   <td>{{u.keterangan}}</td>
                   <td class="text-center">
-                    {%  if u.hutang_choice == "H" %}
+                    {% if u.hutang_choice == "H" %}
                     Rp. {{u.jumlah|floatformat:"0g" }}
                     {% else %}
                     -
                     {% endif %}
                   </td>
                   <td class="text-center">
-                    {%  if u.hutang_choice == "P" %}
+                    {% if u.hutang_choice == "P" %}
                     Rp. {{u.jumlah|floatformat:"0g" }}
                     {% else %}
                     -
                     {% endif %}
                   </td>
                   <td>
-                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#edit_tr">
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                      data-bs-target="#edit_tr">
                       <i class="fa fa-cog"></i>
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
-                      data-target="#hapus_tr">
+                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_tr">
                       <i class="fa fa-trash"></i>
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
-                      data-target="#lihat_tr">
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_tr">
                       <i class="fa fa-eye"></i>
                     </button>
                   </td>
                 </tr>
-                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr"
-                aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <form class="form theme-form" action="/hutang/{{u.pk}}/update/" method="POST" enctype="multipart/form-data">
-                        {% load crispy_forms_tags %} 
-                        {% csrf_token %}
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Tanggal</label>
-                          {{form.tanggal}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Jenis</label>
-                          {{form.hutang_choice}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Nominal</label>
-                          {{form.jumlah}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Keterangan</label>
-                          {{form.keterangan}}
-                        </div>
-                        {% if form.errors %}
-                        <div class="alert alert-danger" id="msg">
-                          {{ form.errors }}
-                        </div>
-                        {% endif %}
-                        <div class="card-footer border-0 pt-0" style="text-align: right;">
-                          <button class="btn btn-warning" type="reset">Cancel</button>
-                          <button class="btn btn-primary" type="submit">Submit</button>
-                        </div>
-                      </form>
+                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <form class="form theme-form" action="/hutang/{{u.pk}}/update/" method="POST"
+                          enctype="multipart/form-data">
+                          {% load crispy_forms_tags %}
+                          {% csrf_token %}
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Tanggal</label>
+                            {{form.tanggal}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Jenis</label>
+                            {{form.hutang_choice}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Nominal</label>
+                            {{form.jumlah}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Keterangan</label>
+                            {{form.keterangan}}
+                          </div>
+                          {% if form.errors %}
+                          <div class="alert alert-danger" id="msg">
+                            {{ form.errors }}
+                          </div>
+                          {% endif %}
+                          <div class="card-footer border-0 pt-0" style="text-align: right;">
+                            <button class="btn btn-warning" type="reset">Cancel</button>
+                            <button class="btn btn-primary" type="submit">Submit</button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
                 {% endfor %}
               </tbody>
             </table>
@@ -195,12 +174,6 @@
       </div>
     </div>
   </div>
-</div>
-</div>
-</div>
-</div>
-<!-- Individual column searching (text inputs) Ends-->
-<!-- Container-fluid Ends-->
 </div>
 {% endblock content %}
 {% block scriptcontent %}

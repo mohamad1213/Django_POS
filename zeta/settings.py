@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     'sass_processor',
     'crispy_forms',
     'zetaapp',
+    'customers',
+    'products',
+    'sales',
+    'authentication'
 ]
 
 MIDDLEWARE = [

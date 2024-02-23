@@ -30,110 +30,111 @@ from xhtml2pdf import pisa
 from django.db.models import Sum
 from django.utils import timezone
 import pandas as pd
+from openpyxl import load_workbook
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.template.loader import get_template
+from .models import *
+from io import BytesIO
+from django.views import View
+from django.template.loader import render_to_string
+def render_to_pdf(template_src, context_dict={}):
+	template = get_template(template_src)
+	html  = template.render(context_dict)
+	result = BytesIO()
+	pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+	if not pdf.err:
+		return HttpResponse(result.getvalue(), content_type='application/pdf')
+	return None
+today = timezone.now().date()
+transaksi = Transaksi.objects.all().order_by('tanggal')
+total_pengeluaran_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
+
+data = {
+        'data': transaksi,
+        'pemasukan': total_pengeluaran_tahunan,
+        'pengeluaran':total_pengeluaran_tahunan,
+        'saldo':sisa_saldo
+        
+    }
+
+class ViewPDF(View):
+	def get(self, request, *args, **kwargs):
+
+		pdf = render_to_pdf('generatepdf.html', data)
+		return HttpResponse(pdf, content_type='application/pdf')
+
+
+#Automaticly downloads to PDF file
+class DownloadPDF(View):
+	def get(self, request, *args, **kwargs):
+		
+		pdf = render_to_pdf('generatepdf.html', data)
+
+		response = HttpResponse(pdf, content_type='application/pdf')
+		filename = "Invoice_%s.pdf" %("12341231")
+		content = "attachment; filename='%s'" %(filename)
+		response['Content-Disposition'] = content
+		return response
+
+
 def import_excel(request):
     if request.method == 'POST':
         form = ExcelUploadForm(request.POST, request.FILES)
         if form.is_valid():
             excel_file = request.FILES['excel_file']
-            df = pd.read_excel(excel_file)
-            print(df)
-            print(df['kategori_id'])
-            if 'pemasukan' in df.columns:
-                for index, row in df.iterrows():
-                    kategori_id = row['kategori_id']
-                    try:
-                        kategori_instance = Kategori.objects.get(nama=kategori_id)
-                    except Http404:
-                        print(f"Kategori with id {kategori_id} does not exist. Skipping row {index + 2}.")
-                        continue
-                    Transaksi.objects.create(
-                        owner=request.user,
-                        jumlah=row['pemasukan'],
-                        tanggal=row['tanggal'],
-                        keterangan=row['keterangan'],
-                        transaksi_choice='P',  # Pemasukan
-                        kategori_id=kategori_instance,
-                    )
-            else:
-                print("Column 'pemasukan' not found in DataFrame")
-                # Check if pengeluaran column is not NaN
-            if 'pengeluaran' in df.columns:
-                for index, row in df.iterrows():
-                    kategori_id = row['kategori_id']
-                    try:
-                        kategori_instance = Transaksi.objects.get(kategori=kategori_id)
-                    except Http404:
-                        print(f"Kategori with id {kategori_id} does not exist. Skipping row {index + 2}.")
-                        continue
-                    Transaksi.objects.create(
-                        owner=request.user,
-                        jumlah=row['pengeluaran'],
-                        tanggal=row['tanggal'],
-                        keterangan=row['keterangan'],
-                        transaksi_choice='L', # Pengeluaran
-                        kategori_id=kategori_instance,
-                    )
-                messages.success(request, 'mantaops.')
-            else:
-                print("Column 'pemasukan' not found in DataFrame")
-            return redirect('/')  # Redirect to a success page
+            if not excel_file.name.endswith('.xlsx'):
+                messages.error(request, 'File bukan berformat Excel (.xlsx)')
+                return render(request, 'transaksi/index.html', {'excel': form})
+
+            df = pd.read_excel(excel_file, engine='openpyxl')
+
+            for index, row in df.iterrows():
+                try:
+                    tanggal = pd.to_datetime(row['tanggal'], format='%Y-%m-%d')
+                except ValueError:
+                    messages.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
+                    continue
+                keterangan = row['keterangan']
+                nama_kategori = row['kategori_id']  # Menambahkan kolom kategori
+                pemasukan = row['pemasukan']
+                pengeluaran = row['pengeluaran']
+                owner_id = row['owner']  # Menambahkan kolom owner
+                if pd.isna(pemasukan):
+                    pemasukan = 0
+                if pd.isna(pengeluaran):
+                    pengeluaran = 0
+                # Menentukan jenis transaksi berdasarkan pemasukan atau pengeluaran
+                if pemasukan:
+                    jenis_transaksi = Transaksi.PEMASUKAN
+                    jumlah = pemasukan
+                elif pengeluaran:
+                    jenis_transaksi = Transaksi.PENGELUARAN
+                    jumlah = pengeluaran
+                else:
+                    messages.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
+                    continue
+
+                # Memeriksa kategori
+                kategori, created = Kategori.objects.get_or_create(nama=nama_kategori)
+                
+                Transaksi.objects.create(
+                    tanggal=tanggal,
+                    keterangan=keterangan,
+                    transaksi_choice=jenis_transaksi,
+                    kategori=kategori,
+                    jumlah=jumlah,
+                    owner_id=owner_id
+                )
+
+            messages.success(request, 'Data berhasil diimpor.')
+            return redirect('transaksi')
     else:
         form = ExcelUploadForm()
+    return render(request, 'transaksi/index.html', {'excel': form})
 
-    return render(request, 'transaksi/import_excel.html', {'form': form})
-
-
-def generate_pdf(request):
-    data = Transaksi.objects.all().order_by('-tanggal','-id')
-    context_data = {
-        'data': data,
-    }
-            
-
-    # Render the HTML template with the invoice data
-    template = get_template('generatepdf.html')
-    html = template.render(context_data)
-
-    # Create a BytesIO buffer to write the PDF content
-    pdf_buffer = BytesIO()
-
-    # Use xhtml2pdf to generate the PDF from the HTML content
-    pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
-
-    if pisa_status.err:
-        return HttpResponse('Error creating PDF', content_type='text/plain')
-
-    # Set the buffer's file pointer to the beginning
-    pdf_buffer.seek(0)
-
-    # Create a response with the PDF content
-    response = HttpResponse(pdf_buffer.read(), content_type='application/pdf')
-    response['Content-Disposition'] = 'filename=invoice.pdf'
-
-    return response
-def generate_chart_data(data, interval):
-    chart_data = []
-
-    if interval == 'daily':
-        for entry in data:
-            chart_data.append({
-                'tanggal': entry['tanggal'],
-                'jumlah': entry['jumlah'],
-            })
-    elif interval == 'monthly':
-        for entry in data:
-            chart_data.append({
-                'tanggal': entry['tanggal'].strftime('%B %Y'),  # Format as Month Year
-                'jumlah': entry['jumlah'],
-            })
-    elif interval == 'yearly':
-        for entry in data:
-            chart_data.append({
-                'tanggal': entry['tanggal'].year,
-                'jumlah': entry['jumlah'],
-            })
-
-    return chart_data
 def AnalasisChart(request):
     start_date = datetime.now() - timedelta(days=365)
     categories = Kategori.objects.all()
@@ -186,10 +187,10 @@ def indexPage(request):
     today = timezone.now().date()
     total_pemasukan_harian = Transaksi.objects.filter(tanggal=today, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_pemasukan_bulanan = Transaksi.objects.filter(tanggal__month=today.month, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_pengeluaran_harian = Transaksi.objects.filter(tanggal=today, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_pengeluaran_bulanan = Transaksi.objects.filter(tanggal__month=today.month, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_pengeluaran_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
     total_hutang = HutangPiutang.objects.filter(tanggal__year=today.year, hutang_choice='H').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_piutang = HutangPiutang.objects.filter(tanggal__year=today.year, hutang_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
@@ -218,6 +219,31 @@ def indexPage(request):
         }
 
     return render(request,'general/dashboard/default/index.html',context)
+
+
+# @login_required(login_url="/login")
+def pos(request):
+    data = Tabungan.objects.all().order_by('-date')
+    if request.POST :
+        form = TabunganForms(request.POST)
+        if form.is_valid():    
+            trform = form.save(commit=False)
+            trform.save()
+            messages.success(request, "Form Created Successfully")
+            return redirect('/pos/')
+        else:
+            print(form.errors)
+            messages.error(request, 'Invalid Form Submission.')
+            messages.error(request, form.errors)
+    else:
+        form = TabunganForms()
+        data = Tabungan.objects.all().order_by('-date','-id')
+    context = {
+        'form': form,
+        'data':data,
+        "breadcrumb":{"parent":"Tabungan","child":"Transaksi"},
+    }
+    return render(request, 'POS/index.html', context)
 
 # @login_required(login_url="/login")
 def tabungan(request):
@@ -272,6 +298,47 @@ def profit(request):
 def hutang(request):
     data = HutangPiutang.objects.all().order_by('-tanggal')
     if request.POST :
+        excel = ExcelUploadForm(request.POST, request.FILES)
+        if excel.is_valid():
+            excel_file = request.FILES['excel_file']
+            if not excel_file.name.endswith('.xlsx'):
+                messages.error(request, 'File bukan berformat Excel (.xlsx)')
+                return render(request, 'transaksi/index.html', {'excel': excel})
+
+            df = pd.read_excel(excel_file, engine='openpyxl')
+
+            for index, row in df.iterrows():
+                try:
+                    tanggal = pd.to_datetime(row['tanggal'], format='%Y-%m-%d')
+                except ValueError:
+                    messages.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
+                    continue
+                keterangan = row['keterangan']
+                pemasukan = row['pemasukan']
+                pengeluaran = row['pengeluaran']
+                if pd.isna(pemasukan):
+                    pemasukan = 0
+                if pd.isna(pengeluaran):
+                    pengeluaran = 0
+                # Menentukan jenis transaksi berdasarkan pemasukan atau pengeluaran
+                if pemasukan:
+                    hutang_choice = HutangPiutang.PIUTANG
+                    jumlah = pemasukan
+                elif pengeluaran:
+                    hutang_choice = HutangPiutang.HUTANG
+                    jumlah = pengeluaran
+                else:
+                    messages.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
+                    continue
+
+                # Memeriksa kategori
+            
+                HutangPiutang.objects.create(
+                    tanggal=tanggal,
+                    keterangan=keterangan,
+                    hutang_choice=hutang_choice,
+                    jumlah=jumlah,
+                )
         form = HutangForms(request.POST)
         if form.is_valid():    
             trform = form.save(commit=False)
@@ -285,9 +352,11 @@ def hutang(request):
             messages.error(request, form.errors)
     else:
         form = HutangForms()
+        excel = ExcelUploadForm()
         data = HutangPiutang.objects.all().order_by('-tanggal','-id')
     context = {
         'form': form,
+        'excel': excel,
         'data':data,
         "breadcrumb":{"parent":"Hutang Piutang","child":"Transaksi"},
     }
@@ -327,6 +396,53 @@ def transaksi(request):
     data = Transaksi.objects.all().order_by('-tanggal')
         
     if request.POST :
+        excel = ExcelUploadForm(request.POST, request.FILES)
+        if excel.is_valid():
+            excel_file = request.FILES['excel_file']
+            if not excel_file.name.endswith('.xlsx'):
+                messages.error(request, 'File bukan berformat Excel (.xlsx)')
+                return render(request, 'transaksi/index.html', {'excel': excel})
+
+            df = pd.read_excel(excel_file, engine='openpyxl')
+
+            for index, row in df.iterrows():
+                try:
+                    tanggal = pd.to_datetime(row['tanggal'], format='%Y-%m-%d')
+                except ValueError:
+                    messages.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
+                    continue
+                keterangan = row['keterangan']
+                nama_kategori = row['kategori_id']  # Menambahkan kolom kategori
+                pemasukan = row['pemasukan']
+                pengeluaran = row['pengeluaran']
+                owner_id = row['owner']  # Menambahkan kolom owner
+                if pd.isna(pemasukan):
+                    pemasukan = 0
+                if pd.isna(pengeluaran):
+                    pengeluaran = 0
+                # Menentukan jenis transaksi berdasarkan pemasukan atau pengeluaran
+                if pemasukan:
+                    jenis_transaksi = Transaksi.PEMASUKAN
+                    jumlah = pemasukan
+                elif pengeluaran:
+                    jenis_transaksi = Transaksi.PENGELUARAN
+                    jumlah = pengeluaran
+                else:
+                    messages.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
+                    continue
+
+                # Memeriksa kategori
+                kategori, created = Kategori.objects.get_or_create(nama=nama_kategori)
+                
+                Transaksi.objects.create(
+                    tanggal=tanggal,
+                    keterangan=keterangan,
+                    transaksi_choice=jenis_transaksi,
+                    kategori=kategori,
+                    jumlah=jumlah,
+                    owner_id=owner_id
+                )
+
         form = TransaksiForms(request.POST)
         if form.is_valid():    
             trform = form.save(commit=False)
@@ -340,9 +456,11 @@ def transaksi(request):
             messages.error(request, form.errors)
     else:
         form = TransaksiForms()
+        excel = ExcelUploadForm()
         data = Transaksi.objects.all().order_by('-tanggal')
     context = {
         'form': form,
+        'excel': excel,
         'data':data,
         "breadcrumb":{"parent":"Transaksi","child":"Transaksi"},
     }
@@ -494,78 +612,3 @@ def updateTask(request, pk):
         task.save()
 
     return HttpResponseRedirect("/to_do_database")
-# def chart_data(request):
-#   # Hitung tanggal awal sesuai dengan periode waktu yang diminta
-#     start_date = datetime.now() - timedelta(days=365)
-#     categories = Kategori.objects.all()
-#     data = []
-
-#     for kategori in categories:
-#         total_amount = Transaksi.objects.filter(kategori=kategori).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-#         data.append({'kategori': kategori.nama, 'jumlah': float(total_amount)})
-
-#     labels_don = [item['kategori'] for item in data]
-#     values_don = [float(item['jumlah']) for item in data]
-#     # Ambil data sesuai dengan periode waktu yang diminta
-#     data_pemasukan = Transaksi.objects \
-#         .filter(tanggal__gte=start_date, transaksi_choice='P') \
-#         .extra({'month': "EXTRACT(month FROM tanggal)"}) \
-#         .values('month') \
-#         .annotate(jumlah=models.Sum('jumlah')) \
-#         .order_by('month')
-#     data_pengeluaran = Transaksi.objects \
-#         .filter(tanggal__gte=start_date, transaksi_choice='L') \
-#         .extra({'month': "EXTRACT(month FROM tanggal)"}) \
-#         .values('month') \
-#         .annotate(jumlah=models.Sum('jumlah')) \
-#         .order_by('month')
-#     data_labels= Transaksi.objects \
-#         .filter(tanggal__gte=start_date) \
-#         .extra({'month': "EXTRACT(month FROM tanggal)"}) \
-#         .values('month') \
-#         .annotate(jumlah=models.Sum('jumlah')) \
-#         .order_by('month')
-#     data = Transaksi.objects.values('tanggal').annotate(total_nominal=Sum('jumlah'))
-    
-#     # Daftar nama bulan untuk label
-#     month_names = [
-#         "Jan",
-#         "Feb",
-#         "Mar",
-#         "Apr",
-#         "May",
-#         "Jun",
-#         "Jul",
-#         "Aug",
-#         "Sep",
-#         "Oct",
-#         "Nov",
-#         "Dec",
-#     ]
-#     # Format tanggal sesuai dengan periode waktu yang diminta
-#     labels = [month_names[int(entry['month']) - 1] for entry in data_labels]
-#     # values = [entry['jumlah'] for entry in data]
-#     dates = [entry['tanggal'] for entry in data]
-#     print(dates)
-#     values_pemasukan = [entry['jumlah'] if 'jumlah' in entry else 0 for entry in data_pemasukan]
-#     values_pengeluaran = [entry['jumlah'] if 'jumlah' in entry else 0 for entry in data_pengeluaran]
-#     count = Transaksi.objects.count()
-#     print(count)
-#     return JsonResponse(data={
-#         'labels': labels, 
-#         'labels_don': labels_don, 
-#         'values_don': values_don, 
-#         'dates': dates, 
-#         'count': count, 
-#         'values_pemasukan': values_pemasukan,
-#         'values_pengeluaran': values_pengeluaran
-        
-#         })
-    # income_data = Transaksi.objects.filter(transaksi_choice='P').values('tanggal__date').annotate(total_jumlah=Sum('jumlah'))
-    # expense_data = Transaksi.objects.filter(transaksi_choice='L').values('tanggal__date').annotate(total_jumlah=Sum('jumlah'))
-
-    # labels = list(set(entry['tanggal__date'] for entry in income_data))
-    # labels.extend(set(entry['tanggal__date'] for entry in expense_data))
-    # labels = list(set(labels))
-    # labels.sort()  # Sort the dates chronologically
-    # print(labels)

@@ -6,7 +6,15 @@ from .models import *
 # forms.py
 
 class ExcelUploadForm(forms.Form):
-    excel_file = forms.FileField(widget=forms.FileInput(attrs={'name':'excel_file'}))
+    excel_file = forms.FileField(widget=forms.FileInput(attrs={'name':'excel_file', 'class':'form-control' ,'type':'file'}))
+    class Meta:
+        model = Transaksi
+        exclude = ['owner']
+        widgets = {
+            'jumlah': forms.TextInput({'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'rupiah','id':"rupiah"}),
+            'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.date.value|date:"d-m-Y"}}'}),
+            'keterangan': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
+        }
 
 class TaskForm(forms.ModelForm):
     title = forms.CharField(max_length=200, widget= forms.Textarea(attrs={'placeholder':'Enter new task here. . .'}))

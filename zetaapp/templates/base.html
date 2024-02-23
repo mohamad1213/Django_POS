@@ -11,6 +11,7 @@
   <meta name="keywords"
     content="admin template, Zeta admin template, dashboard template, flat admin template, responsive admin template, web app" />
   <meta name="author" content="pixelstrap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="icon" href="{% static 'assets/images/logo/favicon-icon.png' %}" type="image/x-icon" />
   <link rel="shortcut icon" href="{% static 'assets/images/logo/favicon-icon.png' %}" type="image/x-icon" />
   <title>PPJ Financial Management</title>
@@ -73,6 +74,9 @@
     <div class="page-body-wrapper">
       <!-- Page Sidebar Start-->
       {% include 'layout/sidebar.html' %}
+      <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{% block heading %}{% endblock %}</h1>
+    </div>
       <!-- Page Sidebar Ends-->
       <!-- page body starts from breadcrumbs -->
       {% block content %}{% endblock content %}

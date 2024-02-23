@@ -17,8 +17,8 @@
                 <div class="card">
                     <div class="card-header pb-0">
                         <h5>Input Laporan</h5>
-                        <a href="{% url 'generate_pdf' %}" class="btn btn btn-primary me-2" type="button"
-                            onclick="myFunction()">Print</a>
+                        <a href="{% url 'pdf_view' %}" class="btn btn btn-primary me-2" type="button"
+                           >Print</a>
 
                     </div>
                     <div class="card-body">
@@ -77,43 +77,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- <form method="get">
-                            <div class="row">
-                                <div class="col-sm-6 col-md-6">
-                                    <div class="mb-3 row">
-                                        <label class="col-sm-3 col-form-label">Mulai Tanggal</label>
-                                        <small class="col-sm-1 col-form-label">:</small>
-                                        <div class="col-sm-8">
-                                            <input class="form-control" type="date" name="tanggal_dari"
-                                                value="{{ tanggal_dari }}" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-md-6">
-                                    <div class="mb-3 row">
-                                        <label class="col-sm-3 col-form-label">Sampai Tanggal</label>
-                                        <small class="col-sm-1 col-form-label">:</small>
-                                        <div class="col-sm-8">
-                                            <input class="form-control" type="date" name="tanggal_sampai"
-                                                value="{{ tanggal_sampai }}" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-md-6">
-                                    <div class="mb-3 row">
-                                        <label class="col-sm-3 col-form-label">Kategori </label>
-                                        <small class="col-sm-1 col-form-label">:</small>
-                                        <div class="col-sm-8">
-                                            <input class="form-control" type="text" name="kategori"
-                                                value="{{ kategori_id }}" required>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> -->
-                    <!-- <div class="card-footer border-0 pt-0" style="text-align: right;">
-                                <button class="btn btn-primary" type="submit">Submit</button>
-                            </div>
-                        </form> -->
                 </div>
             </div>
         </div>
@@ -182,11 +145,6 @@
 
 {% block scriptcontent %}
 
-<script>
-    function myFunction() {
-        window.print();
-    }
-</script>
 <script>
     $(document).ready(function () {
         $('#tableid').DataTable({

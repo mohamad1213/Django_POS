@@ -20,6 +20,9 @@
         <div class="card">
           <div class="card-header pb-0">
             <div class="order-place" style="text-align: right;">
+              <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#excel">
+                Upload Excel
+              </button>
               <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                 Tambah Transaksi
               </button>
@@ -120,6 +123,35 @@
                 {% endfor %}
               </tbody>
             </table>
+            <div class="modal fade" id="excel" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="excelLabel">Upload Excel</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form class="form theme-form" method="POST" enctype="multipart/form-data">
+                      {% load crispy_forms_tags %}
+                      {% csrf_token %}
+                      <div class="mb-3 row">
+                        <div class="col-sm-9">
+                          {{excel}}
+                        </div>
+                      </div>
+                      {% if excel.errors %}
+                      <div class="alert alert-danger" id="msg">
+                        {{ excel.errors }}
+                      </div>
+                      {% endif %}
+                      <div class="card-footer border-0 pt-0" style="text-align: right;">
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
               aria-hidden="true">
               <div class="modal-dialog">
