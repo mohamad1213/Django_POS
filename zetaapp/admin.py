@@ -5,5 +5,6 @@ from .models import *
 admin.site.register(Task)
 admin.site.register(Kategori)
 admin.site.register(Profito)
+admin.site.register(HutPegawai)
 admin.site.register(Transaksi)
 admin.site.register(Karyawan)

@@ -146,6 +146,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
 <script src="{% static 'assets2/vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'assets2/vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <!--Bootstrap Touchspin-->
 <script src="{% static 'assets2/bootstrap-touchspin-master/src/jquery.bootstrap-touchspin.js' %}"></script>
 <!--Sweet Alert-->
@@ -168,12 +169,12 @@
     var sale = {
         items: {
             customer: 0,
-            sub_total: 0.00,
-            grand_total: 0.00,
-            tax_amount: 0.00,
-            tax_percentage: 0.00,
-            amount_payed: 0.00,
-            amount_change: 0.00,
+            sub_total: 0,
+            grand_total: 0,
+            tax_amount: 0,
+            tax_percentage: 0,
+            amount_payed: 0,
+            amount_change: 0,
             products: [
 
             ]
@@ -236,7 +237,7 @@
                         class: 'text-right',
                         targets: [2, 4],
                         render: function (data, type, row) {
-                            return parseFloat(data).toFixed(2) + ' $';
+                            return parseFloat(data);
                         },
                     },
                     {

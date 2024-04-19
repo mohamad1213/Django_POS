@@ -4,44 +4,51 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 20mm 10mm; /* Adjust the margin as needed */
+            margin: 20mm 10mm;
+            /* Adjust the margin as needed */
         }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
         }
 
-        .invoice-header h1{
+        .invoice-header h1 {
             text-align: center;
             color: rgb(13, 26, 149);
         }
+
         .invoice-body {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             background-color: lightgray;
-            word-wrap: break-word; 
+            word-wrap: break-word;
         }
-        
+
         .invoice-table {
             width: 100%;
             border-collapse: collapse;
         }
-        .invoice-table th { 
+
+        .invoice-table th {
             text-align: center;
             border: 1px double rgb(96, 93, 93);
             padding-top: 8px;
             background-color: lightblue;
         }
+
         .invoice-table td {
             border: 1px double rgb(96, 93, 93);
             padding: 8px;
             text-align: center;
         }
+
         .invoice-table tr:nth-child(odd) td {
             background-color: #6c6868;
         }
+
         .invoice-table tr:nth-child(even) td {
             background-color: #432f2f;
         }
@@ -49,6 +56,7 @@
         .invoice-total {
             margin-top: 30pt;
         }
+
         .invoice-logo {
             width: 100px;
             height: auto;
@@ -64,18 +72,89 @@
             margin-top: 10pt;
             font-weight: bold;
         }
+
+        header {
+            padding: 10px 0;
+            margin-bottom: 30px;
+        }
+
+        #logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #logo img {
+            width: 90px;
+        }
+
+        .clearfix:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        #project {
+            float: left;
+        }
+
+        #project span {
+            color: #5D6975;
+            text-align: right;
+            width: 52px;
+            margin-right: 10px;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        #company {
+            float: right;
+            text-align: right;
+        }
+
+        #project div,
+        #company div {
+            white-space: nowrap;
+        }
+
+        h1 {
+
+            color: #5D6975;
+            font-size: 2.4em;
+            line-height: 1.4em;
+            font-weight: normal;
+            text-align: center;
+            margin: 0 0 20px 0;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <header class="clearfix">
+        <div id="logo" style="display:flex; justify-content:center; align-items:center;">
+            <img src="D:\template\template\zetaapp\static\assets\images\logofix2.png" class="brand-logo" width=200px
+                height=200px>
+        </div>
+        <h1>LAPORAN PEMASUKAN DAN PENGELUARAN</h1>
+        <div id="company" class="clearfix">
+            <div>PPJ Pralon</div>
+            <div>PPJpralon@gmail.com</div>
+            <div>085156803370</div>
+        </div>
         <div class="invoice-header">
+            <div><span>Periode Bulan:</span> Januari</div>
+            <div><span>Nama PT:</span> PPJ Pralon</div>
+        </div>
+        <br>
+        <br>
+    </header>
+    <div class="container">
+        <!-- <div class="invoice-header">
             <img src="{{ STATIC_ROOT }}/images/logofix2.png" alt="Logo" class="invoice-logo">
             <h1>Laporan Pemasukan dan Pengeluaran</h1>
             <div class="invoice-period">
                 <h4>Periode: Januari 2024</h4>
             </div>
-        </div>
+        </div> -->
         <div class="invoice-body">
             <table class="invoice-table">
                 <thead>

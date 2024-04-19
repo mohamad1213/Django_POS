@@ -39,20 +39,20 @@
                                             <th class="text-center">ID</th>
                                             <th class="text-center">Date</th>
                                             <th class="text-center">Customer</th>
-                                            <th class="text-center">Total</th>
                                             <th class="text-center">Items</th>
+                                            <th class="text-center">Total</th>
                                             <th class="text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for s in sales %}
                                         <tr>
-                                            <td>{{forloop.counter}}</td>
-                                            <td>{{s.id}}</td>
-                                            <td>{{s.date_added}}</td>
+                                            <td>{{foorloop.counter}}</td>
+                                            <td>{{s.transaction_number }}</td>
+                                            <td>{{s.date_added|date:"d-m-Y"}}</td>
                                             <td>{{s.customer.get_full_name}}</td>
-                                            <td class="text-right">{{s.grand_total}}</td>
                                             <td class="text-center">{{s.sum_items}}</td>
+                                            <td class="text-right">Rp. {{s.grand_total|floatformat:"0g"}}</td>
                                             <td class="text-center">
                                                 <!--View-->
                                                 <a href="{% url 'sales:sales_details' s.id %}"
@@ -64,7 +64,7 @@
                                                 </a>
                                                 <!--Print receipt-->
                                                 <a href="{% url 'sales:sales_receipt_pdf' s.id %}"
-                                                    class="text-decoration-none">
+                                                    class="text-decoration-none" target="_blank">
                                                     <button type="button" class="btn btn-dark btn-sm"
                                                         data-bs-toggle="tooltip" title="View Receipt">
                                                         <i class="fas fa-receipt"></i>
@@ -109,6 +109,8 @@
 <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.print.min.js"></script>
 <!--Moment JS-->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+
 <!--Datatables-->
 <script>
     // Call the dataTables jQuery plugin

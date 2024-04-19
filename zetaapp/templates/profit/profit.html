@@ -6,12 +6,14 @@
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
+
 <!-- Plugins css Ends-->
 {% endblock css %}
 {% block content %}
 <div class="page-body">
   {% include 'layout/breadcrumb.html' %}
-
+  {% include 'messages.html' %}
   <!-- Container-fluid starts-->
   <div class="container-fluid list-products">
     <div class="row">
@@ -26,20 +28,18 @@
             </div>
           </div>
           <div class="card-body">
-            <table class="table table-bordered display table-striped dataTable no-footer" id="product-list">
+            <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
               <thead>
                 <tr>
                   <th>NO</th>
-                  <th scope="col" class="text-center">TANGGAL</th>
-                  <th scope="col" class="text-center">NAMA SUPLAYER</th>
-                  <!-- <th rowspan="2" scope="col" class="text-center">KETERANGAN</th> -->
-                  <th scope="col" class="text-center">Jual</th>
-                  <th scope="col" class="text-center">Beli</th>
-                  <th scope="col" class="text-center">JUMLAH(Kg)</th>
-                  <th scope="col" class="text-center">PROFIT</th>
-                  <th scope="col" class="text-center">OPSI</th>
-                </tr>
-                <tr>
+                  <th class="text-center">TANGGAL</th>
+                  <th class="text-center">NAMA SUPLAYER</th>
+                  <!-- <th rowspan="2" class="text-center">KETERANGAN</th> -->
+                  <th class="text-center">Jual</th>
+                  <th class="text-center">Beli</th>
+                  <th class="text-center">JUMLAH(Kg)</th>
+                  <th class="text-center">PROFIT</th>
+                  <th class="text-center">OPSI</th>
                 </tr>
               </thead>
               <tbody>
@@ -50,79 +50,106 @@
                   <td>{{u.nama_suplayer}}</td>
                   <!-- <td>{{u.description}}</td> -->
                   <td class="text-center">
-                    {{u.harga_jual}}
+                    Rp. {{u.harga_jual|floatformat:"0g" }}
                   </td>
                   <td class="text-center">
-                    {{u.harga_beli}}
+                    Rp. {{u.harga_beli|floatformat:"0g" }}
                   </td>
                   <td class="text-center">
                     {{u.jumlah_brg}}
                   </td>
-                  <td class="text-center">{{u.calculate_profit}}</td>
+                  
+                  <td class="text-center">Rp. {{u.calculate_profit|floatformat:"0g" }}</td>
                   <td>
-                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#edit_tr">
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                      data-bs-target="#edit_tr">
                       <i class="fa fa-cog"></i>
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
-                      data-target="#hapus_tr">
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                      data-bs-target="#hapus_pr">
                       <i class="fa fa-trash"></i>
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
-                      data-target="#lihat_tr">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                      data-bs-target="#lihat_tr">
                       <i class="fa fa-eye"></i>
                     </button>
                   </td>
                 </tr>
-                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr"
-                aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <form class="form theme-form" action="/hutang/{{u.pk}}/update/" method="POST" enctype="multipart/form-data">
-                        {% load crispy_forms_tags %} 
-                        {% csrf_token %}
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Tanggal</label>
-                          {{form.date}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Nama Suplayer</label>
-                          {{form.nama_suplayer}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Harga Jual</label>
-                          {{form.harga_jual}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Harga Beli</label>
-                          {{form.harga_beli}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Kg</label>
-                          {{form.jumlah_brg}}
-                        </div>
-                        <div class="mb-3">
-                          <label class="col-form-label pt-0">Keterangan</label>
-                          {{form.description}}
-                        </div>
-                        {% if form.errors %}
-                        <div class="alert alert-danger" id="msg">
-                          {{ form.errors }}
-                        </div>
-                        {% endif %}
-                        <div class="card-footer border-0 pt-0" style="text-align: right;">
-                          <button class="btn btn-warning" type="reset">Cancel</button>
-                          <button class="btn btn-primary" type="submit">Submit</button>
-                        </div>
-                      </form>
+                <div class="modal fade" id="hapus_pr" tabindex="-1" aria-labelledby="exampleModalLabel"
+                  aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="hapus_pr">
+                          Delete customer</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Apakah Kamu yakin menghapus Profit ini:
+                        <h4 class="bold">
+                          nama {{u.nama_suplayer}} ditanggal {{u.date|date:"d-m-Y"}}
+                        </h4> 
+                      </div>
+                      <div class="card-footer border-0 pt-0" style="text-align: right;">
+                        <button class="btn btn-warning" type="reset">Batal</button>
+                        <a href="{% url 'deletepr' u.id %}" class="text-decoration-none">
+                          <button type="button" class="btn btn-danger">Hapus</button>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="edit_tr">Edit Profit</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <form class="form theme-form" action="{% url 'updatepr' u.id %}" method="POST"
+                          enctype="multipart/form-data">
+                          {% load crispy_forms_tags %}
+                          {% csrf_token %}
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Tanggal</label>
+                            {{form.date}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Nama Suplayer</label>
+                            {{form.nama_suplayer}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Harga Jual</label>
+                            {{form.harga_jual}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Harga Beli</label>
+                            {{form.harga_beli}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Kg</label>
+                            {{form.jumlah_brg}}
+                          </div>
+                          <div class="mb-3">
+                            <label class="col-form-label pt-0">Keterangan</label>
+                            {{form.description}}
+                          </div>
+                          {% if form.errors %}
+                          <div class="alert alert-danger" id="msg">
+                            {{ form.errors }}
+                          </div>
+                          {% endif %}
+                          <div class="card-footer border-0 pt-0" style="text-align: right;">
+                            <button class="btn btn-warning" type="reset">Cancel</button>
+                            <button class="btn btn-primary" type="submit">Submit</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {% endfor %}
               </tbody>
             </table>
@@ -182,12 +209,6 @@
     </div>
   </div>
 </div>
-</div>
-</div>
-</div>
-<!-- Individual column searching (text inputs) Ends-->
-<!-- Container-fluid Ends-->
-</div>
 {% endblock content %}
 {% block scriptcontent %}
 <script>
@@ -200,6 +221,7 @@
 <!-- Plugins JS start-->
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="{% static 'assets/js/datatable/datatables/dataTables.custom.js' %}"></script>
 <script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
 <script src="{% static 'assets/js/rating/rating-script.js' %}"></script>

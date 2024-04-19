@@ -71,14 +71,38 @@
                       data-bs-target="#edit_tr">
                       <i class="fa fa-cog"></i>
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapus_tr">
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#hapus_tr">
                       <i class="fa fa-trash"></i>
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#lihat_tr">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#lihat_tr">
                       <i class="fa fa-eye"></i>
                     </button>
                   </td>
                 </tr>
+                <div class="modal fade" id="hapus_tr" tabindex="-1" aria-labelledby="hapus_tr" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="hapus_tr">
+                          Hapus Transaksi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Apakah Kamu yakin ingin menghapus tabel transaksi ini:
+                        <h4 class="bold">
+                           nomer id {{u.id}}
+                        </h4>
+                      </div>
+                      <div class="card-footer border-0 pt-0" style="text-align: right;">
+                        <button class="btn btn-warning" type="reset">Cancel</button>
+                        <a href="{% url 'deletetr' u.id %}" class="text-decoration-none">
+                          <button type="button" class="btn btn-danger">Delete</button>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
                   <div class="modal-dialog">
                     <div class="modal-content">
@@ -258,6 +282,7 @@
 <script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
 <script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
 <script src="{% static 'assets/js/ecommerce.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="{% static 'assets/js/product-list-custom.js' %}"></script>
 <!-- Plugins JS Ends-->
 {% endblock scriptcontent %}

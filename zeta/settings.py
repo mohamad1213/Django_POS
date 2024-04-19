@@ -40,14 +40,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'sass_processor',
+    'crispy_bootstrap4',
     'crispy_forms',
     'zetaapp',
     'customers',
     'products',
     'sales',
-    'authentication'
+    'authentication',
+    'sweetify'
 ]
-
+SWEETIFY_SWEETALERT_LIBRARY = 'sweetalert2'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -59,7 +61,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'zeta.urls'
-
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -138,7 +140,16 @@ STATICFILES_FINDERS = [
 STATIC_URL = '/zeta/zetaapp/static/'
 
 STATIC_ROOT = BASE_DIR / 'zetaapp/static'
-
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+LOGIN_URL = '/accounts/login/'
+# Route defined in authentication/urls.py
+LOGIN_REDIRECT_URL = "authentication:home"
+# Route defined in authentication/urls.py
+LOGOUT_REDIRECT_URL = "authentication:login"
 
 SASS_PROCESSOR_ROOT = BASE_DIR / 'zetaapp/static'
 # SASS_PROCESSOR_ROOT = STATIC_ROOT
@@ -147,3 +158,11 @@ SASS_PROCESSOR_ROOT = BASE_DIR / 'zetaapp/static'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'info',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}

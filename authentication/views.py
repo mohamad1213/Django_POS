@@ -2,8 +2,38 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .forms import LoginForm, SignUpForm
+from django.contrib.auth import logout
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Profile
+from .forms import ProfileForm
+import sweetify
 
 
+def profile_edit(request, pk=None):
+    profile = Profile.objects.all()
+    if pk:
+        profile = get_object_or_404(Profile, pk=pk)
+    else:
+        profile = None
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            profile.save()
+            return redirect('authentication:profile', pk=profile.pk)
+    else:
+        form = ProfileForm(instance=profile)
+        profile = Profile.objects.all()
+
+    return render(request, 'accounts/profile/profile.html', {'form': form, 'profile':profile})
+
+
+def user_logout(request):
+    logout(request)
+    return redirect('authentication:login') 
 def login_view(request):
     form = LoginForm(request.POST or None)
 
@@ -17,6 +47,7 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
+                sweetify.success(request, f'Selamat anda berhasil Login {{request.user.username}}', extra_tags="success")
                 return redirect("/")
             else:
                 msg = 'Invalid username or password!'

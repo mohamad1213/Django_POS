@@ -45,6 +45,8 @@
   <link id="color" rel="stylesheet" href="{% sass_src 'assets/scss/color-1.scss' %}" media="screen" />
   <!-- Responsive css-->
   <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/responsive.scss' %}" />
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
+
 
 </head>
 
@@ -103,6 +105,8 @@
   <script src="{% static 'assets/js/scrollbar/custom.js' %}"></script>
   <!-- Sidebar jquery-->
   <script src="{% static 'assets/js/config.js' %}"></script>
+  <!-- <script src="{% static 'assets/js/sweet-alert/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/sweet-alert/app.js' %}"></script> -->
   {% block scriptcontent %}{% endblock %}
 
   <!-- Plugins JS Ends-->
@@ -115,3 +119,6 @@
 </body>
 
 </html>
+
+{% load sweetify %}
+{% sweetify %}

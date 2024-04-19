@@ -11,17 +11,32 @@
 {% block content %}
 <div class="page-body">
     {% include 'layout/breadcrumb.html' %}
-    <div class="container-fluid">
+
+    <!-- Container-fluid starts-->
+    <div class="container-fluid list-products">
         <div class="row">
+            <!-- Individual column searching (text inputs) Starts-->
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-header pb-0">
-                        <h5>Input Laporan</h5>
-                        <a href="{% url 'pdf_view' %}" class="btn btn btn-primary me-2" type="button"
-                           >Print</a>
-
+                        <form id="dateForm" action="{% url 'laporan' %}" method="GET">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <label for="start_date">Start Date:</label>
+                                    <input class="form-control" type="date" id="start_date" name="start_date">
+                                </div>
+                                <div class="col-sm-4">
+                                    <label for="end_date">End Date:</label>
+                                    <input class="form-control" type="date" id="end_date" name="end_date">
+                                </div>
+                                <div class="col-sm-4">
+                                    <button class="btn btn-primary" type="submit">Generate Report</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                     <div class="card-body">
+                        <!-- <div class="table-responsive"> -->
                         <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
                             <thead>
                                 <tr>
@@ -63,96 +78,245 @@
                                             data-bs-target="#edit_tr">
                                             <i class="fa fa-cog"></i>
                                         </button>
-                                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
-                                            data-target="#hapus_tr">
+                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#hapus_tr">
                                             <i class="fa fa-trash"></i>
                                         </button>
-                                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
-                                            data-target="#lihat_tr">
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#lihat_tr">
                                             <i class="fa fa-eye"></i>
                                         </button>
                                     </td>
                                 </tr>
+                                <div class="modal fade" id="hapus_tr" tabindex="-1" aria-labelledby="hapus_tr"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="hapus_tr">
+                                                    Hapus Transaksi</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Apakah Kamu yakin ingin menghapus tabel transaksi ini:
+                                                <h4 class="bold">
+                                                    nomer id {{u.id}}
+                                                </h4>
+                                            </div>
+                                            <div class="card-footer border-0 pt-0" style="text-align: right;">
+                                                <button class="btn btn-warning" type="reset">Cancel</button>
+                                                <a href="{% url 'deletetr' u.id %}" class="text-decoration-none">
+                                                    <button type="button" class="btn btn-danger">Delete</button>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="form theme-form" action="/transaksi/{{u.pk}}/update/"
+                                                    method="POST" enctype="multipart/form-data">
+                                                    {% load crispy_forms_tags %}
+                                                    {% csrf_token %}
+                                                    <div class="mb-3">
+                                                        <label class="col-form-label pt-0">Tanggal</label>
+                                                        {{form.tanggal}}
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="col-form-label pt-0">Jenis</label>
+                                                        {{form.jenis_transaksi}}
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="col-form-label pt-0">Kategori</label>
+                                                        {{form.kategori}}
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="col-form-label pt-0">Nominal</label>
+                                                        {{form.jumlah}}
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="col-form-label pt-0">Keterangan</label>
+                                                        {{form.keterangan}}
+                                                    </div>
+                                                    {% if form.errors %}
+                                                    <div class="alert alert-danger" id="msg">
+                                                        {{ form.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="card-footer border-0 pt-0" style="text-align: right;">
+                                                        <button class="btn btn-warning" type="reset">Cancel</button>
+                                                        <button class="btn btn-primary" type="submit">Submit</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 {% endfor %}
                             </tbody>
                         </table>
+                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form class="form theme-form" method="POST" enctype="multipart/form-data">
+                                            {% load crispy_forms_tags %}
+                                            {% csrf_token %}
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Tanggal</label>
+                                                {{form.tanggal}}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Jenis Transaksi</label>
+                                                {{form.transaksi_choice}}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Kategori</label>
+                                                {{form.kategori}}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Nominal</label>
+                                                {{form.jumlah}}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Keterangan</label>
+                                                {{form.keterangan}}
+                                            </div>
+                                            {% if form.errors %}
+                                            <div class="alert alert-danger" id="msg">
+                                                {{ form.errors }}
+                                            </div>
+                                            {% endif %}
+                                            <div class="card-footer border-0 pt-0" style="text-align: right;">
+                                                <button class="btn btn-warning" type="reset">Cancel</button>
+                                                <button class="btn btn-primary" type="submit">Submit</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="excel" tabindex="-1" aria-labelledby="exampleModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="excelLabel">Upload Excel</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form class="form theme-form" method="POST" enctype="multipart/form-data">
+                                            {% load crispy_forms_tags %}
+                                            {% csrf_token %}
+                                            <div class="mb-3 row">
+                                                <div class="col-sm-9">
+                                                    {{excel}}
+                                                </div>
+                                            </div>
+                                            {% if excel.errors %}
+                                            <div class="alert alert-danger" id="msg">
+                                                {{ excel.errors }}
+                                            </div>
+                                            {% endif %}
+                                            <div class="card-footer border-0 pt-0" style="text-align: right;">
+                                                <button class="btn btn-primary" type="submit">Submit</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="row">
-    <!-- Individual column searching (text inputs) Starts-->
-    <div class="col-sm-12">
-        <div class="card">
-            <div class="card-body">
-                <!-- <div class="table-responsive"> -->
-                <div class="table-responsive table-hover">
-                    <table class="table-sm">
-                        <thead class="thead-dark" style="background-color: #416A7C;">
-                            <thead>
-                                <tr>
-                                    <th rowspan="2">NO</th>
-                                    <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
-                                    <th rowspan="2" scope="col" class="text-center">KATEGORI</th>
-                                    <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
-                                    <th colspan="2" scope="col" class="text-center">JENIS</th>
-                                    <th rowspan="2" scope="col" class="text-center">OPSI</th>
-                                </tr>
-                                <tr>
-                                    <th scope="col" class="text-center">PEMASUKAN</th>
-                                    <th scope="col" class="text-center">PENGELUARAN</th>
-                                </tr>
-                            </thead>
-                            {% for u in data %}
-                        <tbody>
-                            <tr class="text-center">
-                                <td>{{forloop.counter}}</td>
-                                <td>{{u.tanggal|date:"m-d-Y"}}</td>
-                                <td>{{u.kategori}}</td>
-                                <td>{{u.keterangan}}</td>
-                                <td class="text-center">
-                                    {% if u.transaksi_choice == "P" %}
-                                    Rp. {{u.jumlah|floatformat:"0g" }}
-                                    {% else %}
-                                    -
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    {% if u.transaksi_choice == "L" %}
-                                    Rp. {{u.jumlah|floatformat:"0g" }}
-                                    {% else %}
-                                    -
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#edit_tr">
-                                        <i class="fa fa-cog"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-
-{% block scriptcontent %}
-
 <script>
-    $(document).ready(function () {
-        $('#tableid').DataTable({
-            "order": [[1, 'asc']],  // Order by the second column (TANGGAL).
-            "pageLength": 25
-        });
+    document.getElementById('dateForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission behavior
+
+        var startDate = document.getElementById('start_date').value;
+        var endDate = document.getElementById('end_date').value;
+
+        // Check if both start date and end date are provided
+        if (!startDate || !endDate) {
+            alert('Please provide both start date and end date.');
+            return;
+        }
+
+        // Redirect to the report page with the provided dates as query parameters
+        window.location.href = '/laporan/?start_date=' + startDate + '&end_date=' + endDate;
     });
 </script>
 
-{% endblock %}
+<script>
+    // Dengan Rupiah
+    var denganRupiah = document.getElementById('{{ form.jumlah.id }}');
+    denganRupiah.addEventListener('keyup', function (e) {
+        denganRupiah.value = formatRupiah(this.value, 'Rp. ');
+    });
+
+    // Fungsi
+    function formatRupiah(angka, prefix) {
+        var number_string = angka.replace(/[^,\d]/g, '').toString(),
+            split = number_string.split(','),
+            sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa),
+            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        if (split[1] != undefined) {
+            // Handle decimal part
+            rupiah += ',' + split[1];
+        }
+
+        // Add additional handling for millions
+        if (rupiah.length > 7) {
+            var jutaan = Math.floor(rupiah.length / 3);
+            for (var i = 1; i <= jutaan; i++) {
+                rupiah = rupiah.slice(0, -(i * 3 + (i - 1))) + '.' + rupiah.slice(-(i * 3 + (i - 1)));
+            }
+        }
+
+        return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+    }
+</script>
+
+<!-- Individual column searching (text inputs) Ends-->
+<!-- Container-fluid Ends-->
+</div>
 {% endblock content %}
+{% block scriptcontent %}
+<!-- Plugins JS start-->
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
+<script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
+<script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
+<script src="{% static 'assets/js/ecommerce.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+<script src="{% static 'assets/js/product-list-custom.js' %}"></script>
+<!-- Plugins JS Ends-->
+{% endblock scriptcontent %}

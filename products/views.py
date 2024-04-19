@@ -1,8 +1,8 @@
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .models import Category, Product
+import sweetify
 
 
 @login_required(login_url="/accounts/login/")
@@ -33,7 +33,7 @@ def categories_add_view(request):
 
         # Check if a category with the same attributes exists
         if Category.objects.filter(**attributes).exists():
-            messages.error(request, 'Category already exists!',
+            sweetify.error(request, 'Category already exists!',
                            extra_tags="warning")
             return redirect('products:categories_add')
 
@@ -44,11 +44,11 @@ def categories_add_view(request):
             # If it doesn't exist, save it
             new_category.save()
 
-            messages.success(request, 'Category: ' +
+            sweetify.success(request, 'Category: ' +
                              attributes["name"] + ' created successfully!', extra_tags="success")
             return redirect('products:categories_list')
         except Exception as e:
-            messages.success(
+            sweetify.success(
                 request, 'There was an error during the creation!', extra_tags="danger")
             print(e)
             return redirect('products:categories_add')
@@ -69,7 +69,7 @@ def categories_update_view(request, category_id):
         # Get the category to update
         category = Category.objects.get(id=category_id)
     except Exception as e:
-        messages.success(
+        sweetify.success(
             request, 'There was an error trying to get the category!', extra_tags="danger")
         print(e)
         return redirect('products:categories_list')
@@ -93,7 +93,7 @@ def categories_update_view(request, category_id):
 
             # Check if a category with the same attributes exists
             if Category.objects.filter(**attributes).exists():
-                messages.error(request, 'Category already exists!',
+                sweetify.error(request, 'Category already exists!',
                                extra_tags="warning")
                 return redirect('products:categories_add')
 
@@ -103,11 +103,11 @@ def categories_update_view(request, category_id):
 
             category = Category.objects.get(id=category_id)
 
-            messages.success(request, '¡Category: ' + category.name +
+            sweetify.success(request, '¡Category: ' + category.name +
                              ' updated successfully!', extra_tags="success")
             return redirect('products:categories_list')
         except Exception as e:
-            messages.success(
+            sweetify.success(
                 request, 'There was an error during the elimination!', extra_tags="danger")
             print(e)
             return redirect('products:categories_list')
@@ -126,11 +126,11 @@ def categories_delete_view(request, category_id):
         # Get the category to delete
         category = Category.objects.get(id=category_id)
         category.delete()
-        messages.success(request, '¡Category: ' + category.name +
+        sweetify.success(request, '¡Category: ' + category.name +
                          ' deleted!', extra_tags="success")
         return redirect('products:categories_list')
     except Exception as e:
-        messages.success(
+        sweetify.success(
             request, 'There was an error during the elimination!', extra_tags="danger")
         print(e)
         return redirect('products:categories_list')
@@ -167,7 +167,7 @@ def products_add_view(request):
 
         # Check if a product with the same attributes exists
         if Product.objects.filter(**attributes).exists():
-            messages.error(request, 'Product already exists!',
+            sweetify.error(request, 'Product already exists!',
                            extra_tags="warning")
             return redirect('products:products_add')
 
@@ -178,11 +178,11 @@ def products_add_view(request):
             # If it doesn't exist, save it
             new_product.save()
 
-            messages.success(request, 'Product: ' +
+            sweetify.success(request, 'Product: ' +
                              attributes["name"] + ' created successfully!', extra_tags="success")
             return redirect('products:products_list')
         except Exception as e:
-            messages.success(
+            sweetify.success(
                 request, 'There was an error during the creation!', extra_tags="danger")
             print(e)
             return redirect('products:products_add')
@@ -203,7 +203,7 @@ def products_update_view(request, product_id):
         # Get the product to update
         product = Product.objects.get(id=product_id)
     except Exception as e:
-        messages.success(
+        sweetify.success(
             request, 'There was an error trying to get the product!', extra_tags="danger")
         print(e)
         return redirect('products:products_list')
@@ -230,7 +230,7 @@ def products_update_view(request, product_id):
 
             # Check if a product with the same attributes exists
             if Product.objects.filter(**attributes).exists():
-                messages.error(request, 'Product already exists!',
+                sweetify.error(request, 'Product already exists!',
                                extra_tags="warning")
                 return redirect('products:products_add')
 
@@ -240,11 +240,11 @@ def products_update_view(request, product_id):
 
             product = Product.objects.get(id=product_id)
 
-            messages.success(request, '¡Product: ' + product.name +
+            sweetify.success(request, '¡Product: ' + product.name +
                              ' updated successfully!', extra_tags="success")
             return redirect('products:products_list')
         except Exception as e:
-            messages.success(
+            sweetify.success(
                 request, 'There was an error during the update!', extra_tags="danger")
             print(e)
             return redirect('products:products_list')
@@ -263,11 +263,11 @@ def products_delete_view(request, product_id):
         # Get the product to delete
         product = Product.objects.get(id=product_id)
         product.delete()
-        messages.success(request, '¡Product: ' + product.name +
+        sweetify.success(request, '¡Product: ' + product.name +
                          ' deleted!', extra_tags="success")
         return redirect('products:products_list')
     except Exception as e:
-        messages.success(
+        sweetify.success(
             request, 'There was an error during the elimination!', extra_tags="danger")
         print(e)
         return redirect('products:products_list')

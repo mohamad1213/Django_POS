@@ -12,6 +12,8 @@
 {% block content %}
 <div class="page-body">
   {% include 'layout/breadcrumb.html' %}
+  {% include 'messages.html' %}
+  
 
   <!-- Container-fluid starts-->
   <div class="container-fluid list-products">
@@ -182,6 +184,7 @@
 <!-- Plugins JS start-->
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
 <script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
 <script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>

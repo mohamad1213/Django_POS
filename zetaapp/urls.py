@@ -1,5 +1,7 @@
 from django.urls import path,include
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
 
     # dashboard paths
@@ -17,8 +19,9 @@ urlpatterns = [
 
     # HutangPiutang
     path('hutang/', views.hutang,name='hutang'),
-    path('transaksi/<pk>/update/', views.UpdateTr,name='updatetr'),
-    path('transaksi/<pk>/delete/', views.DeleteTr,name='deletetr'),
+    path('hutang/<pk>/delete/', views.DeleteHutang,name='deletehut'),
+    path('hutang/<pk>/update/', views.UpdateHutangPeg,name='updatehut'),
+    
 
     # path('chart_data/<str:interval>/', views.chart_data, name='chart_data'),
     path('chart_data/', views.chart_data, name='chart_data'),
@@ -26,16 +29,18 @@ urlpatterns = [
     path('pdf_view/', views.ViewPDF.as_view(), name="pdf_view"),
     path('pdf_download/', views.DownloadPDF.as_view(), name="pdf_download"),
     path('hutangpeg/', views.hutangPeg, name='hutangpeg'),
+    path('hutangpeg/<pk>/delete/', views.DeleteHutangPeg, name='DeleteHutangPeg'),
     #Tabungan
     path('tabungan/', views.tabungan,name='tabungan'),
 
     #profit
     path('profit/', views.profit,name='profit'),
-    
-    #profit
-    path('pos/', views.pos,name='pos'),
+    path('profit/<pk>/delete/', views.DeleteProf,name='deletepr'),
+    path('profit/<pk>/update/', views.UpdatePr,name='updatepr'),
 
-    #profit
+
+    
+    #laporan
     path('laporan/', views.laporan,name='laporan'),
 
     # page layout paths
@@ -48,5 +53,7 @@ urlpatterns = [
     path('page_layout_footer_dark',views.page_layout_footer_dark,name='page_layout_footer_dark'),
     path('page_layout_footer_fixed',views.page_layout_footer_fixed,name='page_layout_footer_fixed'),
 
-
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,7 +1,7 @@
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .models import Customer
+import sweetify
 
 
 @login_required(login_url="/accounts/login/")
@@ -33,7 +33,7 @@ def customers_add_view(request):
 
         # Check if a customer with the same attributes exists
         if Customer.objects.filter(**attributes).exists():
-            messages.error(request, 'Customer already exists!',
+            sweetify.error(request, 'Customer already exists!',
                            extra_tags="warning")
             return redirect('customers:customers_add')
 
@@ -44,11 +44,11 @@ def customers_add_view(request):
             # If it doesn't exist save it
             new_customer.save()
 
-            messages.success(request, 'Customer: ' + attributes["first_name"] + " " +
+            sweetify.success(request, 'Customer: ' + attributes["first_name"] + " " +
                              attributes["last_name"] + ' created successfully!', extra_tags="success")
             return redirect('customers:customers_list')
         except Exception as e:
-            messages.success(
+            sweetify.success(
                 request, 'There was an error during the creation!', extra_tags="danger")
             print(e)
             return redirect('customers:customers_add')
@@ -69,7 +69,7 @@ def customers_update_view(request, customer_id):
         # Get the customer to update
         customer = Customer.objects.get(id=customer_id)
     except Exception as e:
-        messages.success(
+        sweetify.success(
             request, 'There was an error trying to get the customer!', extra_tags="danger")
         print(e)
         return redirect('customers:customers_list')
@@ -94,17 +94,17 @@ def customers_update_view(request, customer_id):
 
             # Check if a customer with the same attributes exists
             if Customer.objects.filter(**attributes).exists():
-                messages.error(request, 'Customer already exists!',
+                sweetify.error(request, 'Customer already exists!',
                                extra_tags="warning")
                 return redirect('customers:customers_add')
 
             customer = Customer.objects.get(id=customer_id)
 
-            messages.success(request, '¡Customer: ' + customer.get_full_name() +
+            sweetify.success(request, '¡Customer: ' + customer.get_full_name() +
                              ' updated successfully!', extra_tags="success")
             return redirect('customers:customers_list')
         except Exception as e:
-            messages.success(
+            sweetify.success(
                 request, 'There was an error during the update!', extra_tags="danger")
             print(e)
             return redirect('customers:customers_list')
@@ -123,11 +123,11 @@ def customers_delete_view(request, customer_id):
         # Get the customer to delete
         customer = Customer.objects.get(id=customer_id)
         customer.delete()
-        messages.success(request, '¡Customer: ' + customer.get_full_name() +
+        sweetify.success(request, '¡Customer: ' + customer.get_full_name() +
                          ' deleted!', extra_tags="success")
         return redirect('customers:customers_list')
     except Exception as e:
-        messages.success(
+        sweetify.success(
             request, 'There was an error during the elimination!', extra_tags="danger")
         print(e)
         return redirect('customers:customers_list')

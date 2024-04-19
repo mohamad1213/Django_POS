@@ -75,12 +75,12 @@ class ProfitForms(ModelForm):
         model = Profito
         exclude = ['owner']
         widgets = {
-            'jumlah_brg': forms.TextInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da', 'placeholder':"Kg"}),
-            'nama_suplayer': forms.TextInput({'class': 'form-control', 'type':'text', 'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
-            'harga_jual': forms.TextInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
-            'harga_beli': forms.TextInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
-            'date': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da'}),
-            'description': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da'})
+            'jumlah_brg': forms.TextInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da', 'placeholder':"Kg", 'name':'jumlah_brg'}),
+            'nama_suplayer': forms.TextInput({'class': 'form-control', 'type':'text', 'style':'padding:6px 10px ;border: 1px solid #ced4da','name':'nama_suplayer'}),
+            'harga_jual': forms.TextInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da','name':'harga_jual'}),
+            'harga_beli': forms.TextInput({'class': 'form-control', 'type':'number', 'style':'padding:6px 10px ;border: 1px solid #ced4da','name':'harga_beli'}),
+            'date': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'date'}),
+            'description': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'description'})
         }
 class TabunganForms(ModelForm):
     class Meta:

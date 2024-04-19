@@ -1,18 +1,19 @@
 import os
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from zeta.wsgi import *
 from zeta import settings
+import sweetify
 from django.template.loader import get_template
 from customers.models import Customer
 from products.models import Product
-from weasyprint import HTML, CSS
 from .models import Sale, SaleDetail
 import json
-
+from io import BytesIO
+from xhtml2pdf import pisa
+from django.views import View
 
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
@@ -69,11 +70,11 @@ def sales_add_view(request):
 
                 print("Sale saved")
 
-                messages.success(
-                    request, 'Sale created successfully!', extra_tags="success")
+                sweetify.success(
+                    request, 'POS berhasil dibuat!', extra_tags="success")
 
             except Exception as e:
-                messages.success(
+                sweetify.error(
                     request, 'There was an error during the creation!', extra_tags="danger")
 
         return redirect('sales:sales_list')
@@ -83,11 +84,6 @@ def sales_add_view(request):
 
 @login_required(login_url="/accounts/login/")
 def sales_details_view(request, sale_id):
-    """
-    Args:
-        request:
-        sale_id: ID of the sale to view
-    """
     try:
         # Get the sale
         sale = Sale.objects.get(id=sale_id)
@@ -102,37 +98,46 @@ def sales_details_view(request, sale_id):
         }
         return render(request, "sales/sales_details.html", context=context)
     except Exception as e:
-        messages.success(
+        sweetify.success(
             request, 'There was an error getting the sale!', extra_tags="danger")
         print(e)
         return redirect('sales:sales_list')
 
+def render_to_pdf(template_src, context_dict={}):
+	template = get_template(template_src)
+	html  = template.render(context_dict)
+	result = BytesIO()
+	pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+	if not pdf.err:
+		return HttpResponse(result.getvalue(), content_type='application/pdf')
+	return None
+# @login_required(login_url="/accounts/login/")
+# def receipt_pdf_view(request, sale_id):
+#     # Get the sale
+#     sale = Sale.objects.get(id=sale_id)
 
-@login_required(login_url="/accounts/login/")
-def receipt_pdf_view(request, sale_id):
-    """
-    Args:
-        request:
-        sale_id: ID of the sale to view the receipt
-    """
-    # Get the sale
-    sale = Sale.objects.get(id=sale_id)
+#     # Get the sale details
+#     details = SaleDetail.objects.filter(sale=sale)
 
-    # Get the sale details
-    details = SaleDetail.objects.filter(sale=sale)
+#     data = {
+#         "sale": sale,
+#         "details": details
+#     }
 
-    template = get_template("sales/sales_receipt_pdf.html")
-    context = {
-        "sale": sale,
-        "details": details
-    }
-    html_template = template.render(context)
+#     return render(request, "sales/sales_receipt_pdf.html", context=data)
 
-    # CSS Boostrap
-    css_url = os.path.join(
-        settings.BASE_DIR, 'static/assets2/css/receipt_pdf/bootstrap.min.css')
+class ViewPDF(View):
+    def get(self, request, sale_id, *args, **kwargs,):
+        sale = Sale.objects.get(id=sale_id)
 
-    # Create the pdf
-    pdf = HTML(string=html_template).write_pdf(stylesheets=[CSS(css_url)])
+        # Get the sale details
+        details = SaleDetail.objects.filter(sale=sale)
 
-    return HttpResponse(pdf, content_type="application/pdf")
+        data = {
+            "sale": sale,
+            "details": details
+        }
+
+
+        pdf = render_to_pdf('sales/sales_receipt_pdf.html', data)
+        return HttpResponse(pdf, content_type='application/pdf')
