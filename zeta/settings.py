@@ -89,21 +89,21 @@ WSGI_APPLICATION = 'zeta.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=1800)
-
-}
 # DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'ppj2',   # Replace with your actual database name
-#         'USER': 'postgres',   # Replace with your actual database user
-#         'PASSWORD': 'tatam123',   # Replace with your actual database password
-#         'HOST': 'localhost',   # Set to the hostname where your PostgreSQL server is running
-#         'PORT': '5432',   # Set to the port number where your PostgreSQL server is running
-#     }
+#     'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=1800)
 
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ppj2',   # Replace with your actual database name
+        'USER': 'postgres',   # Replace with your actual database user
+        'PASSWORD': 'tatam123',   # Replace with your actual database password
+        'HOST': 'localhost',   # Set to the hostname where your PostgreSQL server is running
+        'PORT': '5432',   # Set to the port number where your PostgreSQL server is running
+    }
+
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

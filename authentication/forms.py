@@ -21,8 +21,11 @@ class LoginForm(forms.Form):
     password = forms.CharField(
         widget=forms.PasswordInput(
             attrs={
-                "placeholder": "Password",
-                "class": "form-control form-control-user"
+                "class": "form-control",
+                "placeholder":"*********",
+                "type":"password",
+                "name":"login[password]",
+                "required":""
             }
         ))
 
