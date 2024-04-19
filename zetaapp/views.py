@@ -12,7 +12,7 @@ import locale
 from datetime import datetime, timedelta
 from babel.numbers import format_currency
 # Set the locale to Indonesian (ID) format
-locale.setlocale(locale.LC_ALL, 'id_ID')
+# locale.setlocale(locale.LC_ALL, 'id_ID')
 from django.db.models import Q 
 from django.template.loader import get_template
 from django.shortcuts import render
