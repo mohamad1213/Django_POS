@@ -12,6 +12,8 @@ import os
 from django.core.asgi import get_asgi_application
 
 # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zeta.settings')
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'railwaydeploy.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'PPJ.settings')
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zeta.settings')
+
 
 application = get_asgi_application()
