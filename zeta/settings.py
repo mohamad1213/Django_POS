@@ -9,12 +9,13 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+import dj_database_url
 
 from pathlib import Path
 import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+DATABASE_URL = 'postgresql://postgres:aSkLFmBFFBUTcTtiIprzLvZOAuUqAbZX@monorail.proxy.rlwy.net:15409/railway'
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
@@ -26,7 +27,9 @@ SECRET_KEY = 'django-insecure-n)ltk01zv+8&&u2z)7o&vh)_2g3h6wk#_u(g*fwt*hl1s!n748
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['web-production-1f347.up.railway.app']
+
 
 
 # Application definition
@@ -85,17 +88,20 @@ WSGI_APPLICATION = 'zeta.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ppj2',   # Replace with your actual database name
-        'USER': 'postgres',   # Replace with your actual database user
-        'PASSWORD': 'tatam123',   # Replace with your actual database password
-        'HOST': 'localhost',   # Set to the hostname where your PostgreSQL server is running
-        'PORT': '5432',   # Set to the port number where your PostgreSQL server is running
-    }
+    'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=1800)
 
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'ppj2',   # Replace with your actual database name
+#         'USER': 'postgres',   # Replace with your actual database user
+#         'PASSWORD': 'tatam123',   # Replace with your actual database password
+#         'HOST': 'localhost',   # Set to the hostname where your PostgreSQL server is running
+#         'PORT': '5432',   # Set to the port number where your PostgreSQL server is running
+#     }
 
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
