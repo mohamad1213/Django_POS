@@ -15,7 +15,6 @@ from pathlib import Path
 import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATABASE_URL = 'postgresql://postgres:aSkLFmBFFBUTcTtiIprzLvZOAuUqAbZX@monorail.proxy.rlwy.net:15409/railway'
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
@@ -89,6 +88,7 @@ WSGI_APPLICATION = 'zeta.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+DATABASE_URL = 'postgresql://postgres:aSkLFmBFFBUTcTtiIprzLvZOAuUqAbZX@monorail.proxy.rlwy.net:15409/railway'
 DATABASES = {
     'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=1800)
 
