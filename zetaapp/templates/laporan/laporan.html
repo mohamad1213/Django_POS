@@ -6,6 +6,9 @@
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/date-picker.scss' %}">
+
+
 <!-- Plugins css Ends-->
 {% endblock css %}
 {% block content %}
@@ -21,15 +24,24 @@
                     <div class="card-header pb-0">
                         <form id="dateForm" action="{% url 'laporan' %}" method="GET">
                             <div class="row">
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <label for="start_date">Start Date:</label>
-                                    <input class="form-control" type="date" id="start_date" name="start_date">
+                                    <input class="datepicker-here form-control digits" type="text" id="start_date" name="start_date" data-language="en" data-date-format="yyyy-mm-dd">
                                 </div>
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <label for="end_date">End Date:</label>
-                                    <input class="form-control" type="date" id="end_date" name="end_date">
+
+                                    <input class="datepicker-here form-control digits" type="text" id="end_date" name="end_date" data-language="en" data-date-format="yyyy-mm-dd">
                                 </div>
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
+                                    <label for="transaksi_choice">Jenis Transaksi:</label>
+                                    <select class="form-control" id="transaksi_choice" name="transaksi_choice">
+                                        <option value="">Semua</option>
+                                        <option value="P">Pemasukan</option>
+                                        <option value="L">Pengeluaran</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3 d-flex align-items-end">
                                     <button class="btn btn-primary" type="submit">Generate Report</button>
                                 </div>
                             </div>
@@ -45,15 +57,15 @@
                                     <th rowspan="2" scope="col" class="text-center">KATEGORI</th>
                                     <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
                                     <th colspan="2" scope="col" class="text-center">JENIS</th>
-                                    <th rowspan="2" scope="col" class="text-center">OPSI</th>
                                 </tr>
                                 <tr>
                                     <th scope="col" class="text-center">PEMASUKAN</th>
                                     <th scope="col" class="text-center">PENGELUARAN</th>
                                 </tr>
                             </thead>
+                            {% if transactions %}
                             <tbody>
-                                {% for u in data %}
+                                {% for u in transactions %}
                                 <tr class="text-center">
                                     <td>{{forloop.counter}}</td>
                                     <td>{{u.tanggal|date:"d-m-Y"}}</td>
@@ -73,176 +85,11 @@
                                         -
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#edit_tr">
-                                            <i class="fa fa-cog"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#hapus_tr">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#lihat_tr">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </td>
                                 </tr>
-                                <div class="modal fade" id="hapus_tr" tabindex="-1" aria-labelledby="hapus_tr"
-                                    aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="hapus_tr">
-                                                    Hapus Transaksi</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                                </button>
-                                            </div>
-                                            <div class="modal-body">
-                                                Apakah Kamu yakin ingin menghapus tabel transaksi ini:
-                                                <h4 class="bold">
-                                                    nomer id {{u.id}}
-                                                </h4>
-                                            </div>
-                                            <div class="card-footer border-0 pt-0" style="text-align: right;">
-                                                <button class="btn btn-warning" type="reset">Cancel</button>
-                                                <a href="{% url 'deletetr' u.id %}" class="text-decoration-none">
-                                                    <button type="button" class="btn btn-danger">Delete</button>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr"
-                                    aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <form class="form theme-form" action="/transaksi/{{u.pk}}/update/"
-                                                    method="POST" enctype="multipart/form-data">
-                                                    {% load crispy_forms_tags %}
-                                                    {% csrf_token %}
-                                                    <div class="mb-3">
-                                                        <label class="col-form-label pt-0">Tanggal</label>
-                                                        {{form.tanggal}}
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="col-form-label pt-0">Jenis</label>
-                                                        {{form.jenis_transaksi}}
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="col-form-label pt-0">Kategori</label>
-                                                        {{form.kategori}}
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="col-form-label pt-0">Nominal</label>
-                                                        {{form.jumlah}}
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="col-form-label pt-0">Keterangan</label>
-                                                        {{form.keterangan}}
-                                                    </div>
-                                                    {% if form.errors %}
-                                                    <div class="alert alert-danger" id="msg">
-                                                        {{ form.errors }}
-                                                    </div>
-                                                    {% endif %}
-                                                    <div class="card-footer border-0 pt-0" style="text-align: right;">
-                                                        <button class="btn btn-warning" type="reset">Cancel</button>
-                                                        <button class="btn btn-primary" type="submit">Submit</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 {% endfor %}
                             </tbody>
+                            {% endif %}
                         </table>
-                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                            aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="form theme-form" method="POST" enctype="multipart/form-data">
-                                            {% load crispy_forms_tags %}
-                                            {% csrf_token %}
-                                            <div class="mb-3">
-                                                <label class="col-form-label pt-0">Tanggal</label>
-                                                {{form.tanggal}}
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="col-form-label pt-0">Jenis Transaksi</label>
-                                                {{form.transaksi_choice}}
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="col-form-label pt-0">Kategori</label>
-                                                {{form.kategori}}
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="col-form-label pt-0">Nominal</label>
-                                                {{form.jumlah}}
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="col-form-label pt-0">Keterangan</label>
-                                                {{form.keterangan}}
-                                            </div>
-                                            {% if form.errors %}
-                                            <div class="alert alert-danger" id="msg">
-                                                {{ form.errors }}
-                                            </div>
-                                            {% endif %}
-                                            <div class="card-footer border-0 pt-0" style="text-align: right;">
-                                                <button class="btn btn-warning" type="reset">Cancel</button>
-                                                <button class="btn btn-primary" type="submit">Submit</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal fade" id="excel" tabindex="-1" aria-labelledby="exampleModalLabel"
-                            aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="excelLabel">Upload Excel</h1>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="form theme-form" method="POST" enctype="multipart/form-data">
-                                            {% load crispy_forms_tags %}
-                                            {% csrf_token %}
-                                            <div class="mb-3 row">
-                                                <div class="col-sm-9">
-                                                    {{excel}}
-                                                </div>
-                                            </div>
-                                            {% if excel.errors %}
-                                            <div class="alert alert-danger" id="msg">
-                                                {{ excel.errors }}
-                                            </div>
-                                            {% endif %}
-                                            <div class="card-footer border-0 pt-0" style="text-align: right;">
-                                                <button class="btn btn-primary" type="submit">Submit</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -250,11 +97,12 @@
     </div>
 </div>
 <script>
-    document.getElementById('dateForm').addEventListener('submit', function(event) {
+    document.getElementById('dateForm').addEventListener('submit', function (event) {
         event.preventDefault(); // Prevent the default form submission behavior
 
         var startDate = document.getElementById('start_date').value;
         var endDate = document.getElementById('end_date').value;
+        var transaksiChoice = document.getElementById('transaksi_choice').value;
 
         // Check if both start date and end date are provided
         if (!startDate || !endDate) {
@@ -262,10 +110,17 @@
             return;
         }
 
-        // Redirect to the report page with the provided dates as query parameters
-        window.location.href = '/laporan/?start_date=' + startDate + '&end_date=' + endDate;
+        // Build the query parameters
+        var queryParams = '?start_date=' + startDate + '&end_date=' + endDate;
+        if (transaksiChoice) {
+            queryParams += '&transaksi_choice=' + transaksiChoice;
+        }
+
+        // Redirect to the report page with the provided dates and transaksi choice as query parameters
+        window.location.href = '/laporan/' + queryParams;
     });
 </script>
+
 
 <script>
     // Dengan Rupiah
@@ -316,7 +171,9 @@
 <script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
 <script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
 <script src="{% static 'assets/js/ecommerce.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="{% static 'assets/js/product-list-custom.js' %}"></script>
+<script src="{% static 'assets/js/datepicker/date-picker/datepicker.js' %}"></script>
+<script src="{% static 'assets/js/datepicker/date-picker/datepicker.en.js' %}"></script>
+<script src="{% static 'assets/js/datepicker/date-picker/datepicker.custom.js' %}"></script>
 <!-- Plugins JS Ends-->
 {% endblock scriptcontent %}

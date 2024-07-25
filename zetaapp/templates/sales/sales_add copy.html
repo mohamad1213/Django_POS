@@ -469,78 +469,75 @@
             $('[name="amount_change"]').val(formatCurrency(amountChange.toString()));
         }
 
-        $('.saleForm').on('submit', function (e) {
-    e.preventDefault();
+    $('.saleForm').on('submit', function (e) {
+            e.preventDefault();
 
-    if (sale.items.products.length === 0) {
-        Swal.fire({
-            title: 'The sale must have at least 1 product',
-            text: 'Search a product and add it to the sale',
-            icon: 'warning',
-        });
-        return false;
-    }
-
-    if (parseCurrency($('[name="amount_payed"]').val()) < parseCurrency($('[name="sub_total"]').val())) {
-        Swal.fire({
-            title: 'Payable Amount is lower than the Grand Total',
-            icon: 'warning',
-        });
-        return false;
-    }
-
-    sale.items.customer = $('select[name="customer"]').val();
-    sale.items.sub_total = parseCurrency($('input[name="sub_total"]').val());
-    sale.items.amount_payed = parseCurrency($('[name="amount_payed"]').val());
-    sale.items.amount_change = roundTo(sale.items.amount_payed - sale.items.sub_total, 2);
-
-    var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
-
-    function csrfSafeMethod(method) {
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-
-    $.ajaxSetup({
-        beforeSend: function (xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
-
-    $.ajax({
-        url: "{% url 'sales:sales_add' %}",
-        type: "POST",
-        data: JSON.stringify(sale.items),
-        datatype: "json",
-        processData: false,
-        contentType: 'application/json',
-        success: function (data) {
-            if (data.success) {
+            // Only allow sending if we have at least one product
+            if (sale.items.products.length === 0) {
                 Swal.fire({
-                    title: 'Success!',
-                    text: data.message,
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = data.redirect_url; // Redirect to the desired URL
+                    title: 'The sale must have at least 1 product',
+                    text: 'Search a product and add it to the sale',
+                    icon: 'warning',
+                });
+                return false;
+            }
+
+            // Only allow sending if the paid amount is equal or greater than the total
+            if (parseCurrency($('[name="amount_payed"]').val()) < parseCurrency($('[name="sub_total"]').val())) {
+                Swal.fire({
+                    title: 'Payable Amount is lower than the Grand Total',
+                    icon: 'warning',
+                });
+                return false;
+            }
+
+            // Add the missing data to the sale object
+            sale.items.customer = $('select[name="customer"]').val();
+            console.log("Customer: " + sale.items.customer);
+            sale.items.sub_total = parseCurrency($('input[name="sub_total"]').val());
+            sale.items.amount_payed = parseCurrency($('[name="amount_payed"]').val());
+            sale.items.amount_change = roundTo(sale.items.amount_payed - sale.items.sub_total, 2);
+
+            console.log("Sale:")
+            console.log(sale.items)
+
+            // Validate the csrf_token
+            var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+            function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
                     }
-                });
-            } else {
-                Swal.fire({
-                    title: 'Error!',
-                    text: data.message,
-                    icon: 'error',
-                });
-            }
-        },
-        error: function (error) {
-            console.log("Ajax error");
-            console.log(error);
-        }
-    });
-});
+                }
+            });
+            $.ajax({
+                url: "{% url 'sales:sales_add' %}",
+                type: "POST",
+                // We need to convert the JS object sale to string
+                data: JSON.stringify(sale.items), 
+                datatype: "json",
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    console.log("Ajax OK")
+                },
+                error: function (error) {
+                    console.log("Ajax error");
+                    console.log(error);
+                },
+            }).done(function (data){
+                console.log ("Ajax Done");
+            }).fail(function (data, jqXHR, textStatus, errorThrown){
+                console.log ("Ajax Fail");
+                alert(textStatus + ':' + errorThrown);
+            });
+            
+        });
 
 </script>
 

@@ -14,6 +14,7 @@ import json
 from io import BytesIO
 from xhtml2pdf import pisa
 from django.views import View
+from django.http import JsonResponse
 
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
@@ -23,7 +24,7 @@ def is_ajax(request):
 def sales_list_view(request):
     context = {
         "active_icon": "sales",
-        "sales": Sale.objects.all()
+        "sales": Sale.objects.all().order_by('-date_added')
     }
     return render(request, "sales/sales.html", context=context)
 
@@ -43,17 +44,13 @@ def sales_add_view(request):
             sale_attributes = {
                 "customer": Customer.objects.get(id=int(data['customer'])),
                 "sub_total": float(data["sub_total"]),
-                "grand_total": float(data["grand_total"]),
-                "tax_amount": float(data["tax_amount"]),
-                "tax_percentage": float(data["tax_percentage"]),
                 "amount_payed": float(data["amount_payed"]),
                 "amount_change": float(data["amount_change"]),
+
             }
             try:
-                # Create the sale
                 new_sale = Sale.objects.create(**sale_attributes)
                 new_sale.save()
-                # Create the sale details
                 products = data["products"]
 
                 for product in products:
@@ -64,20 +61,15 @@ def sales_add_view(request):
                         "quantity": product["quantity"],
                         "total_detail": product["total_product"]
                     }
-                    sale_detail_new = SaleDetail.objects.create(
-                        **detail_attributes)
+                    sale_detail_new = SaleDetail.objects.create(**detail_attributes)
                     sale_detail_new.save()
-
-                print("Sale saved")
-
-                sweetify.success(
-                    request, 'POS berhasil dibuat!', extra_tags="success")
+                    
+                response_data = {'success': True, 'message': 'Sale successfully created!', 'redirect_url': '/sales/'}
 
             except Exception as e:
-                sweetify.error(
-                    request, 'There was an error during the creation!', extra_tags="danger")
+                response_data = {'success': False, 'message': 'There was an error during the creation!'}
 
-        return redirect('sales:sales_list')
+            return JsonResponse(response_data)
 
     return render(request, "sales/sales_add.html", context=context)
 

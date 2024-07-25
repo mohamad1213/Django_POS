@@ -1,11 +1,9 @@
-<!DOCTYPE html>
 {% load static %}
-<html lang="en">
 
 <head>
     <style>
         @page {
-            size: A5 portrait;
+            size: A4 portrait;
             margin: 20mm 10mm;
             /* Adjust the margin as needed */
         }
@@ -132,66 +130,90 @@
 
 <body>
     <header class="clearfix">
-        <h1>POS PPJ Pralon</h1>
+        <div id="logo" style="display:flex; justify-content:center; align-items:center;">
+            <img src="D:\template\template\zetaapp\static\assets\images\logofix2.png" class="brand-logo" width=200px
+                height=200px>
+        </div>
+        <h1>LAPORAN PEMASUKAN DAN PENGELUARAN</h1>
         <div id="company" class="clearfix">
             <div>PPJ Pralon</div>
             <div>PPJpralon@gmail.com</div>
             <div>085156803370</div>
         </div>
+        <div class="invoice-header">
+            <div><span>Periode Bulan:</span> Januari</div>
+            <div><span>Nama PT:</span> PPJ Pralon</div>
+        </div>
+        <br>
+        <br>
     </header>
     <div class="container">
-        <div class="row border border-dark">
-            <div class="col-6 border-left border-dark">
-                <p><b>Date:</b> {{sale.date_added}}</p>
-                <p><b>Sale ID:</b> {{sale.id}}</p>
-                <p><b>Customer:</b> {{sale.customer.get_full_name}}</p>
+        <!-- <div class="invoice-header">
+            <img src="{{ STATIC_ROOT }}/images/logofix2.png" alt="Logo" class="invoice-logo">
+            <h1>Laporan Pemasukan dan Pengeluaran</h1>
+            <div class="invoice-period">
+                <h4>Periode: Januari 2024</h4>
             </div>
-        </div>
-
-        <br>
-        <!--Tabla de productos-->
+        </div> -->
         <div class="invoice-body">
             <table class="invoice-table">
                 <thead>
-                    <tr style="border: 1px solid black;">
-                        <th class="text-center">#</th>
-                        <th class="text-left pl-2">Product</th>
-                        <th class="text-center">Quantity</th>
-                        <th class="text-right pr-2">Price</th>
-                        <th class="text-right pr-2">Total</th>
+                    <tr>
+                        <th rowspan="2" class="nomer">NO</th>
+                        <th rowspan="2">TANGGAL</th>
+                        <th rowspan="2">KATEGORI</th>
+                        <th rowspan="2">KETERANGAN</th>
+                        <th colspan="2">JENIS</th>
+                    </tr>
+                    <tr>
+                        <th>PEMASUKAN</th>
+                        <th>PENGELUARAN</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for d in details %}
+                    {% for u in transactions %}
+
                     <tr>
-                        <td class="text-center">{{forloop.counter}}</td>
-                        <td class="text-left pl-2">{{d.product.name}}</td>
-                        <td class="text-center">{{d.quantity}}</td>
-                        <td class="text-right pr-2 ">{{d.price}} $</td>
-                        <td class="text-right pr-2">{{d.total_detail}} $</td>
-                    </tr>
-                    {% endfor %}
-                    <tr>
-                        <td colspan="4" class="text-right pr-2"><b>Subtotal</b></td>
-                        <td class="text-right pr-2">{{sale.sub_total|floatformat:2}} $</td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" class="text-right pr-2"><b>Amount payed</b></td>
-                        <td class="text-right pr-2">{{ sale.amount_payed }} $</td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" class="text-right pr-2"><b>Change</b></td>
-                        <td class="text-right pr-2">{{ sale.amount_change }} $</td>
-                    </tr>
-                    <tr>
-                        <td colspan="5">
-                            <p class="text-uppercase font-weight-bold text-center">
-                                Thank you for your preference!
-                            </p>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{u.tanggal|date:"d-m-Y"}}</td>
+                        <td>{{u.kategori}}</td>
+                        <td>{{u.keterangan}}</td>
+                        <td>
+                            {% if u.transaksi_choice == "P" %}
+                            Rp. {{u.jumlah|floatformat:"0g" }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.transaksi_choice == "L" %}
+                            Rp. {{u.jumlah|floatformat:"0g" }}
+                            {% else %}
+                            -
+                            {% endif %}
                         </td>
                     </tr>
+                    {% endfor %}
                 </tbody>
+
             </table>
+        </div>
+        <div class="invoice-total">
+            <div class="row">
+                <div class="col text-right">
+                    <h2>Total Pemasukan: Rp. {{pemasukan|floatformat:"0g"}}</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col text-right">
+                    <h2>Total Pengeluaran: Rp. {{pengeluaran|floatformat:"0g"}}</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col text-right">
+                    <h2 class="invoice-total-amount">Saldo Akhir: Rp. {{saldo|floatformat:"0g"}}</h2>
+                </div>
+            </div>
         </div>
     </div>
 </body>

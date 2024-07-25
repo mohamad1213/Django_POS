@@ -14,8 +14,6 @@ class Sale(models.Model):
     transaction_number = models.CharField(max_length=20, unique=True)
     sub_total = models.FloatField(default=0)
     grand_total = models.FloatField(default=0)
-    tax_amount = models.FloatField(default=0)
-    tax_percentage = models.FloatField(default=0)
     amount_payed = models.FloatField(default=0)
     amount_change = models.FloatField(default=0)
 
@@ -23,7 +21,7 @@ class Sale(models.Model):
         db_table = 'Sales'
 
     def __str__(self) -> str:
-        return "Sale ID: " + str(self.id) + " | Grand Total: " + str(self.grand_total) + " | Datetime: " + str(self.date_added)
+        return "Sale ID: " + str(self.id) + " | Sub Total: " + str(self.sub_total) + " | Datetime: " + str(self.date_added)
 
     def sum_items(self):
         details = SaleDetail.objects.filter(sale=self.id)
@@ -36,7 +34,8 @@ class Sale(models.Model):
     def generate_invoice_number(self):
         date_str = self.date_added.strftime('%Y%m%d')
         random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        return f'INV-{date_str}-{random_chars}'
+        return f'PPJ-{date_str}-{random_chars}'
+    
     
 class SaleDetail(models.Model):
     sale = models.ForeignKey(

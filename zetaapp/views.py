@@ -86,7 +86,7 @@ def profit(request):
             trform.owner = request.user
             trform.save()
             sweetify.success(request, "Formulir Berhasil Dibuat")
-            return redirect('/profit/')
+            return redirect('/classroom/')
         else:
             print(form.errors)
             sweetify.error(request, 'Formulir tidak valid.')
@@ -457,9 +457,11 @@ def tabungan_update_view(request, id):
 #laporan
 def laporan(request):
     data = Transaksi.objects.all().order_by('-tanggal','-id')
+    pemasukan = pengeluaran = saldo = 0
     if request.method == 'GET':
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
+        transaksi_choice = request.GET.get('transaksi_choice')
 
         # Check if both start date and end date are provided
         if start_date and end_date:
@@ -467,11 +469,25 @@ def laporan(request):
                 tanggal__gte=start_date,
                 tanggal__lte=end_date
             )
-            return render(request, 'generatepdf.html', {'transactions': transactions})
+            if transaksi_choice:  # Filter by transaksi_choice if provided
+                transactions = transactions.filter(transaksi_choice=transaksi_choice)
+
+            transactions = transactions.order_by('-tanggal', '-id')
+            pemasukan = transactions.filter(transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+            pengeluaran = transactions.filter(transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+            saldo = pemasukan - pengeluaran
+            return render(request, 'laporan/laporan.html', {
+                'transactions': transactions,
+                'pemasukan': pemasukan,
+                'pengeluaran': pengeluaran,
+                'saldo': saldo
+            })
     context = {
         'data': data,
+        'pemasukan': pemasukan,
+        'pengeluaran': pengeluaran,
+        'saldo': saldo
     }
-
     return render(request, 'laporan/laporan.html', context)
 
 

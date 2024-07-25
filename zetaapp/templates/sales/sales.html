@@ -52,7 +52,7 @@
                                             <td>{{s.date_added|date:"d-m-Y"}}</td>
                                             <td>{{s.customer.get_full_name}}</td>
                                             <td class="text-center">{{s.sum_items}}</td>
-                                            <td class="text-right">Rp. {{s.grand_total|floatformat:"0g"}}</td>
+                                            <td class="text-right">Rp. {{s.sub_total|floatformat:"0g"}}</td>
                                             <td class="text-center">
                                                 <!--View-->
                                                 <a href="{% url 'sales:sales_details' s.id %}"
