@@ -36,21 +36,21 @@
                                     <thead>
                                         <tr>
                                             <th class="text-center">#</th>
-                                            <th class="text-center">ID</th>
-                                            <th class="text-center">Date</th>
-                                            <th class="text-center">Customer</th>
-                                            <th class="text-center">Items</th>
+                                            <th class="text-center">ID Transaksi</th>
+                                            <th class="text-center">Tanggal</th>
+                                            <th class="text-center">Pelanggan</th>
+                                            <th class="text-center">Jumlah</th>
                                             <th class="text-center">Total</th>
-                                            <th class="text-center">Actions</th>
+                                            <th class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for s in sales %}
                                         <tr>
-                                            <td>{{foorloop.counter}}</td>
-                                            <td>{{s.transaction_number }}</td>
-                                            <td>{{s.date_added|date:"d-m-Y"}}</td>
-                                            <td>{{s.customer.get_full_name}}</td>
+                                            <td class="text-center">{{foorloop.counter}}</td>
+                                            <td class="text-center">{{s.transaction_number }}</td>
+                                            <td class="text-center">{{s.date_added|date:"d-m-Y"}}</td>
+                                            <td class="text-center">{{s.customer.get_full_name}}</td>
                                             <td class="text-center">{{s.sum_items}}</td>
                                             <td class="text-right">Rp. {{s.sub_total|floatformat:"0g"}}</td>
                                             <td class="text-center">

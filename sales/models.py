@@ -7,8 +7,13 @@ import random
 import string
 from django.db import models
 from django.utils import timezone
+from zetaapp.models import Transaksi
+
+class CustomerCategory(models.Model):
+    name = models.CharField(max_length=50, unique=True)
 class Sale(models.Model):
     date_added = models.DateTimeField(default=django.utils.timezone.now)
+    
     customer = models.ForeignKey(
         Customer, models.DO_NOTHING, db_column='customer')
     transaction_number = models.CharField(max_length=20, unique=True)
@@ -29,7 +34,19 @@ class Sale(models.Model):
     def save(self, *args, **kwargs):
         if not self.transaction_number:
             self.transaction_number = self.generate_invoice_number()
-        super().save(*args, **kwargs)
+        creating = self.pk is None  # Cek apakah ini sale baru
+        super().save(*args, **kwargs)  # Simpan sale dulu
+
+        if creating:
+            # Buat transaksi pengeluaran otomatis
+            Transaksi.objects.create(
+                owner=None,  # Bisa diisi user yang membuat sale
+                jumlah=self.grand_total,  # Jumlah pengeluaran = total penjualan
+                tanggal=self.date_added.date(),
+                keterangan=f"Pengeluaran dari penjualan {self.transaction_number}",
+                transaksi_choice=Transaksi.PENGELUARAN,
+                kategori=None  # Sesuaikan dengan kategori pengeluaran
+            )
 
     def generate_invoice_number(self):
         date_str = self.date_added.strftime('%Y%m%d')

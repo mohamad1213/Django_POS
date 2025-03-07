@@ -14,7 +14,7 @@ urlpatterns = [
     path('accounts/', include('authentication.urls')),
     # Transaksi
     path('transaksi/', views.transaksi,name='transaksi'),
-    path('transaksi/<pk>/update/', views.UpdateTr,name='updatetr'),
+    path('transaksi/<int:pk>/update/', views.UpdateTr,name='updatetr'),
     path('transaksi/<pk>/delete/', views.DeleteTr,name='deletetr'),
 
     # HutangPiutang

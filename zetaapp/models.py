@@ -39,7 +39,7 @@ class HutPegawai(models.Model):
     ]
     pegawai = models.ForeignKey('Karyawan', on_delete=models.CASCADE)
     jumlah = models.DecimalField(max_digits=20, decimal_places=2)
-    tanggal = models.DateTimeField()
+    tanggal = models.DateField()
     hutang_choice= models.CharField(max_length=1, choices=JENIS_CHOICES)
 
     keterangan = models.TextField(blank=True, null=True)
@@ -54,10 +54,10 @@ class Transaksi(models.Model):
     ]
     owner = models.ForeignKey(User,null=True, on_delete = models.DO_NOTHING,related_name='transaksi')
     jumlah = models.DecimalField(max_digits=20, decimal_places=2)
-    tanggal = models.DateTimeField()
+    tanggal = models.DateField()
     keterangan = models.TextField(blank=True, null=True)
-    transaksi_choice= models.CharField(max_length=1, choices=JENIS_CHOICES)
-    kategori = models.ForeignKey(Kategori, on_delete=models.CASCADE)
+    transaksi_choice= models.CharField(max_length=1, choices=JENIS_CHOICES, blank=True, null=True)
+    kategori = models.ForeignKey(Kategori, on_delete=models.CASCADE, blank=True, null=True)
     def calculate_profit_loss(self):
         # Assuming the buy and sell transactions are related by date
         buy_transaction = Transaksi.objects.filter(

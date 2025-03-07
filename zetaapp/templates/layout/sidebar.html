@@ -31,6 +31,11 @@
               <i data-feather="activity"></i><span>Customers</span></a>
           </li>
           <li class="sidebar-list">
+            <a class="sidebar-link {% if url_name == 'products:products_list' %}active{% endif %}  sidebar-title link-nav"
+              href="{% url 'products:products_list' %}">
+              <i data-feather="activity"></i><span>Products</span></a>
+          </li>
+          <li class="sidebar-list">
             <a class="sidebar-link {% if url_name == 'sales:sales_list' %}active{% endif %}  sidebar-title link-nav"
               href="{% url 'sales:sales_list' %}">
               <i data-feather="activity"></i><span>POS</span></a>

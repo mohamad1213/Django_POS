@@ -42,6 +42,7 @@ class Product(models.Model):
         Category, related_name="category", on_delete=models.CASCADE, db_column='category')
 
     price = models.FloatField(default=0)
+    
 
     class Meta:
         # Table's name

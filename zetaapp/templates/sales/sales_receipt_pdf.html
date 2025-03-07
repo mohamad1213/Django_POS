@@ -5,194 +5,119 @@
 <head>
     <style>
         @page {
-            size: A5 portrait;
-            margin: 20mm 10mm;
-            /* Adjust the margin as needed */
+            size: A8 portrait;
+            margin: 5mm;
         }
 
         body {
             font-family: Arial, sans-serif;
             margin: 0;
+            font-size: 6px; /* Ukuran font lebih kecil */
+            line-height: 1;
         }
 
-        .invoice-header h1 {
+        .header {
             text-align: center;
-            color: rgb(13, 26, 149);
+            margin-bottom: 5mm;
         }
 
-        .invoice-body {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background-color: lightgray;
-            word-wrap: break-word;
+        .header h1 {
+            margin: 0;
+            font-size: 8px; /* Ukuran font lebih kecil untuk header */
+            color: #333;
+        }
+
+        .header p {
+            margin: 1px 0;
+            font-size: 6px; /* Ukuran font lebih kecil untuk informasi header */
         }
 
         .invoice-table {
             width: 100%;
+            margin-bottom: 5mm;
             border-collapse: collapse;
         }
 
+        .invoice-table td, .invoice-table th {
+            padding: 0.5mm; /* Padding yang lebih kecil */
+            text-align: left;
+            font-size: 6px; /* Ukuran font lebih kecil */
+            border-bottom: 0.5px solid #ddd; /* Garis bawah tipis */
+        }
+
         .invoice-table th {
-            text-align: center;
-            border: 1px double rgb(96, 93, 93);
-            padding-top: 8px;
-            background-color: lightblue;
-        }
-
-        .invoice-table td {
-            border: 1px double rgb(96, 93, 93);
-            padding: 8px;
-            text-align: center;
-        }
-
-        .invoice-table tr:nth-child(odd) td {
-            background-color: #6c6868;
-        }
-
-        .invoice-table tr:nth-child(even) td {
-            background-color: #432f2f;
-        }
-
-        .invoice-total {
-            margin-top: 30pt;
-        }
-
-        .invoice-logo {
-            width: 100px;
-            height: auto;
-            margin-bottom: 20pt;
-        }
-
-        .invoice-period {
-            text-align: right;
-            margin-bottom: 10pt;
-        }
-
-        .invoice-total-amount {
-            margin-top: 10pt;
+            text-align: left;
+            background-color: #f4f4f4;
             font-weight: bold;
         }
 
-        header {
-            padding: 10px 0;
-            margin-bottom: 30px;
+        .invoice-table td {
+            text-align: left;
         }
 
-        #logo {
+        .total-row td {
+            font-weight: bold;
+        }
+
+        .footer {
             text-align: center;
-            margin-bottom: 10px;
+            margin-top: 5mm;
+            font-size: 6px; /* Ukuran font lebih kecil untuk footer */
         }
-
-        #logo img {
-            width: 90px;
-        }
-
-        .clearfix:after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-
-        #project {
-            float: left;
-        }
-
-        #project span {
-            color: #5D6975;
-            text-align: right;
-            width: 52px;
-            margin-right: 10px;
-            display: inline-block;
-            font-size: 14px;
-        }
-
-        #company {
-            float: right;
-            text-align: right;
-        }
-
-        #project div,
-        #company div {
-            white-space: nowrap;
-        }
-
-        h1 {
-
-            color: #5D6975;
-            font-size: 2.4em;
-            line-height: 1.4em;
-            font-weight: normal;
-            text-align: center;
-            margin: 0 0 20px 0;
+        .section p {
+            line-height: 0;
         }
     </style>
 </head>
 
 <body>
-    <header class="clearfix">
+    <div class="header">
         <h1>POS PPJ Pralon</h1>
-        <div id="company" class="clearfix">
-            <div>PPJ Pralon</div>
-            <div>PPJpralon@gmail.com</div>
-            <div>085156803370</div>
-        </div>
-    </header>
-    <div class="container">
-        <div class="row border border-dark">
-            <div class="col-6 border-left border-dark">
-                <p><b>Date:</b> {{sale.date_added}}</p>
-                <p><b>Sale ID:</b> {{sale.id}}</p>
-                <p><b>Customer:</b> {{sale.customer.get_full_name}}</p>
-            </div>
-        </div>
+        <p>4CRF+PCC, Jl. Sitimulyo Segoroyoso, Pamotan, Jambidan, Kec. Banguntapan, Kabupaten Bantul, Daerah Istimewa Yogyakarta 55195</p>
+    </div>
+    
+    <div class="section">
+        <p><b>Date:</b> {{sale.date_added|date:"d F Y, H:i"}}</p>
+        <p><b>Customer:</b> {{sale.customer.get_full_name}}</p>
+        <!-- <p stay><b>Sale ID:</b> {{sale.id}}</p> -->
+    </div>
 
-        <br>
-        <!--Tabla de productos-->
-        <div class="invoice-body">
-            <table class="invoice-table">
-                <thead>
-                    <tr style="border: 1px solid black;">
-                        <th class="text-center">#</th>
-                        <th class="text-left pl-2">Product</th>
-                        <th class="text-center">Quantity</th>
-                        <th class="text-right pr-2">Price</th>
-                        <th class="text-right pr-2">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for d in details %}
-                    <tr>
-                        <td class="text-center">{{forloop.counter}}</td>
-                        <td class="text-left pl-2">{{d.product.name}}</td>
-                        <td class="text-center">{{d.quantity}}</td>
-                        <td class="text-right pr-2 ">{{d.price}} $</td>
-                        <td class="text-right pr-2">{{d.total_detail}} $</td>
-                    </tr>
-                    {% endfor %}
-                    <tr>
-                        <td colspan="4" class="text-right pr-2"><b>Subtotal</b></td>
-                        <td class="text-right pr-2">{{sale.sub_total|floatformat:2}} $</td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" class="text-right pr-2"><b>Amount payed</b></td>
-                        <td class="text-right pr-2">{{ sale.amount_payed }} $</td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" class="text-right pr-2"><b>Change</b></td>
-                        <td class="text-right pr-2">{{ sale.amount_change }} $</td>
-                    </tr>
-                    <tr>
-                        <td colspan="5">
-                            <p class="text-uppercase font-weight-bold text-center">
-                                Thank you for your preference!
-                            </p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <table class="invoice-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in details %}
+            <tr>
+                <td>{{d.product.name}}</td>
+                <td>{{d.quantity}}</td>
+                <td>{{d.price}}</td>
+                <td>{{d.total_detail}}</td>
+            </tr>
+            {% endfor %}
+            <!-- Total rows -->
+            <tr class="total-row">
+                <td colspan="3">Sub total:</td>
+                <td>{{sale.sub_total|floatformat:0}}</td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="3">Bayar:</td>
+                <td>{{ sale.amount_payed|floatformat:0 }}</td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="3">Sisa:</td>
+                <td>{{ sale.amount_change|floatformat:0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <h4 class="bold">THANK YOU</h4>
     </div>
 </body>
 

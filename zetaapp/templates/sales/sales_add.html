@@ -31,7 +31,8 @@
                             <!--Left column-->
                             <div class="col-md-9">
                                 <div class="row">
-                                    <div class="card" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #508C9B;">
+                                    <div class="card"
+                                        style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #508C9B;">
                                         <div class="card-body">
                                             <!--Search product-->
                                             <div class="col-md-9">
@@ -40,8 +41,10 @@
                                                         <select class="form-control select2" name="searchbox_products"
                                                             id="searchbox_products" style="flex-grow: 1;">
                                                         </select>
-                                                        <button type="button" class="btn btn-danger btn-sm deleteAll"style="margin-left: 10px;" >
-                                                            Hapus Semua Barang<i class="ml-1 fas fa-trash-alt fa-xs"></i>
+                                                        <button type="button" class="btn btn-danger btn-sm deleteAll"
+                                                            style="margin-left: 10px;">
+                                                            Hapus Semua Barang<i
+                                                                class="ml-1 fas fa-trash-alt fa-xs"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -51,7 +54,8 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <div class="card" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                                        <div class="card"
+                                            style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
                                             <div class="card-body pl-0">
                                                 <table class="table table-hover text-nowrap" id="table_products">
                                                     <thead>
@@ -80,7 +84,7 @@
                                     <div class="card-body">
                                         {% csrf_token %}
                                         <div class="form-group">
-                                            <label for="customer">Customer</label>
+                                            <label for="customer">Pelanggan</label>
                                             <select name="customer" class="form-control" id="searchbox_customers"
                                                 required>
                                                 <option value="" selected disabled hidden>Select the customer
@@ -92,19 +96,22 @@
                                             <div class="form-group mt-4">
                                                 <label>Subtotal</label>
                                                 <div class="input-group">
-                                                    <input name="sub_total" id="sub_total" class="form-control" required>
+                                                    <input name="sub_total" id="sub_total" class="form-control"
+                                                        required>
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Bayar</label>
                                                 <div class="input-group">
-                                                    <input name="amount_payed" id="amount_payed" class="form-control" required>
+                                                    <input name="amount_payed" id="amount_payed" class="form-control"
+                                                        required>
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Sisa</label>
                                                 <div class="input-group">
-                                                    <input name="amount_change" id="amount_change" class="form-control" readonly>
+                                                    <input name="amount_change" id="amount_change" class="form-control"
+                                                        readonly>
                                                 </div>
                                             </div>
 
@@ -153,13 +160,13 @@
     //     return 'Rp ' + amount.toLocaleString('id-ID');
     // }
     function formatCurrency(amount) {
-            let isNegative = amount < 0;
-            let formattedAmount = 'Rp ' + Math.abs(amount).toLocaleString('id-ID', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            });
-            return isNegative ? '-' + formattedAmount : formattedAmount;
-        }
+        let isNegative = amount < 0;
+        let formattedAmount = 'Rp ' + Math.abs(amount).toLocaleString('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+        return isNegative ? '-' + formattedAmount : formattedAmount;
+    }
     //Variable for product number in table
     var number = 1;
 
@@ -266,7 +273,7 @@
 
         //Select2 customers
         $('#searchbox_customers').select2({
-            placeholder: "Select a customer",
+            placeholder: "Pilih Pelanggan",
             allowClear: true,
         });
 
@@ -429,118 +436,121 @@
         if (repo.loading) {
             return repo.text;
         }
+        // Buat Number format rupiah
+        var formattedPrice = new Intl.NumberFormat('id-ID').format(repo.price); 
 
         var option = $(
             '<div class="wrapper container">' +
             ' <div class="row">' +
             '<div class="col-lg-11 text-left shadow-sm">' +
-            //'<br>' +
             '<p style="margin-bottom: 5px;">' +
-            '<b>Name:</b> ' + repo.text + " | Category: " + "<span class='btn-info px-2'>" + repo.category + '</span> <br>' +
-            '<b>Price:</b> <span class="btn-success px-2">' + repo.price + ' $. </span>' +
+            '<b>Nama:</b> ' + repo.text + " | Kategori: " + "<span class='btn-info px-2'>" + repo.category + '</span> <br>' +
+            '<b>Harga:</b> <span class="btn-success px-2">' + formattedPrice + ' </span>' +
             '</p>' +
             '</div>' +
             '</div>' +
-            '</div>');
+            '</div>'
+        );
 
         return option;
     }
 
+
     // Send the sale via ajax
-        function parseCurrency(value) {
-            return parseFloat(value.replace(/[^,\d]/g, '').replace(',', '.'));
-        }
-
-        function roundTo(value, decimals) {
-            return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
-        }
-        $('[name="amount_payed"], [name="sub_total"],[name="sub_total"]').on('keyup', function () {
-            let currentValue = $(this).val().replace(/^Rp\s*/i, ''); // Remove existing "Rp " prefix
-            let parsedValue = parseCurrency(currentValue);
-            let formattedValue = formatCurrency(parsedValue);
-            $(this).val(formattedValue);
-            calculateAmountChange();
-        });
-
-        function calculateAmountChange() {
-            let amountPayed = parseCurrency($('[name="amount_payed"]').val());
-            let subTotal = parseCurrency($('[name="sub_total"]').val());
-            let amountChange = roundTo(amountPayed - subTotal, 2);
-            $('[name="amount_change"]').val(formatCurrency(amountChange.toString()));
-        }
-
-        $('.saleForm').on('submit', function (e) {
-    e.preventDefault();
-
-    if (sale.items.products.length === 0) {
-        Swal.fire({
-            title: 'The sale must have at least 1 product',
-            text: 'Search a product and add it to the sale',
-            icon: 'warning',
-        });
-        return false;
+    function parseCurrency(value) {
+        return parseFloat(value.replace(/[^,\d]/g, '').replace(',', '.'));
     }
 
-    if (parseCurrency($('[name="amount_payed"]').val()) < parseCurrency($('[name="sub_total"]').val())) {
-        Swal.fire({
-            title: 'Payable Amount is lower than the Grand Total',
-            icon: 'warning',
-        });
-        return false;
+    function roundTo(value, decimals) {
+        return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
     }
-
-    sale.items.customer = $('select[name="customer"]').val();
-    sale.items.sub_total = parseCurrency($('input[name="sub_total"]').val());
-    sale.items.amount_payed = parseCurrency($('[name="amount_payed"]').val());
-    sale.items.amount_change = roundTo(sale.items.amount_payed - sale.items.sub_total, 2);
-
-    var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
-
-    function csrfSafeMethod(method) {
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-
-    $.ajaxSetup({
-        beforeSend: function (xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
+    $('[name="amount_payed"], [name="sub_total"],[name="sub_total"]').on('keyup', function () {
+        let currentValue = $(this).val().replace(/^Rp\s*/i, ''); // Remove existing "Rp " prefix
+        let parsedValue = parseCurrency(currentValue);
+        let formattedValue = formatCurrency(parsedValue);
+        $(this).val(formattedValue);
+        calculateAmountChange();
     });
 
-    $.ajax({
-        url: "{% url 'sales:sales_add' %}",
-        type: "POST",
-        data: JSON.stringify(sale.items),
-        datatype: "json",
-        processData: false,
-        contentType: 'application/json',
-        success: function (data) {
-            if (data.success) {
-                Swal.fire({
-                    title: 'Success!',
-                    text: data.message,
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = data.redirect_url; // Redirect to the desired URL
-                    }
-                });
-            } else {
-                Swal.fire({
-                    title: 'Error!',
-                    text: data.message,
-                    icon: 'error',
-                });
-            }
-        },
-        error: function (error) {
-            console.log("Ajax error");
-            console.log(error);
+    function calculateAmountChange() {
+        let amountPayed = parseCurrency($('[name="amount_payed"]').val());
+        let subTotal = parseCurrency($('[name="sub_total"]').val());
+        let amountChange = roundTo(amountPayed - subTotal, 2);
+        $('[name="amount_change"]').val(formatCurrency(amountChange.toString()));
+    }
+
+    $('.saleForm').on('submit', function (e) {
+        e.preventDefault();
+
+        if (sale.items.products.length === 0) {
+            Swal.fire({
+                title: 'The sale must have at least 1 product',
+                text: 'Search a product and add it to the sale',
+                icon: 'warning',
+            });
+            return false;
         }
+
+        if (parseCurrency($('[name="amount_payed"]').val()) < parseCurrency($('[name="sub_total"]').val())) {
+            Swal.fire({
+                title: 'Payable Amount is lower than the Grand Total',
+                icon: 'warning',
+            });
+            return false;
+        }
+
+        sale.items.customer = $('select[name="customer"]').val();
+        sale.items.sub_total = parseCurrency($('input[name="sub_total"]').val());
+        sale.items.amount_payed = parseCurrency($('[name="amount_payed"]').val());
+        sale.items.amount_change = roundTo(sale.items.amount_payed - sale.items.sub_total, 2);
+
+        var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+        function csrfSafeMethod(method) {
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        $.ajax({
+            url: "{% url 'sales:sales_add' %}",
+            type: "POST",
+            data: JSON.stringify(sale.items),
+            datatype: "json",
+            processData: false,
+            contentType: 'application/json',
+            success: function (data) {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = data.redirect_url; // Redirect to the desired URL
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message,
+                        icon: 'error',
+                    });
+                }
+            },
+            error: function (error) {
+                console.log("Ajax error");
+                console.log(error);
+            }
+        });
     });
-});
 
 </script>
 

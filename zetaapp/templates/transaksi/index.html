@@ -51,7 +51,7 @@
                   <td>{{forloop.counter}}</td>
                   <td>{{u.tanggal|date:"d-m-Y"}}</td>
                   <td>{{u.kategori}}</td>
-                  <td>{{u.keterangan}}</td>
+                  <td style="width:30%">{{u.keterangan }}</td>
                   <td class="text-center">
                     {% if u.transaksi_choice == "P" %}
                     Rp. {{u.jumlah|floatformat:"0g" }}
@@ -111,41 +111,38 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
-                        <form class="form theme-form" action="/transaksi/{{u.pk}}/update/" method="POST"
-                          enctype="multipart/form-data">
-                          {% load crispy_forms_tags %}
-                          {% csrf_token %}
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Tanggal</label>
-                            {{form.tanggal}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Jenis</label>
-                            {{form.jenis_transaksi}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Kategori</label>
-                            {{form.kategori}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Nominal</label>
-                            {{form.jumlah}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Keterangan</label>
-                            {{form.keterangan}}
-                          </div>
-                          {% if form.errors %}
-                          <div class="alert alert-danger" id="msg">
-                            {{ form.errors }}
-                          </div>
-                          {% endif %}
-                          <div class="card-footer border-0 pt-0" style="text-align: right;">
-                            <button class="btn btn-warning" type="reset">Cancel</button>
-                            <button class="btn btn-primary" type="submit">Submit</button>
-                          </div>
+                        <form class="form theme-form" action="{% url 'updatetr' u.pk %}" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="id_tanggal">Tanggal</label>
+                                {{ form.tanggal }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_jenis_transaksi">Jenis</label>
+                                {{ form.jenis_transaksi }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_kategori">Kategori</label>
+                                {{ form.kategori }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_jumlah">Nominal</label>
+                                {{ form.jumlah }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_keterangan">Keterangan</label>
+                                {{ form.keterangan }}
+                            </div>
+                            {% if form.errors %}
+                                <div class="alert alert-danger" id="msg">
+                                    {{ form.errors }}
+                                </div>
+                            {% endif %}
+                            <div class="card-footer border-0 pt-0" style="text-align: right;">
+                                <button class="btn btn-warning" type="reset">Cancel</button>
+                                <button class="btn btn-primary" type="submit">Submit</button>
+                            </div>
                         </form>
-                      </div>
                     </div>
                   </div>
                 </div>

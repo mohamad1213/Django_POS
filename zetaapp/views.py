@@ -30,16 +30,106 @@ from io import BytesIO
 from xhtml2pdf import pisa
 from django.views import View
 import sweetify
-
+from django.db.models.functions import ExtractMonth, ExtractYear
+from django.db.models.functions import TruncDate
 #Dashboard
+from django.db.models import Sum
+from django.utils import timezone
+from django.db.models.functions import TruncDate
+from django.utils import timezone
 @login_required(login_url="/accounts/login/")
 def indexPage(request):
-    data = Transaksi.objects.all().order_by('-tanggal')[:6]
-    count = Transaksi.objects.all().order_by('-tanggal')
-    calculate = Transaksi.objects.filter(transaksi_choice='P')
-    for u in calculate :
-        calculate = u.calculate_profit_loss
+
+    today = timezone.localtime(timezone.now()).date()  # Tanggal dengan zona waktu yang benar
+    # today = timezone.localdate()  # Mengambil tanggal lokal sesuai TIME_ZONE
+    # today = timezone.now().date()
+
+    # Ambil semua transaksi tanpa batasan 6 data
+    data = Transaksi.objects.all().order_by('-tanggal')[:5]
+
+    # Hitung jumlah transaksi
+    count = Transaksi.objects.count()
+    print(count)
+
+    # Hitung total calculate_profit_loss dengan aman
+    # calculate = sum(u.calculate_profit_loss for u in Transaksi.objects.filter(transaksi_choice='P'))
+
+    # Gunakan TruncDate untuk tanggal
+    total_pemasukan_harian = Transaksi.objects.annotate(
+        tanggal_only=TruncDate('tanggal')
+    ).filter(
+        tanggal_only=today, transaksi_choice='P'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    total_pengeluaran_harian = Transaksi.objects.annotate(
+        tanggal_only=TruncDate('tanggal')
+    ).filter(
+        tanggal_only=today, transaksi_choice='L'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    # Query total pemasukan dan pengeluaran bulanan & tahunan
+    total_pemasukan_bulanan = Transaksi.objects.filter(
+        tanggal__month=today.month, transaksi_choice='P'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    total_pengeluaran_bulanan = Transaksi.objects.filter(
+        tanggal__month=today.month, transaksi_choice='L'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    total_pemasukan_tahunan = Transaksi.objects.filter(
+        tanggal__year=today.year, transaksi_choice='P'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    total_pengeluaran_tahunan = Transaksi.objects.filter(
+        tanggal__year=today.year, transaksi_choice='L'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    # Hitung sisa saldo
+    sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
+    sisa_cashflow_harian = total_pemasukan_harian - total_pengeluaran_harian
+    sisa_cashflow_bulanan = total_pemasukan_bulanan - total_pengeluaran_bulanan
+    sisa_cashflow_tahunan = total_pemasukan_tahunan - total_pengeluaran_tahunan
+
+    # Hitung hutang piutang
+    total_hutang = HutangPiutang.objects.filter(
+        tanggal__year=today.year, hutang_choice='H'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    total_piutang = HutangPiutang.objects.filter(
+        tanggal__year=today.year, hutang_choice='P'
+    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+    sisa_hutang = total_piutang - total_hutang
+
+    context = {
+        "breadcrumb": {"parent": "Dashboard", "child": "Dashboard"},
+        'total_pemasukan_harian': total_pemasukan_harian,
+        'total_pemasukan_bulanan': total_pemasukan_bulanan,
+        'total_pemasukan_tahunan': total_pemasukan_tahunan,
+        'total_pengeluaran_harian': total_pengeluaran_harian,
+        'total_pengeluaran_bulanan': total_pengeluaran_bulanan,
+        'total_pengeluaran_tahunan': total_pengeluaran_tahunan,
+        'sisa_cashflow_harian': sisa_cashflow_harian,
+        'sisa_cashflow_bulanan': sisa_cashflow_bulanan,
+        'sisa_cashflow_tahunan': sisa_cashflow_tahunan,
+        'total_hutang': total_hutang,
+        'total_piutang': total_piutang,
+        'sisa_hutang': sisa_hutang,
+        'sisa_saldo': sisa_saldo,
+        'data': data,
+        'count': count,
+        # 'calculate': calculate
+    }
+
+    return render(request, 'general/dashboard/default/index.html', context)
+
+# def indexPage(request):
+    data = Transaksi.objects.all().order_by('-tanggal')
+    count = Transaksi.objects.count()  # Menghitung jumlah transaksi
+
+    calculate = [u.calculate_profit_loss for u in Transaksi.objects.filter(transaksi_choice='P')]
     today = timezone.now().date()
+    total_pemasukan_harian = Transaksi.objects.annotate(tanggal_only=TruncDate('tanggal')).filter(tanggal_only=today, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_pemasukan_harian = Transaksi.objects.filter(tanggal=today, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_pemasukan_bulanan = Transaksi.objects.filter(tanggal__month=today.month, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     total_pengeluaran_harian = Transaksi.objects.filter(tanggal=today, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
@@ -369,12 +459,12 @@ def transaksi(request):
             trform = form.save(commit=False)
             trform.owner = request.user
             trform.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('/transaksi/')
         else:
             print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
+            messages.error(request, 'Formulir tidak valid.')
+            messages.error(request, form.errors)
     else:
         form = TransaksiForms()
         excel = ExcelUploadForm()
@@ -393,29 +483,31 @@ def DeleteTr(request, pk):
     sweetify.success(request, "Form Successfully Deleted")  
     return redirect('/transaksi/')
 
-@login_required(login_url='/accounts/')
+@login_required(login_url='/accounts/login/')
 def UpdateTr(request, pk):
-    try :
+    try:
         data = Transaksi.objects.get(id=pk)
     except Transaksi.DoesNotExist:
         messages.error(request, 'Transaksi not found!', extra_tags="danger")
-        return redirect('transaksi')
+        return redirect('transaksi')  # Ensure 'transaksi' is a named URL pattern
+
     form = TransaksiForms(request.POST or None, instance=data)
-    if request.POST :
-        # form = TransaksiForms(request.POST, instance=formData)
-        if form.is_valid():    
-            # trform = form.save(commit=False)
-            form.owner = request.user
-            form.save()
+    
+    if request.POST:
+        if form.is_valid():
+            transaksi_instance = form.save(commit=False)
+            transaksi_instance.owner = request.user  # Set the owner field correctly
+            transaksi_instance.save()
             sweetify.success(request, "Formulir Berhasil Dibuat")
-            return redirect('/transaksi/')
+            return redirect('transaksi')  # Ensure 'transaksi' is a named URL pattern
         else:
             print(form.errors)
             sweetify.error(request, 'Formulir tidak valid.')
             sweetify.error(request, form.errors)
+
     context = {
-    'form': form,
-    "breadcrumb":{"parent":"Transaksi","child":"Transaksi"},
+        'form': form,
+        "breadcrumb": {"parent": "Transaksi", "child": "Transaksi"},
     }
     return render(request, 'transaksi/index.html', context)
 

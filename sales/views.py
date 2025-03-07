@@ -15,6 +15,7 @@ from io import BytesIO
 from xhtml2pdf import pisa
 from django.views import View
 from django.http import JsonResponse
+from zetaapp.models import Transaksi
 
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
@@ -35,7 +36,6 @@ def sales_add_view(request):
         "active_icon": "sales",
         "customers": [c.to_select2() for c in Customer.objects.all()]
     }
-
     if request.method == 'POST':
         if is_ajax(request=request):
             # Save the POST arguments
