@@ -21,7 +21,7 @@
             <div class="card-body">
                 <div class="row ml-0 mb-3" style="text-align: right;">
                     <a href="{% url 'products:products_add' %}">
-                        <button type="button" class="btn btn-success font-weight-bold">
+                        <button type="button" class="btn btn-primary font-weight-bold">
                             <i class="fas fa-plus mr-2"></i>
                             Tambah barang
                         </button>
@@ -29,7 +29,7 @@
                 </div>
                 <div class="table-responsive">
                     <div id="custom-buttons"></div>    
-                    <table class="table table-bordered display table-striped dataTable no-footer" id="">
+                    <table class="table table-bordered display table-striped dataTable no-footer" id="prodata">
                         <thead>
                             <tr>
                                 <th>NO</th>
@@ -68,7 +68,7 @@
                                     <!-- Button trigger modal -->
                                     <a class="text-decoration-none">
                                         <button rel="delete" type="button" class="btn btn-danger btn-sm"
-                                            data-toggle="modal" data-target="#exampleModal">
+                                            data-bs-toggle="modal" data-bs-target="#exampleModal">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </a>
@@ -85,12 +85,11 @@
                                                         <span aria-hidden="true">&times;</span>
                                                     </button>
                                                 </div>
-                                                <div id="updateThisText" class="modal-body">
-
+                                                <p>{{p.name}}</p>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary"
-                                                        data-dismiss="modal">Batal</button>
+                                                        data-bs-dismiss="modal">Batal</button>
                                                     <a href="#" class="text-decoration-none">
                                                         <a id="updateThisURL"
                                                             href="{% url 'products:products_delete' p.id %}"
@@ -183,22 +182,6 @@
         // Tambahkan tombol ke dalam div custom
         tblProducts.buttons().container().appendTo('#custom-buttons');
     });
-
-
-    // Alert when trying to delete a product
-    $('#dataTable tbody')
-        // Event when whe try to delete a product
-        // We update the text, and href of the modal delete button
-        .on('click', 'button[rel="delete"]', function () {
-            // Row variable
-            var tr = tblProducts.cell($(this).closest('td, li')).index();
-            row_data = (tblProducts.row(tr.row).data());
-            product_id = row_data[0];
-            product_name = row_data[2]
-            new_delete_url = 'delete/' + product_id;
-            document.getElementById("updateThisText").innerHTML = "Are you sure you want to delete the product:  " + product_name + "?";
-            document.getElementById("updateThisURL").href = new_delete_url;
-        });
 
 
 </script>

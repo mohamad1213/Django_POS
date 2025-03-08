@@ -42,6 +42,8 @@ class Product(models.Model):
         Category, related_name="category", on_delete=models.CASCADE, db_column='category')
 
     price = models.FloatField(default=0)
+    # created_at = models.DateField(auto_now_add=True)
+    # updated_at = models.DateField()
     
 
     class Meta:

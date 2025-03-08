@@ -37,6 +37,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+## BERANDA PAGE
 @login_required(login_url="/accounts/login/")
 def indexPage(request):
 
@@ -122,48 +123,6 @@ def indexPage(request):
     }
 
     return render(request, 'general/dashboard/default/index.html', context)
-
-# def indexPage(request):
-    data = Transaksi.objects.all().order_by('-tanggal')
-    count = Transaksi.objects.count()  # Menghitung jumlah transaksi
-
-    calculate = [u.calculate_profit_loss for u in Transaksi.objects.filter(transaksi_choice='P')]
-    today = timezone.now().date()
-    total_pemasukan_harian = Transaksi.objects.annotate(tanggal_only=TruncDate('tanggal')).filter(tanggal_only=today, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_pemasukan_harian = Transaksi.objects.filter(tanggal=today, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_pemasukan_bulanan = Transaksi.objects.filter(tanggal__month=today.month, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_pengeluaran_harian = Transaksi.objects.filter(tanggal=today, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_pengeluaran_bulanan = Transaksi.objects.filter(tanggal__month=today.month, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_pengeluaran_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
-    total_hutang = HutangPiutang.objects.filter(tanggal__year=today.year, hutang_choice='H').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    total_piutang = HutangPiutang.objects.filter(tanggal__year=today.year, hutang_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    sisa_hutang = total_piutang - total_hutang
-    sisa_cashflow_harian = total_pemasukan_harian - total_pengeluaran_harian
-    sisa_cashflow_bulanan = total_pemasukan_bulanan - total_pengeluaran_bulanan
-    sisa_cashflow_tahunan = total_pemasukan_tahunan - total_pengeluaran_tahunan
-    context={
-        "breadcrumb":{"parent":"Dashboard","child":"Dashboard"},
-        'total_pemasukan_harian': total_pemasukan_harian,
-        'total_pemasukan_bulanan': total_pemasukan_bulanan,
-        'total_pemasukan_tahunan': total_pemasukan_tahunan,
-        'total_pengeluaran_harian': total_pengeluaran_harian,
-        'total_pengeluaran_bulanan': total_pengeluaran_bulanan,
-        'total_pengeluaran_tahunan': total_pengeluaran_tahunan,
-        'sisa_cashflow_harian': sisa_cashflow_harian,
-        'sisa_cashflow_bulanan': sisa_cashflow_bulanan,
-        'sisa_cashflow_tahunan': sisa_cashflow_tahunan,
-        'total_hutang': total_hutang,
-        'total_piutang': total_piutang,
-        'sisa_hutang': sisa_hutang,
-        'sisa_saldo': sisa_saldo,
-        'data':data,
-        'count':count,
-        'calculate':calculate
-        }
-
-    return render(request,'general/dashboard/default/index.html',context)
 
 #PROFIT
 @login_required(login_url="/accounts/login/")
@@ -511,6 +470,7 @@ def UpdateTr(request, pk):
     }
     return render(request, 'transaksi/index.html', context)
 
+#TABUNGAN
 @login_required(login_url="/accounts/login/")
 def tabungan_update_view(request, id):
     """
@@ -582,6 +542,47 @@ def laporan(request):
     }
     return render(request, 'laporan/laporan.html', context)
 
+def ChartReport(request):
+    periode = request.GET.get('periode', 'harian')  # Default harian
+    today = datetime.today()
+    labels= []
+    income_values = []
+    expense_values = []
+
+    if periode == 'harian':
+        labels = [(today - timedelta(days=i)).strftime('%d-%m-%Y') for i in range(6, -1, -1)]
+    elif periode == 'bulanan':
+        labels = [(today.replace(day=1) - timedelta(days=30 * i)).strftime('%b %Y') for i in range(5, -1, -1)]
+    elif periode == 'tahunan':
+        labels = [(today.year - i) for i in range(5, -1, -1)]
+
+
+    for label in labels:
+        if periode == 'harian':
+            date = datetime.strptime(label, '%d-%m-%Y').date()
+            total_income = Transaksi.objects.filter(tanggal=date, transaksi_choice='P').aggregate(total=Sum('jumlah'))['total'] or 0
+            total_expense = Transaksi.objects.filter(tanggal=date, transaksi_choice='L').aggregate(total=Sum('jumlah'))['total'] or 0
+
+        elif periode == 'bulanan':
+            start_date = datetime.strptime(label, '%b %Y').date()
+            end_date = (start_date + timedelta(days=31)).replace(day=1) - timedelta(days=1)
+            total_income = Transaksi.objects.filter(tanggal__range=[start_date, end_date], transaksi_choice='P').aggregate(total=Sum('jumlah'))['total'] or 0
+            total_expense = Transaksi.objects.filter(tanggal__range=[start_date, end_date], transaksi_choice='L').aggregate(total=Sum('jumlah'))['total'] or 0
+
+        elif periode == 'tahunan':
+            total_income = Transaksi.objects.filter(tanggal__year=label, transaksi_choice='P').aggregate(total=Sum('jumlah'))['total'] or 0
+            total_expense = Transaksi.objects.filter(tanggal__year=label, transaksi_choice='L').aggregate(total=Sum('jumlah'))['total'] or 0
+
+        income_values.append(total_income)
+        expense_values.append(total_expense)
+
+    data = {
+        "labels": labels,
+        "income_values": income_values,
+        "expense_values": expense_values
+    }
+
+    return JsonResponse(data)
 
 #print PDF
 @login_required(login_url="/accounts/login/")
@@ -698,46 +699,65 @@ def import_excel(request):
 @login_required(login_url="/accounts/login/")
 def AnalasisChart(request):
     start_date = datetime.now() - timedelta(days=365)
+    
+    # Ambil semua kategori
     categories = Kategori.objects.all()
     data = []
+    
     for kategori in categories:
         total_amount = Transaksi.objects.filter(kategori=kategori).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
         data.append({'kategori': kategori.nama, 'jumlah': float(total_amount)})
 
     labels_don = [item['kategori'] for item in data]
     values_don = [float(item['jumlah']) for item in data]
-    daily_data = Transaksi.objects.values('tanggal__date', 'transaksi_choice').annotate(total_jumlah=Sum('jumlah'))
 
-    labels = list(set(entry['tanggal__date'] for entry in daily_data))
-    labels.sort()  # Sort the dates chronologically
+    # Perbaikan query menggunakan TruncDate
+    daily_data = (
+        Transaksi.objects
+        .annotate(tanggal_hanya=TruncDate('tanggal'))
+        .values('tanggal_hanya', 'transaksi_choice')
+        .annotate(total_jumlah=Sum('jumlah'))
+    )
 
+    labels = sorted(set(entry['tanggal_hanya'] for entry in daily_data))
 
     return JsonResponse(data={
         'labels_don': labels_don, 
         'values_don': values_don, 
         'labels': labels,
-        })
+    })
+
 #chart donut
 @login_required(login_url="/accounts/login/")
 def chart_data(request):
-    daily_data = Transaksi.objects.values('tanggal__date', 'transaksi_choice').annotate(total_jumlah=Sum('jumlah'))
+    # Perbaiki query dengan TruncDate untuk mengambil hanya tanggalnya
+    daily_data = (
+        Transaksi.objects
+        .annotate(tanggal_hanya=TruncDate('tanggal'))  # Mengubah DateTimeField menjadi DateField
+        .values('tanggal_hanya', 'transaksi_choice')
+        .annotate(total_jumlah=Sum('jumlah'))
+    )
 
-    labels = list(set(entry['tanggal__date'] for entry in daily_data))
-    labels.sort()  # Sort the dates chronologically
+    labels = sorted(set(entry['tanggal_hanya'] for entry in daily_data))  # Pastikan tanggal terurut
+
+    # Inisialisasi daftar nilai dengan panjang sesuai jumlah label (tanggal unik)
     income_values = [0] * len(labels)
     expense_values = [0] * len(labels)
 
+    # Loop untuk mengisi data income dan expense berdasarkan transaksi_choice
     for entry in daily_data:
-        date_index = labels.index(entry['tanggal__date'])
+        date_index = labels.index(entry['tanggal_hanya'])  # Gunakan tanggal yang sudah diperbaiki
         if entry['transaksi_choice'] == 'P':
             income_values[date_index] = float(entry['total_jumlah'])
         elif entry['transaksi_choice'] == 'L':
             expense_values[date_index] = float(entry['total_jumlah'])
+
     return JsonResponse(data={
         'labels': labels,
         'income_values': income_values,
         'expense_values': expense_values,
-        })
+    })
+    
 from zeta import settings
 import os
 def fetch_resources(uri, rel):

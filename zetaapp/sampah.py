@@ -1,4 +1,4 @@
-def generate_chart_data(data, interval):
+`````def generate_chart_data(data, interval):
     chart_data = []
 
     if interval == 'daily':

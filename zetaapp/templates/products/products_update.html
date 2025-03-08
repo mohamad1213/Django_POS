@@ -1,5 +1,7 @@
 {% extends 'base.html' %}{% load static %}
 {% load sass_tags %}
+{% load humanize %}
+
 {% block css %}
 <!-- Plugins css start-->
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
@@ -71,8 +73,8 @@
                         <div class="form-row">
                             <div class="form-group col-md-8">
                                 <label for="inputPrice">Price</label>
-                                <input type="number" name="price" step="any" class="form-control"
-                                    value="{{product.price}}" required>
+                                <input type="text" name="price" step="any" class="form-control"
+                                    value="{{product.price|floatformat:0|intcomma }}" required>
                             </div>
                         </div>
 

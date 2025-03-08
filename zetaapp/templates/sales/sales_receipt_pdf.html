@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-{% load static %}
+{% load humanize %}
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt</title>
     <style>
         @page {
             size: A8 portrait;
@@ -11,9 +14,10 @@
 
         body {
             font-family: Arial, sans-serif;
+            font-size: 7px;
             margin: 0;
-            font-size: 6px; /* Ukuran font lebih kecil */
-            line-height: 1;
+            line-height: 1.2;
+            color: #333;
         }
 
         .header {
@@ -22,50 +26,63 @@
         }
 
         .header h1 {
+            font-size: 9px;
             margin: 0;
-            font-size: 8px; /* Ukuran font lebih kecil untuk header */
-            color: #333;
-        }
-
-        .header p {
-            margin: 1px 0;
-            font-size: 6px; /* Ukuran font lebih kecil untuk informasi header */
-        }
-
-        .invoice-table {
-            width: 100%;
-            margin-bottom: 5mm;
-            border-collapse: collapse;
-        }
-
-        .invoice-table td, .invoice-table th {
-            padding: 0.5mm; /* Padding yang lebih kecil */
-            text-align: left;
-            font-size: 6px; /* Ukuran font lebih kecil */
-            border-bottom: 0.5px solid #ddd; /* Garis bawah tipis */
-        }
-
-        .invoice-table th {
-            text-align: left;
-            background-color: #f4f4f4;
             font-weight: bold;
         }
 
-        .invoice-table td {
+        .header p {
+            font-size: 6px;
+            margin: 1px 0;
+        }
+
+        .section {
+            margin-bottom: 4mm;
+            padding-left: 2mm;
+        }
+
+        .section p {
+            font-size: 5px;
+            /* Ukuran lebih kecil */
+            margin: 0;
+            /* Hilangkan margin agar lebih rapat */
+            line-height: 1;
+            /* Sesuaikan jarak antar baris */
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6px;
+        }
+
+        th,
+        td {
+            padding: 1mm;
             text-align: left;
+            border-bottom: 0.5px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+            text-align: center;
         }
 
         .total-row td {
             font-weight: bold;
         }
 
+        .right {
+            text-align: right;
+        }
+
         .footer {
             text-align: center;
             margin-top: 5mm;
-            font-size: 6px; /* Ukuran font lebih kecil untuk footer */
-        }
-        .section p {
-            line-height: 0;
+            font-size: 7px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -73,51 +90,49 @@
 <body>
     <div class="header">
         <h1>POS PPJ Pralon</h1>
-        <p>4CRF+PCC, Jl. Sitimulyo Segoroyoso, Pamotan, Jambidan, Kec. Banguntapan, Kabupaten Bantul, Daerah Istimewa Yogyakarta 55195</p>
-    </div>
-    
-    <div class="section">
-        <p><b>Date:</b> {{sale.date_added|date:"d F Y, H:i"}}</p>
-        <p><b>Customer:</b> {{sale.customer.get_full_name}}</p>
-        <!-- <p stay><b>Sale ID:</b> {{sale.id}}</p> -->
+        <p>Jl. Sitimulyo Segoroyoso, Jambidan, Banguntapan, Bantul, Yogyakarta</p>
     </div>
 
-    <table class="invoice-table">
+    <div class="section">
+        <p><b>Tanggal:</b> {{ sale.date_added|date:"d F Y, H:i" }}</p>
+        <p><b>Pelanggan:</b> {{ sale.customer.get_full_name }}</p>
+    </div>
+
+    <table>
         <thead>
             <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
+                <th>Nama</th>
+                <th class="right">Qty</th>
+                <th class="right">Harga</th>
+                <th class="right">Total</th>
             </tr>
         </thead>
         <tbody>
             {% for d in details %}
             <tr>
-                <td>{{d.product.name}}</td>
-                <td>{{d.quantity}}</td>
-                <td>{{d.price}}</td>
-                <td>{{d.total_detail}}</td>
+                <td>{{ d.product.name }}</td>
+                <td class="right">{{ d.quantity }} kg</td>
+                <td class="right">{{ d.price|floatformat:0|intcomma }}</td>
+                <td class="right">{{ d.total_detail|floatformat:0|intcomma }}</td>
             </tr>
             {% endfor %}
-            <!-- Total rows -->
             <tr class="total-row">
-                <td colspan="3">Sub total:</td>
-                <td>{{sale.sub_total|floatformat:0}}</td>
+                <td colspan="3"><b>Sub Total</b></td>
+                <td class="right"><b>{{ sale.sub_total|floatformat:0|intcomma }}</b></td>
             </tr>
             <tr class="total-row">
-                <td colspan="3">Bayar:</td>
-                <td>{{ sale.amount_payed|floatformat:0 }}</td>
+                <td colspan="3"><b>Bayar</b></td>
+                <td class="right"><b>{{ sale.amount_payed|floatformat:0|intcomma }}</b></td>
             </tr>
             <tr class="total-row">
-                <td colspan="3">Sisa:</td>
-                <td>{{ sale.amount_change|floatformat:0 }}</td>
+                <td colspan="3"><b>Kembalian</b></td>
+                <td class="right"><b>{{ sale.amount_change|floatformat:0|intcomma }}</b></td>
             </tr>
         </tbody>
     </table>
 
     <div class="footer">
-        <h4 class="bold">THANK YOU</h4>
+        <p>TERIMA KASIH TELAH BERBELANJA</p>
     </div>
 </body>
 

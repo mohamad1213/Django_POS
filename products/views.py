@@ -140,7 +140,7 @@ def categories_delete_view(request, category_id):
 def products_list_view(request):
     context = {
         "active_icon": "products",
-        "products": Product.objects.all()
+        "products": Product.objects.all().order_by('-id')
     }
     return render(request, "products/products.html", context=context)
 
@@ -192,16 +192,12 @@ def products_add_view(request):
 
 @login_required(login_url="/accounts/login/")
 def products_update_view(request, product_id):
-    """
-    Args:
-        request:
-        product_id : The product's ID that will be updated
-    """
 
     # Get the product
     try:
         # Get the product to update
         product = Product.objects.get(id=product_id)
+        
     except Exception as e:
         sweetify.success(
             request, 'There was an error trying to get the product!', extra_tags="danger")

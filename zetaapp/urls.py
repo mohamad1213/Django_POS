@@ -41,7 +41,8 @@ urlpatterns = [
 
     
     #laporan
-    path('laporan/', views.laporan,name='laporan'),
+    path('laporan/', views.laporan, name='laporan'),
+    path('chart-report/', views.ChartReport , name='chart-report'),
     # path('export-to-excel/',views.export_to_excel, name='export_to_excel'),
     # path('export-to-pdf/', views.export_to_pdf, name='export_to_pdf'),
 

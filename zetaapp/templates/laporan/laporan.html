@@ -23,17 +23,33 @@
                 <div class="card">
                     <div class="card-header pb-0">
                         <form id="dateForm" action="{% url 'laporan' %}" method="GET">
-                            <div class="row">
+                            <div class="row mb-3">
+                                <!-- Pilihan Periode -->
                                 <div class="col-sm-3">
-                                    <label for="start_date">Start Date:</label>
-                                    <input class="datepicker-here form-control digits" type="text" id="start_date" name="start_date" data-language="en" data-date-format="yyyy-mm-dd">
+                                    <label for="periode">Pilih Periode:</label>
+                                    <select id="periode" name="periode" class="form-control">
+                                        <option value="harian">Harian</option>
+                                        <option value="mingguan">Mingguan</option>
+                                        <option value="bulanan">Bulanan</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
                                 </div>
-                                <div class="col-sm-3">
-                                    <label for="end_date">End Date:</label>
-
-                                    <input class="datepicker-here form-control digits" type="text" id="end_date" name="end_date" data-language="en" data-date-format="yyyy-mm-dd">
+                                <div class="col-md-4" id="custom-range" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <input class="datepicker-here form-control digits" type="text"
+                                                id="start_date" name="start_date" data-language="en"
+                                                data-date-format="yyyy-mm-dd" autocomplete="off">
+                                        </div>
+                                        <br>
+                                        <div class="col-md-6">
+                                            <input class="datepicker-here form-control digits" type="text" id="end_date"
+                                                name="end_date" data-language="en" data-date-format="yyyy-mm-dd"
+                                                autocomplete="off">
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-sm-3">
+                                <div class="col-sm-2">
                                     <label for="transaksi_choice">Jenis Transaksi:</label>
                                     <select class="form-control" id="transaksi_choice" name="transaksi_choice">
                                         <option value="">Semua</option>
@@ -41,11 +57,48 @@
                                         <option value="L">Pengeluaran</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-3 d-flex align-items-end">
+
+                                <!-- Tombol Submit -->
+                                <div class="col-sm-2 d-flex align-items-end">
                                     <button class="btn btn-primary" type="submit">Generate Report</button>
                                 </div>
                             </div>
                         </form>
+                    </div>
+                    {% if transactions %}
+                    <!-- Ringkasan Keuangan -->
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5>Total Pemasukan</h5>
+                                    <h3>Rp {{ pemasukan }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h5>Total Pengeluaran</h5>
+                                    <h3>Rp {{ pengeluaran }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5>Saldo Akhir</h5>
+                                    <h3>Rp {{ saldo }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grafik Keuangan -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div id="chart-line" style="height: 320px;"></div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- <div class="table-responsive"> -->
@@ -63,7 +116,6 @@
                                     <th scope="col" class="text-center">PENGELUARAN</th>
                                 </tr>
                             </thead>
-                            {% if transactions %}
                             <tbody>
                                 {% for u in transactions %}
                                 <tr class="text-center">
@@ -88,37 +140,68 @@
                                 </tr>
                                 {% endfor %}
                             </tbody>
-                            {% endif %}
                         </table>
                     </div>
+                    <div class="mt-4">
+                        <a href="#" class="btn btn-danger">🖨 Cetak PDF</a>
+                        <a href="#" class="btn btn-success">📥 Download Excel</a>
+                        <button onclick="window.print()" class="btn btn-primary">🖥 Print</button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <script>
-    document.getElementById('dateForm').addEventListener('submit', function (event) {
-        event.preventDefault(); // Prevent the default form submission behavior
+    document.addEventListener("DOMContentLoaded", function () {
+        const periodeSelect = document.getElementById("periode");
+        const customRangeDiv = document.getElementById("custom-range");
 
-        var startDate = document.getElementById('start_date').value;
-        var endDate = document.getElementById('end_date').value;
-        var transaksiChoice = document.getElementById('transaksi_choice').value;
-
-        // Check if both start date and end date are provided
-        if (!startDate || !endDate) {
-            alert('Please provide both start date and end date.');
-            return;
-        }
-
-        // Build the query parameters
-        var queryParams = '?start_date=' + startDate + '&end_date=' + endDate;
-        if (transaksiChoice) {
-            queryParams += '&transaksi_choice=' + transaksiChoice;
-        }
-
-        // Redirect to the report page with the provided dates and transaksi choice as query parameters
-        window.location.href = '/laporan/' + queryParams;
+        periodeSelect.addEventListener("change", function () {
+            if (periodeSelect.value === "custom") {
+                customRangeDiv.style.display = "block";
+            } else {
+                customRangeDiv.style.display = "none";
+            }
+        });
     });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.0.0-beta/dist/js/datepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/air-datepicker@3.0.0-beta/dist/css/datepicker.min.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Inisialisasi Datepicker
+    new AirDatepicker('#start_date', { dateFormat: 'yyyy-MM-dd' });
+    new AirDatepicker('#end_date', { dateFormat: 'yyyy-MM-dd' });
+
+    let periodeSelect = document.getElementById('periode');
+    let customRange = document.getElementById('custom-range');
+    let form = document.getElementById('dateForm');
+
+    // Tampilkan input tanggal jika 'Custom' dipilih
+    periodeSelect.addEventListener('change', function () {
+        if (this.value === 'custom') {
+            customRange.style.display = 'block';
+        } else {
+            customRange.style.display = 'none';
+        }
+    });
+
+    // Validasi Form Sebelum Submit
+    form.addEventListener('submit', function (event) {
+        let periode = periodeSelect.value;
+        let startDate = document.getElementById('start_date').value;
+        let endDate = document.getElementById('end_date').value;
+
+        if (periode === 'custom' && (!startDate || !endDate)) {
+            alert("Please provide both start date and end date.");
+            event.preventDefault();  // Mencegah form terkirim jika input kosong
+        }
+    });
+});
 </script>
 
 
@@ -159,8 +242,50 @@
     }
 </script>
 
-<!-- Individual column searching (text inputs) Ends-->
-<!-- Container-fluid Ends-->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function fetchDataAndRenderChart(periode) {
+            fetch(`/chart-report/?periode=${periode}`)
+                .then(response => response.json())
+                .then(data => {
+                    var options = {
+                        chart: {
+                            height: 320,
+                            type: "area",
+                            zoom: { enabled: false },
+                        },
+                        stroke: { curve: "smooth" },
+                        series: [
+                            { name: "Pemasukan", data: data.income_values, color: '#28a745' },
+                            { name: "Pengeluaran", data: data.expense_values, color: '#dc3545' }
+                        ],
+                        xaxis: { categories: data.labels },
+                        yaxis: {
+                            labels: {
+                                formatter: function (value) {
+                                    return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                                }
+                            },
+                        }
+                    };
+
+                    document.querySelector("#chart-line").innerHTML = "";  // Reset canvas
+                    var chart = new ApexCharts(document.querySelector("#chart-line"), options);
+                    chart.render();
+                });
+        }
+
+        // Fetch default data (harian)
+        fetchDataAndRenderChart("harian");
+
+        // Update chart on period change
+        document.getElementById('periode').addEventListener('change', function () {
+            fetchDataAndRenderChart(this.value);
+        });
+    });
+</script>
+
 </div>
 {% endblock content %}
 {% block scriptcontent %}
