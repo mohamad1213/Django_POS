@@ -70,6 +70,9 @@
                                                         <i class="fas fa-receipt"></i>
                                                     </button>
                                                 </a>
+                                                <button class="btn btn-danger btn-sm delete-sale" data-sale-id="{{ sale.id }}">
+                                                    Hapus
+                                                </button>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -210,4 +213,35 @@
         });
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".delete-sale").forEach(button => {
+            button.addEventListener("click", function() {
+                let saleId = this.getAttribute("data-sale-id");
+    
+                if (confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+                    fetch("{% url 'sales:delete_sale' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        body: JSON.stringify({ sale_id: saleId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload(); // Refresh halaman setelah delete
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => console.error("Error:", error));
+                }
+            });
+        });
+    });
+    </script>
+    
 {% endblock %}

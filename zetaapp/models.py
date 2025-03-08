@@ -59,24 +59,19 @@ class Transaksi(models.Model):
     transaksi_choice= models.CharField(max_length=1, choices=JENIS_CHOICES, blank=True, null=True)
     kategori = models.ForeignKey(Kategori, on_delete=models.CASCADE, blank=True, null=True)
     def calculate_profit_loss(self):
-        # Assuming the buy and sell transactions are related by date
         buy_transaction = Transaksi.objects.filter(
             transaksi_choice='L',
             tanggal__lte=self.tanggal
         ).order_by('-tanggal').first()
 
         if self.transaksi_choice == 'P' and buy_transaction:
-            # Calculate profit or loss
             profit_loss = self.jumlah - buy_transaction.jumlah
             return profit_loss
-        else:
-            return 0
+        return 0
 
     def __str__(self):
         return f"{self.get_transaksi_choice_display()} - {self.jumlah} on {self.tanggal}"
 
-    def __str__(self):
-        return self.keterangan
 
 class HutangPiutang(models.Model):
     HUTANG = 'H'

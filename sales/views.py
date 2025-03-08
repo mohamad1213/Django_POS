@@ -16,7 +16,8 @@ from xhtml2pdf import pisa
 from django.views import View
 from django.http import JsonResponse
 from zetaapp.models import Transaksi
-
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
@@ -94,6 +95,30 @@ def sales_details_view(request, sale_id):
             request, 'There was an error getting the sale!', extra_tags="danger")
         print(e)
         return redirect('sales:sales_list')
+    
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
+@login_required(login_url="/accounts/login/")
+def delete_sale(request):
+    if request.method == "POST" and is_ajax(request=request):
+        try:
+            data = json.load(request)
+            sale_id = data.get("sale_id")
+            sale = get_object_or_404(Sale, id=sale_id)
+
+            # Hapus semua detail transaksi terlebih dahulu
+            SaleDetail.objects.filter(sale=sale).delete()
+            sale.delete()
+
+            response_data = {"success": True, "message": "Transaksi berhasil dihapus!"}
+        except Exception as e:
+            response_data = {"success": False, "message": f"Terjadi kesalahan: {str(e)}"}
+
+        return JsonResponse(response_data)
+
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
 
 def render_to_pdf(template_src, context_dict={}):
 	template = get_template(template_src)
