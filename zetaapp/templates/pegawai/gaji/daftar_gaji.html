@@ -1,0 +1,38 @@
+{% extends 'base_absensi.html' %}
+
+{% block content %}
+<h2>Daftar Gaji</h2>
+<a href="{% url 'hitung_gaji' %}" class="btn btn-primary">Hitung Gaji</a>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nama Pegawai</th>
+            <th>Bulan</th>
+            <th>Tahun</th>
+            <th>Total Hadir</th>
+            <th>Total Gaji</th>
+            <th>Status</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for gaji in gaji_list %}
+        <tr>
+            <td>{{ gaji.pegawai.nama }}</td>
+            <td>{{ gaji.bulan }}</td>
+            <td>{{ gaji.tahun }}</td>
+            <td>{{ gaji.total_hadir }} hari</td>
+            <td>Rp {{ gaji.total_gaji }}</td>
+            <td>{{ gaji.status }}</td>
+            <td>
+                {% if gaji.status == 'Pending' %}
+                <a href="{% url 'approve_gaji' gaji.id %}" class="btn btn-success">Approve</a>
+                {% else %}
+                ✅ Approved
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

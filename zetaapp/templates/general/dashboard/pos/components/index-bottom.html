@@ -1,0 +1,220 @@
+{% load static %}
+{% load sass_tags %}
+
+<div class="row">
+  <div class="col-xl-12 col-md-12 box-col-12">
+    <div class="card o-hidden">
+      <div class="card-header pb-0">
+        <div class="media">
+          <div class="media-body">
+            <h5>Grafik pemasukan dan Pengeluaran</h5>
+          </div>
+          <div class="icon-box onhover-dropdown"><i data-feather="more-horizontal"></i>
+            <div class="icon-box-show onhover-show-div">
+              <!-- <select class="form-control" id="chartType" onchange="updateChart()">
+                <option value="daily">Daily</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select> -->
+              <ul id="chartType" onchange="updateChart()">
+                <li> <a value="daily">Harian</a></li>
+                <li> <a value="monthly">Bulanan</a></li>
+                <li> <a value="yearly">Tahunan</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bar-chart-widget">
+        <div class="bottom-content card-body">
+          <div class="row">
+            <div class="col-12">
+              <div id="chart-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+      // Ganti 'daily', 'monthly', atau 'yearly' sesuai dengan kebutuhan Anda
+      fetch(`/chart_data/`)
+        .then(response => response.json())
+        .then(data => {
+          var options = {
+            dataLabels:{
+              enabled:true,
+            },
+            chart: {
+              height: 320,
+              type: "area",
+              zoom: {
+                enabled: false,
+              },
+            },
+            stroke: {
+              curve: "smooth",
+            },
+            series: [{
+              name: "Pemasukan",
+              data: data.income_values,
+              // color: 'rgb(16, 83, 156);',  // Set color for 'Pemasukan' line
+            },
+            {
+              name: "Pengeluaran",
+              data: data.expense_values,
+              // color: '#F28585',  // Set color for 'Pemasukan' line
+            }],
+            xaxis: {
+              categories: data.labels,
+            },
+
+            yaxis: {
+              labels: {
+                formatter: function (value) {
+                  return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                }
+              },
+            },
+            // fill: {
+            //   type: 'image',
+            //   opacity: 0.85,
+            //   image: {
+            //     src: ['../../assets/images/stripes.jpg', '../../assets/images/1101098.png', '../../assets/images/4679113782_ca13e2e6c0_z.jpg', '../../assets/images/2979121308_59539a3898_z.jpg'],
+            //     width: 25,
+            //     imagedHeight: 25
+            //   },
+            // },
+          }
+          var chartturnoverchart = new ApexCharts(
+            document.querySelector("#chart-line"), options);
+          chartturnoverchart.render();
+        });
+    });
+  </script>
+  <!-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+      // Ganti 'daily', 'monthly', atau 'yearly' sesuai dengan kebutuhan Anda
+      fetch(`/chart_data/`)
+        .then(response => response.json())
+        .then(data => {
+
+          var options = {
+            series: [{
+              name: "Pemasukan",
+              data: data.values_pemasukan,
+            },
+            {
+              name: "Pengeluaran",
+              data: data.values_pengeluaran,
+            },],
+            chart: {
+              type: 'bar',
+              height: 380
+            },
+            legend: {
+              show: true,
+            },
+            plotOptions: {
+              bar: {
+                radius: 10,
+                // horizontal: false,
+                columnWidth: "55%",
+                endingShape: "rounded",
+                colors: {
+                  ranges: [{
+                    from: -100,
+                    to: -46,
+                    color: '#F15B46'
+                  }, {
+                    from: -45,
+                    to: 0,
+                    color: '#FEB019'
+                  }]
+                },
+                columnWidth: '80%',
+              }
+            },
+            labels: {
+              rotate: -90
+            },
+
+            dataLabels: {
+              enabled: true,
+              enabledOnSeries: true
+              // enabled:false
+            },
+            xaxis: {
+              categories: [
+                data.labels
+              ],
+            },
+            grid: {
+              show: false,
+              padding: {
+                left: 0,
+                right: 0,
+              },
+            },
+
+            // colors: [zetaAdminConfig.primary, zetaAdminConfig.secondary, "#51bb25"],
+            stroke: {
+              show: true,
+              // colors: ["transparent"],
+              curve: "smooth",
+              lineCap: "butt",
+            },
+            yaxis: {
+              labels: {
+                formatter: function (val) {
+                  return 'Rp ' + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }
+              },
+              reversed: false,
+              axisTicks: {
+                show: true
+              },
+              title: {
+                text: "Rp. (Rupiah)",
+              },
+              tooltip: {
+                x: {
+                  format: 'dd MMM yyyy',
+                  formatter: function (val) {
+                    return 'Date: ' + val;
+                  }
+                },
+                y: {
+                  formatter: function (val) {
+                    return 'Rp ' + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                  }
+                }
+              },
+              fill: {
+                type: "gradient",
+                gradient: {
+                  shade: "light",
+                  type: "vertical",
+                  shadeIntensity: 0.1,
+                  opacityFrom: 1,
+                  opacityTo: 0.9,
+                  stops: [0, 100],
+                },
+              },
+            }
+
+
+          };
+
+          var chart = new ApexCharts(document.querySelector('#chart'), options);
+          chart.render();
+
+        });
+
+    });
+
+    updateChart();
+  </script> -->

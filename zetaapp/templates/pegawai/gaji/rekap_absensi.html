@@ -1,0 +1,106 @@
+{% extends 'base_absensi.html' %}{% load static %}
+{% load sass_tags %}
+{% load humanize %}
+{% load sass_tags %}
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<!-- Plugins css Ends-->
+{% endblock css %}
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+
+    <!-- Container-fluid starts-->
+    <div class="container-fluid list-products">
+        <div class="row">
+            <!-- Individual column searching (text inputs) Starts-->
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="mb-4">Rekapitulasi Absensi Mingguan</h2>
+                        <p>Periode: {{ minggu_mulai }} - {{ minggu_selesai }}</p>
+
+                        <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nama Pegawai</th>
+                                    <th>Total Hadir</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in rekapitulasi %}
+                                <tr>
+                                    <td>{{ data.pegawai.nama }}</td>
+                                    <td>{{ data.total_hadir }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="card-body">
+                            <form method="GET" class="mb-3">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        {{ form.tanggal_mulai.label_tag }}
+                                        {{ form.tanggal_mulai }}
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary">Filter</button>
+                                    </div>
+                                </div>
+                            </form>
+                            {% if absensi_data %}
+                            <div class="accordion" id="absensiAccordion">
+                                {% for minggu, absensi_list in absensi_data.items %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
+                                            aria-controls="collapse{{ forloop.counter }}">
+                                            Absensi Minggu: {{ minggu }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                                        aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#absensiAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nama Pegawai</th>
+                                                        <th>Tanggal</th>
+                                                        <th>Jam Masuk</th>
+                                                        <th>Jam Keluar</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for absensi in absensi_list %}
+                                                    <tr>
+                                                        <td>{{ absensi.pegawai.nama }}</td>
+                                                        <td>{{ absensi.tanggal }}</td>
+                                                        <td>{{ absensi.jam_masuk|default:"-" }}</td>
+                                                        <td>{{ absensi.jam_keluar|default:"-" }}</td>
+                                                        <td>{{ absensi.status }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-center mt-4">Silakan pilih tanggal untuk melihat rekap absensi.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'base_absensi.html' %}
+
+{% block content %}
+<h2>Detail Pegawai</h2>
+<p><b>Nama:</b> {{ pegawai.nama }}</p>
+<p><b>Posisi:</b> {{ pegawai.posisi }}</p>
+<p><b>Gaji Harian:</b> Rp {{ pegawai.gaji_harian }}</p>
+<a href="{% url 'daftar_pegawai' %}" class="btn btn-secondary">Kembali</a>
+{% endblock %}

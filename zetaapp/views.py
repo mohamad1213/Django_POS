@@ -39,6 +39,17 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 ## BERANDA PAGE
 @login_required(login_url="/accounts/login/")
+def Absensi(request):
+    return render (request, 'general/dashboard/absensi/tes.html')
+@login_required(login_url="/accounts/login/")
+def Pos(request):
+    return render (request, 'general/dashboard/pos/index.html')
+
+@login_required(login_url="/accounts/login/")
+def menuPage(request):
+    return render (request, 'general/dashboard/menu/menu.html')
+    
+@login_required(login_url="/accounts/login/")
 def indexPage(request):
 
     today = timezone.localtime(timezone.now()).date()  # Tanggal dengan zona waktu yang benar

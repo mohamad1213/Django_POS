@@ -1,0 +1,113 @@
+{% extends 'base_absensi.html' %}
+{% load sass_tags %}
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<!-- Plugins css Ends-->
+{% endblock css %}
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+
+    <div class="container-fluid list-products">
+        <div class="row">
+            <!-- Individual column searching (text inputs) Starts-->
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <div class="d-flex justify-content-between mb-3">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#Absensiform">
+                                Tambah Absensi
+                            </button>
+                            <div>
+                                <a href="#" class="btn btn-success">Export Excel</a>
+                                <a href="#" class="btn btn-danger">Export PDF</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Pegawai</th>
+                                    <th>Tanggal</th>
+                                    <th>Jam (Masuk/Keluar)</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in absensi_list %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{u.pegawai}}</td>
+                                    <td> {{u.tanggal}} </td>
+                                    <td>{{u.jam_masuk}} / {{u.jam_keluar}}</td>
+                                    <td> {{u.status}} </td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#absensiModal">✏
+                                            Edit</button>
+                                        <a href="{}" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#absensiModal">✏
+                                            Edit</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="modal fade" id="Absensiform" tabindex="-1" aria-labelledby="exampleModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Absensi</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form class="form theme-form" method="POST" enctype="multipart/form-data">
+                                            {% load crispy_forms_tags %}
+                                            {% csrf_token %}
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Nama</label>
+                                                {{form.pegawai}}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Tanggal</label>
+                                                {{form.tanggal}}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Jam (Masuk / Keluar)</label>
+                                                {{form.jam_masuk}} - {{form.jam_keluar}}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="col-form-label pt-0">Status</label>
+                                                {{form.status}}
+                                            </div>
+                                            {% if form.errors %}
+                                            <div class="alert alert-danger" id="msg">
+                                                {{ form.errors }}
+                                            </div>
+                                            {% endif %}
+                                            <div class="card-footer border-0 pt-0" style="text-align: right;">
+                                                <button class="btn btn-warning" type="reset">Cancel</button>
+                                                <button class="btn btn-primary" type="submit">Submit</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

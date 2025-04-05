@@ -7,7 +7,14 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from django.contrib.auth import get_user_model
 from zetaapp.models import Kategori
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 
+# Ganti dengan lokasi ChromeDriver yang sudah diunduh
+# PATH_TO_CHROMEDRIVER = "D:\template\template\zetaapp\tests\chromedriver.exe"
+
+# service = Service(PATH_TO_CHROMEDRIVER)
+# driver = webdriver.Chrome(service=service)
 User = get_user_model()
 
 class TransaksiTest(StaticLiveServerTestCase):

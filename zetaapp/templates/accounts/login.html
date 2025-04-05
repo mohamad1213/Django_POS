@@ -2,6 +2,7 @@
 {% load sass_tags %}
 {% block css %}
 <!-- Plugins css start-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
 <!-- Plugins css Ends-->
 {% endblock css %}
@@ -19,11 +20,44 @@
 </div>
 <!-- Loader ends-->
 <!-- page-wrapper Start-->
+<style>
+
+    /* Pastikan div cukup tinggi */
+    .col-xl-5-custom {
+        /* margin-top: 100px; */
+        /* Tambahkan margin atas */
+        min-height: 500px;
+        /* Sesuaikan agar gambar tidak terpotong */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Atur gambar agar tidak terpotong */
+    .bg-img-cover {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+        /* Pastikan gambar tetap proporsional */
+        display: block;
+    }
+
+    /* Jika gambar digunakan sebagai background */
+    .bg-center {
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+
 <section>
     <div class="container-fluid p-0">
         <div class="row m-0">
-            <div class="col-xl-5 p-0"><img class="bg-img-cover bg-center" src="{% static 'assets/images/login/3.jpg' %}"
-                    alt="looginpage"></div>
+            <div class="col-xl-5 p-0 col-xl-5-custom">
+                <img class="bg-img-cover bg-center" src="{% static 'assets/images/bg_login_true.jpg' %}" alt="Login Page">
+            </div>
             <div class="col-xl-7 p-0">
                 <div class="login-card">
                     {% if msg %}
@@ -67,5 +101,6 @@
 {% block scriptcontent %}
 <!-- Plugins JS start-->
 <script src="{% static 'assets/js/sweet-alert/sweetalert.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Plugins JS Ends-->
 {% endblock scriptcontent %}

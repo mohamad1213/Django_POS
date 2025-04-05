@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% load static %}
+{% extends 'base_pos.html' %}{% load static %}
 {% load sass_tags %}
 {% block css %}
 <!-- Plugins css start-->
@@ -10,7 +10,7 @@
 {% endblock css %}
 {% block content %}
 <div class="page-body">
-    {% include 'layout/breadcrumb.html' %}
+    {% include 'layout_pos/breadcrumb.html' %}
 
     <!-- Container-fluid starts-->
     <div class="container-fluid list-products">
@@ -126,7 +126,6 @@
 <script src="{% static 'assets/js/ecommerce.js' %}"></script>
 <script src="{% static 'assets/js/product-list-custom.js' %}"></script>
 <!-- Plugins JS Ends-->
-{% endblock scriptcontent %}
 <!--Datatables-->
 <script>
     // Call the dataTables jQuery plugin

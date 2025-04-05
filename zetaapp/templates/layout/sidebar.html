@@ -2,17 +2,23 @@
 <div class="sidebar-wrapper">
   <div>
     <div class="logo-wrapper">
-      <a href="/"><img class="img-fluid for-light" src="{% static 'assets/images/logo/small-logo.png' %}" alt="" /><img
-          class="img-fluid for-dark" src="{% static 'assets/images/logo/small-white-logo.png' %}" alt="" /></a>
+      <a href="/"><img class="img-fluid for-light" style="height: 70px; width: 200px;"
+          src="{% static 'assets/images/Logo2.png' %}" alt="" />
+          <img class="img-fluid for-dark"
+          src="{% static 'assets/images/Logo2.png' %}" alt="" /></a>
       <div class="back-btn"><i class="fa fa-angle-left"></i></div>
     </div>
     <div class="logo-icon-wrapper">
-      <a href="/"><img class="img-fluid" src="{% static 'assets/images/logo-icon.png' %}" alt="" /></a>
+      <a href="/"><img class="img-fluid" style="height: 400px; width: 600px;"
+          src="{% static 'assets/images/Logo2.png' %}" alt="" /></a>
     </div>
+    <br>
+    
     <nav class="sidebar-main">
       <div class="left-arrow" id="left-arrow">
         <i data-feather="arrow-left"></i>
       </div>
+      <br>
       <div id="sidebar-menu">
         <ul class="sidebar-links" id="simple-bar">
           <li class="back-btn">
@@ -21,24 +27,32 @@
               <span>Back</span><i class="fa fa-angle-right ps-2" aria-hidden="true"> </i>
             </div>
           </li>
+
           <li class="sidebar-list">
             <a class="sidebar-link {% if url_name == 'dashboard' %}active{% endif %} sidebar-title link-nav"
               href="{% url 'dashboard' %}">
               <i data-feather="home"></i><span>Dashboard</span></a>
-          <li class="sidebar-list">
-            <a class="sidebar-link {% if url_name == 'customers:customers_list' %}active{% endif %}  sidebar-title link-nav"
-              href="{% url 'customers:customers_list' %}">
-              <i data-feather="activity"></i><span>Customers</span></a>
           </li>
           <li class="sidebar-list">
-            <a class="sidebar-link {% if url_name == 'products:products_list' %}active{% endif %}  sidebar-title link-nav"
-              href="{% url 'products:products_list' %}">
-              <i data-feather="activity"></i><span>Products</span></a>
-          </li>
-          <li class="sidebar-list">
-            <a class="sidebar-link {% if url_name == 'sales:sales_list' %}active{% endif %}  sidebar-title link-nav"
-              href="{% url 'sales:sales_list' %}">
-              <i data-feather="activity"></i><span>POS</span></a>
+            <a href="#" class="sidebar-link" data-bs-toggle="collapse" data-bs-target="#Product"
+              aria-expanded="false">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                  <g>
+                    <path d="M9.07861 16.1355H14.8936" stroke="#130F26" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round"></path>
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                      d="M2.3999 13.713C2.3999 8.082 3.0139 8.475 6.3189 5.41C7.7649 4.246 10.0149 2 11.9579 2C13.8999 2 16.1949 4.235 17.6539 5.41C20.9589 8.475 21.5719 8.082 21.5719 13.713C21.5719 22 19.6129 22 11.9859 22C4.3589 22 2.3999 22 2.3999 13.713Z"
+                      stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </g>
+                </g>
+              </svg><span>Manajemen POS</span></a>
+            <ul class="collapse list-unstyled ps-3" id="Product">
+              <li><a href="{% url 'sales:sales_list' %}" class="sidebar-link">POS</a></li>
+              <li><a href="{% url 'products:products_list' %}" class="sidebar-link">Data Barang</a></li>
+              <li><a href="{% url 'customers:customers_list' %}" class="sidebar-link">Data Pelanggan</a></li>
+              <li><a href="{% url 'products:categories_list' %}" class="sidebar-link">Data Kategori</a></li>
+            </ul>
           </li>
           <li class="sidebar-list">
             <a class="sidebar-link {% if url_name == 'transaksi' %}active{% endif %}  sidebar-title link-nav"
@@ -46,14 +60,23 @@
               <i data-feather="activity"></i><span>Transaksi</span></a>
           </li>
           <li class="sidebar-list">
-            <a class="sidebar-link {% if url_name == 'hutang' %}active{% endif %}  sidebar-title link-nav"
-              href="{% url 'hutang' %}">
-              <i data-feather="refresh-ccw"></i><span>Hutang Piutang Ortu</span></a>
-          </li>
-          <li class="sidebar-list">
-            <a class="sidebar-link {% if url_name == 'hutangpeg' %}active{% endif %}  sidebar-title link-nav"
-              href="{% url 'hutangpeg' %}">
-              <i data-feather="repeat"></i><span>Hutang Piutang Pegawai</span></a>
+            <a href="#" class="sidebar-link" data-bs-toggle="collapse" data-bs-target="#Hutang"
+              aria-expanded="false">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                  <g>
+                    <path d="M9.07861 16.1355H14.8936" stroke="#130F26" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round"></path>
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                      d="M2.3999 13.713C2.3999 8.082 3.0139 8.475 6.3189 5.41C7.7649 4.246 10.0149 2 11.9579 2C13.8999 2 16.1949 4.235 17.6539 5.41C20.9589 8.475 21.5719 8.082 21.5719 13.713C21.5719 22 19.6129 22 11.9859 22C4.3589 22 2.3999 22 2.3999 13.713Z"
+                      stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </g>
+                </g>
+              </svg><span>Manajemen Hutang</span></a>
+            <ul class="collapse list-unstyled ps-3" id="Hutang">
+              <li><a href="{% url 'hutang' %}" class="sidebar-link">Hutang Ortu</a></li>
+              <li><a href="{% url 'hutangpeg' %}" class="sidebar-link">Hutang Pegawai</a></li>
+            </ul>
           </li>
           <li class="sidebar-list">
             <a class="sidebar-link {% if url_name == 'profit' %}active{% endif %}  sidebar-title link-nav"

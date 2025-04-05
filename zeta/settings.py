@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'zetaapp',
     'customers',
     'products',
+    'pegawai',
     'sales',
     'authentication',
     'sweetify'

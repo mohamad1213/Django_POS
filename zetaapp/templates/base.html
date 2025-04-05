@@ -11,10 +11,9 @@
   <meta name="keywords"
     content="admin template, Zeta admin template, dashboard template, flat admin template, responsive admin template, web app" />
   <meta name="author" content="pixelstrap" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="icon" href="{% static 'assets/images/logo/favicon-icon.png' %}" type="image/x-icon" />
   <link rel="shortcut icon" href="{% static 'assets/images/logo/favicon-icon.png' %}" type="image/x-icon" />
-  <title>PPJ Financial Management</title>
+  <title>Zeta admin dashboard</title>
   <!-- Google font-->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
@@ -45,9 +44,6 @@
   <link id="color" rel="stylesheet" href="{% sass_src 'assets/scss/color-1.scss' %}" media="screen" />
   <!-- Responsive css-->
   <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/responsive.scss' %}" />
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
-
-
 </head>
 
 <body class="{{layout}}">
@@ -76,9 +72,6 @@
     <div class="page-body-wrapper">
       <!-- Page Sidebar Start-->
       {% include 'layout/sidebar.html' %}
-      <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{% block heading %}{% endblock %}</h1>
-    </div>
       <!-- Page Sidebar Ends-->
       <!-- page body starts from breadcrumbs -->
       {% block content %}{% endblock content %}
@@ -97,16 +90,10 @@
   <script src="{% static 'assets/js/icons/feather-icon/feather.min.js' %}"></script>
   <script src="{% static 'assets/js/icons/feather-icon/feather-icon.js' %}"></script>
   <!-- scrollbar js-->
-  <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
-  <script src="{% static 'assets/js/notify/bootstrap-notify.min.js' %}"></script>
-  <script src="{% static 'assets/js/icons/icons-notify.js' %}"></script>
-  <script src="{% static 'assets/js/icons/icon-clipart.js' %}"></script>
   <script src="{% static 'assets/js/scrollbar/simplebar.js' %}"></script>
   <script src="{% static 'assets/js/scrollbar/custom.js' %}"></script>
   <!-- Sidebar jquery-->
   <script src="{% static 'assets/js/config.js' %}"></script>
-  <!-- <script src="{% static 'assets/js/sweet-alert/sweetalert.min.js' %}"></script>
-<script src="{% static 'assets/js/sweet-alert/app.js' %}"></script> -->
   {% block scriptcontent %}{% endblock %}
 
   <!-- Plugins JS Ends-->
@@ -119,6 +106,3 @@
 </body>
 
 </html>
-
-{% load sweetify %}
-{% sweetify %}
