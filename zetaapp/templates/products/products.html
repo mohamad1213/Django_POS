@@ -1,4 +1,4 @@
-{% extends 'base_pos.html' %}{% load static %}
+{% extends 'base.html' %}{% load static %}
 {% load sass_tags %}
 {% load humanize %}
 {% block css %}
@@ -11,10 +11,32 @@
 {% endblock css %}
 {% block content %}
 <div class="page-body">
-    {% include 'layout_pos/breadcrumb.html' %}
+    {% include 'layout/breadcrumb.html' %}
 
     <!-- Container-fluid starts-->
     <div class="container-fluid list-products">
+        <div class="row mb-4">
+            {% for item in totals_per_product %}
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm text-center">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">{{ item.product__name }}</h6>
+                        <h3 class="card-title">{{ item.total_qty|default:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-md-12">
+                <div class="card shadow-sm text-center">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Belum ada barang</h6>
+                        <h3 class="card-title">0</h3>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
 
         <!-- DataTable -->
         <div class="card shadow mb-12">
@@ -28,16 +50,16 @@
                     </a>
                 </div>
                 <div class="table-responsive">
-                    <div id="custom-buttons"></div>    
+                    <div id="custom-buttons"></div>
                     <table class="table table-bordered display table-striped dataTable no-footer" id="prodata">
                         <thead>
                             <tr>
                                 <th>NO</th>
                                 <th>Nama</th>
                                 <th>Kategori</th>
-                                <th class="text-center" >Harga</th>
-                                <th class="text-center" >Status</th>
-                                <th class="text-center" >Actions</th>
+                                <th class="text-center">Harga</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,29 +108,29 @@
                                                     </button>
                                                 </div>
                                                 <p>{{p.name}}</p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Batal</button>
-                                                    <a href="#" class="text-decoration-none">
-                                                        <a id="updateThisURL"
-                                                            href="{% url 'products:products_delete' p.id %}"
-                                                            class="text-decoration-none">
-                                                            <button type="button" class="btn btn-danger">Hapus</button>
-                                                        </a>
-                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Batal</button>
+                                                <a href="#" class="text-decoration-none">
+                                                    <a id="updateThisURL"
+                                                        href="{% url 'products:products_delete' p.id %}"
+                                                        class="text-decoration-none">
+                                                        <button type="button" class="btn btn-danger">Hapus</button>
+                                                    </a>
                                             </div>
                                         </div>
                                     </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
                 </div>
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock content %}
 {% block scriptcontent %}

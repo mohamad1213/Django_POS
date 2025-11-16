@@ -11,7 +11,11 @@ class ExcelUploadForm(forms.Form):
         model = Transaksi
         exclude = ['owner']
         widgets = {
-            'jumlah': forms.TextInput({'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'rupiah','id':"rupiah"}),
+            'jumlah': forms.TextInput(attrs={
+                'class': 'form-control',
+                'id': 'id_jumlah',
+                'placeholder': 'Rp 0',
+            }),
             'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.date.value|date:"d-m-Y"}}'}),
             'keterangan': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
         }
@@ -28,9 +32,9 @@ class TransaksiForms(ModelForm):
         model = Transaksi
         exclude = ['owner']
         widgets = {
-            'jumlah': forms.TextInput({'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'rupiah','id':"rupiah"}),
+            'jumlah': forms.TextInput({'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'rupiah','id':"id_jumlah"}),
             'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.date.value|date:"d-m-Y"}}'}),
-            'keterangan': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
+            'keterangan': forms.Textarea(attrs={'rows': 3, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
         }
     def __init__(self, *args, **kwargs):
         super(TransaksiForms, self).__init__(*args, **kwargs)
@@ -71,6 +75,28 @@ class HutangPegForms(ModelForm):
 
 
 class ProfitForms(ModelForm):
+    class Meta:
+        model = Profito2
+        fields = '__all__'
+        widgets = {
+            'tanggal': forms.DateInput(attrs={
+                'type':'date',
+                'class':'form-control'
+            }),
+            'nama_barang': forms.TextInput(attrs={'class':'form-control'}),
+            'harga_beli': forms.TextInput(attrs={'class':'form-control', 'id':'id_harga_beli', 'placeholder':'Rp 0'}),
+            'harga_jual': forms.TextInput(attrs={'class':'form-control', 'id':'id_harga_jual', 'placeholder':'Rp 0'}),
+            'solar': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_solar', 'placeholder':'Rp 0'}),
+            'karung': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_karung', 'placeholder':'Rp 0'}),
+            'ongkos_kirim': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_kirim', 'placeholder':'Rp 0'}),
+            'ongkos_muat': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_muat', 'placeholder':'Rp 0'}),
+            'ongkos_lain': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_lain', 'placeholder':'Rp 0'}),
+            'ongkos_sortir': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_sortir', 'placeholder':'Rp 0'}),
+            'ongkos_giling': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_giling', 'placeholder':'Rp 0'}),
+            'biaya_darurat_mesin': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_biaya_darurat_mesin', 'placeholder':'Rp 0'}),
+            'keterangan': forms.Textarea(attrs={'class':'form-control', 'rows':3}),
+        }
+class Profit2Forms(ModelForm):
     class Meta:
         model = Profito
         exclude = ['owner']

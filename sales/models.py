@@ -43,9 +43,9 @@ class Sale(models.Model):
                 owner=None,  # Bisa diisi user yang membuat sale
                 jumlah=self.sub_total,  # Jumlah pengeluaran = total penjualan
                 tanggal=self.date_added.date(),
-                keterangan=f"Pengeluaran dari penjualan {self.transaction_number}",
+                keterangan=f"Penjualan {self.transaction_number}",
                 transaksi_choice=Transaksi.PENGELUARAN,
-                kategori=None  # Sesuaikan dengan kategori pengeluaran
+                kategori=None,
             )
 
     def generate_invoice_number(self):

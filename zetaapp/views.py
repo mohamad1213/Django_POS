@@ -3,8 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponseRedirect
 from django.http import JsonResponse, HttpResponse
 import openpyxl
+from datetime import datetime, date
+from django.db import transaction
+import re
+from datetime import datetime, time
 from django.http import HttpResponse
 from django.shortcuts import render
+from collections import defaultdict
 from .models import *
 from .forms import *
 from django.contrib import messages
@@ -37,79 +42,128 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+from sales.models import SaleDetail
 ## BERANDA PAGE
-@login_required(login_url="/accounts/login/")
-def Absensi(request):
-    return render (request, 'general/dashboard/absensi/tes.html')
-@login_required(login_url="/accounts/login/")
-def Pos(request):
-    return render (request, 'general/dashboard/pos/index.html')
+import logging
 
-@login_required(login_url="/accounts/login/")
-def menuPage(request):
-    return render (request, 'general/dashboard/menu/menu.html')
-    
+logger = logging.getLogger(__name__)
+
+def get_product_summary(request):
+    data = (
+        SaleDetail.objects
+        .values('product__name')
+        .annotate(total_qty=Sum('quantity'))
+        .order_by('product__name')
+    )
+
+    product_names = [d['product__name'] for d in data]
+    product_totals = [d['total_qty'] for d in data]
+
+    return JsonResponse({
+        'product_names': product_names,
+        'product_totals': product_totals
+    })
 @login_required(login_url="/accounts/login/")
 def indexPage(request):
+    today = timezone.localtime(timezone.now()).date()
 
-    today = timezone.localtime(timezone.now()).date()  # Tanggal dengan zona waktu yang benar
-    # today = timezone.localdate()  # Mengambil tanggal lokal sesuai TIME_ZONE
-    # today = timezone.now().date()
-
-    # Ambil semua transaksi tanpa batasan 6 data
+    # Ambil data terbaru (5)
     data = Transaksi.objects.all().order_by('-tanggal')[:5]
 
-    # Hitung jumlah transaksi
+    # Hitung jumlah total rows (untuk debug)
     count = Transaksi.objects.count()
-    print(count)
+    print("Total transaksi:", count)
 
-    # Hitung total calculate_profit_loss dengan aman
-    # calculate = sum(u.calculate_profit_loss for u in Transaksi.objects.filter(transaksi_choice='P'))
+    try:
+        totals_per_product = (
+            SaleDetail.objects
+            .values('product__name')  # nama produk
+            .annotate(total_qty=Sum('quantity'))  # jumlah total
+            .order_by('-total_qty')
+        )
+        # Buat list untuk chart
+        product_names = [p['product__name'] for p in totals_per_product]
+        product_totals = [p['total_qty'] for p in totals_per_product]
+        total_pemasukan_harian = (
+            Transaksi.objects
+            .filter(tanggal__date=today, transaksi_choice='P')
+            .aggregate(total=Sum('jumlah'))['total'] or 0
+        )
 
-    # Gunakan TruncDate untuk tanggal
-    total_pemasukan_harian = Transaksi.objects.annotate(
-        tanggal_only=TruncDate('tanggal')
-    ).filter(
-        tanggal_only=today, transaksi_choice='P'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+        total_pengeluaran_harian = (
+            Transaksi.objects
+            .filter(tanggal__date=today, transaksi_choice='L')
+            .aggregate(total=Sum('jumlah'))['total'] or 0
+        )
 
-    total_pengeluaran_harian = Transaksi.objects.annotate(
-        tanggal_only=TruncDate('tanggal')
-    ).filter(
-        tanggal_only=today, transaksi_choice='L'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    except Exception as e:
+        # Bila terjadi error (mis. DB tidak support __date), jatuhkan ke opsi B
+        print("Opsi A gagal:", e)
 
-    # Query total pemasukan dan pengeluaran bulanan & tahunan
-    total_pemasukan_bulanan = Transaksi.objects.filter(
-        tanggal__month=today.month, transaksi_choice='P'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+        # =========================
+        # Opsi B: rentang waktu (paling aman)
+        # =========================
+        tz = timezone.get_current_timezone()
+        start_dt = datetime.combine(today, time.min).replace(tzinfo=tz)
+        end_dt = datetime.combine(today, time.max).replace(tzinfo=tz)
 
-    total_pengeluaran_bulanan = Transaksi.objects.filter(
-        tanggal__month=today.month, transaksi_choice='L'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+        total_pemasukan_harian = (
+            Transaksi.objects
+            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='P')
+            .aggregate(total=Sum('jumlah'))['total'] or 0
+        )
 
-    total_pemasukan_tahunan = Transaksi.objects.filter(
-        tanggal__year=today.year, transaksi_choice='P'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+        total_pengeluaran_harian = (
+            Transaksi.objects
+            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='L')
+            .aggregate(total=Sum('jumlah'))['total'] or 0
+        )
 
-    total_pengeluaran_tahunan = Transaksi.objects.filter(
-        tanggal__year=today.year, transaksi_choice='L'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    # =========================
+    # Bulanan & Tahunan (gunakan lookup month/year)
+    # =========================
+    total_pemasukan_bulanan = (
+        Transaksi.objects
+        .filter(tanggal__month=today.month, transaksi_choice='P')
+        .aggregate(total=Sum('jumlah'))['total'] or 0
+    )
 
-    # Hitung sisa saldo
+    total_pengeluaran_bulanan = (
+        Transaksi.objects
+        .filter(tanggal__month=today.month, transaksi_choice='L')
+        .aggregate(total=Sum('jumlah'))['total'] or 0
+    )
+
+    total_pemasukan_tahunan = (
+        Transaksi.objects
+        .filter(tanggal__year=today.year, transaksi_choice='P')
+        .aggregate(total=Sum('jumlah'))['total'] or 0
+    )
+
+    total_pengeluaran_tahunan = (
+        Transaksi.objects
+        .filter(tanggal__year=today.year, transaksi_choice='L')
+        .aggregate(total=Sum('jumlah'))['total'] or 0
+    )
+
+    # Sisa / cashflow
     sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
     sisa_cashflow_harian = total_pemasukan_harian - total_pengeluaran_harian
     sisa_cashflow_bulanan = total_pemasukan_bulanan - total_pengeluaran_bulanan
     sisa_cashflow_tahunan = total_pemasukan_tahunan - total_pengeluaran_tahunan
 
-    # Hitung hutang piutang
-    total_hutang = HutangPiutang.objects.filter(
-        tanggal__year=today.year, hutang_choice='H'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    # Hutang/piutang
+    total_hutang = (
+        HutangPiutang.objects
+        .filter(tanggal__year=today.year, hutang_choice='H')
+        .aggregate(total=Sum('jumlah'))['total'] or 0
+    )
 
-    total_piutang = HutangPiutang.objects.filter(
-        tanggal__year=today.year, hutang_choice='P'
-    ).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    total_piutang = (
+        HutangPiutang.objects
+        .filter(tanggal__year=today.year, hutang_choice='P')
+        .aggregate(total=Sum('jumlah'))['total'] or 0
+    )
 
     sisa_hutang = total_piutang - total_hutang
 
@@ -130,12 +184,26 @@ def indexPage(request):
         'sisa_saldo': sisa_saldo,
         'data': data,
         'count': count,
-        # 'calculate': calculate
+        'product_names': product_names,
+        'product_totals': product_totals,
     }
 
     return render(request, 'general/dashboard/default/index.html', context)
 
 #PROFIT
+@login_required(login_url="/accounts/login/")
+def profit_create(request):
+    if request.method == 'POST':
+        form = ProfitForms(request.POST)
+        if form.is_valid():
+            form.save()
+            sweetify.success(request, "Formulir Berhasil Dibuat")
+            return redirect('profit')  # ganti sesuai nama url list
+    else:
+        form = ProfitForms()
+    
+    return render(request, 'profit/tambah_profit.html', {'form': form})
+
 @login_required(login_url="/accounts/login/")
 def profit(request):
     data = Profito.objects.all().order_by('-date')
@@ -146,7 +214,7 @@ def profit(request):
             trform.owner = request.user
             trform.save()
             sweetify.success(request, "Formulir Berhasil Dibuat")
-            return redirect('/classroom/')
+            return redirect('/profit/')
         else:
             print(form.errors)
             sweetify.error(request, 'Formulir tidak valid.')
@@ -374,7 +442,7 @@ def DeleteHutangPeg(request, pk):
 #TRANSAKSI
 @login_required(login_url="/accounts/login/")
 def transaksi(request):
-    data = Transaksi.objects.all().order_by('-tanggal')
+    data = Transaksi.objects.all().order_by('-id')
         
     if request.POST :
         excel = ExcelUploadForm(request.POST, request.FILES)
@@ -438,7 +506,6 @@ def transaksi(request):
     else:
         form = TransaksiForms()
         excel = ExcelUploadForm()
-        data = Transaksi.objects.all().order_by('-tanggal')
     context = {
         'form': form,
         'excel': excel,
@@ -552,7 +619,6 @@ def laporan(request):
         'saldo': saldo
     }
     return render(request, 'laporan/laporan.html', context)
-
 def ChartReport(request):
     periode = request.GET.get('periode', 'harian')  # Default harian
     today = datetime.today()
@@ -705,70 +771,124 @@ def import_excel(request):
     else:
         form = ExcelUploadForm()
     return render(request, 'transaksi/index.html', {'excel': form})
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
-#Chart Line
 @login_required(login_url="/accounts/login/")
 def AnalasisChart(request):
-    start_date = datetime.now() - timedelta(days=365)
-    
-    # Ambil semua kategori
+    # Ambil semua kategori dari model
     categories = Kategori.objects.all()
+    print(categories)
     data = []
-    
+
+    # Hitung total per kategori yang ada
     for kategori in categories:
-        total_amount = Transaksi.objects.filter(kategori=kategori).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+        total_amount = (
+            Transaksi.objects.filter(kategori=kategori)
+            .aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+        )
         data.append({'kategori': kategori.nama, 'jumlah': float(total_amount)})
 
+    # Tambahkan kategori None → "Pengeluaran"
+    total_none = (
+        Transaksi.objects.filter(kategori__isnull=True)
+        .aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    )
+    if total_none > 0:
+        data.append({'kategori': 'Pengeluaran', 'jumlah': float(total_none)})
+
+    # Siapkan data untuk chart donut
     labels_don = [item['kategori'] for item in data]
     values_don = [float(item['jumlah']) for item in data]
 
-    # Perbaikan query menggunakan TruncDate
-    daily_data = (
-        Transaksi.objects
-        .annotate(tanggal_hanya=TruncDate('tanggal'))
-        .values('tanggal_hanya', 'transaksi_choice')
-        .annotate(total_jumlah=Sum('jumlah'))
-    )
-
-    labels = sorted(set(entry['tanggal_hanya'] for entry in daily_data))
-
-    return JsonResponse(data={
-        'labels_don': labels_don, 
-        'values_don': values_don, 
-        'labels': labels,
+    return JsonResponse({
+        'labels_don': labels_don,
+        'values_don': values_don,
     })
+
 
 #chart donut
 @login_required(login_url="/accounts/login/")
 def chart_data(request):
-    # Perbaiki query dengan TruncDate untuk mengambil hanya tanggalnya
-    daily_data = (
-        Transaksi.objects
-        .annotate(tanggal_hanya=TruncDate('tanggal'))  # Mengubah DateTimeField menjadi DateField
-        .values('tanggal_hanya', 'transaksi_choice')
-        .annotate(total_jumlah=Sum('jumlah'))
-    )
+    try:
+        # Coba gunakan TruncDate (efisien di DB)
+        daily_qs = (
+            Transaksi.objects
+            .annotate(tanggal_hanya=TruncDate('tanggal'))
+            .values('tanggal_hanya', 'transaksi_choice')
+            .annotate(total_jumlah=Sum('jumlah'))
+            .order_by('tanggal_hanya')
+        )
 
-    labels = sorted(set(entry['tanggal_hanya'] for entry in daily_data))  # Pastikan tanggal terurut
+        # Kumpulkan tanggal unik (sebagai date objects)
+        dates = []
+        for row in daily_qs:
+            d = row.get('tanggal_hanya')
+            if d is not None and d not in dates:
+                dates.append(d)
 
-    # Inisialisasi daftar nilai dengan panjang sesuai jumlah label (tanggal unik)
-    income_values = [0] * len(labels)
-    expense_values = [0] * len(labels)
+        idx_map = {d: i for i, d in enumerate(dates)}
+        income_values = [0.0] * len(dates)
+        expense_values = [0.0] * len(dates)
 
-    # Loop untuk mengisi data income dan expense berdasarkan transaksi_choice
-    for entry in daily_data:
-        date_index = labels.index(entry['tanggal_hanya'])  # Gunakan tanggal yang sudah diperbaiki
-        if entry['transaksi_choice'] == 'P':
-            income_values[date_index] = float(entry['total_jumlah'])
-        elif entry['transaksi_choice'] == 'L':
-            expense_values[date_index] = float(entry['total_jumlah'])
+        for row in daily_qs:
+            d = row.get('tanggal_hanya')
+            if d is None:
+                continue
+            i = idx_map[d]
+            amount = float(row.get('total_jumlah') or 0.0)
+            choice = row.get('transaksi_choice')
+            if choice == 'P':
+                income_values[i] += amount
+            elif choice == 'L':
+                expense_values[i] += amount
 
-    return JsonResponse(data={
+        labels = [d.isoformat() for d in dates]
+
+    except Exception as e:
+        # Fallback aman: grouping di Python
+        logger.exception("TruncDate failed, fallback grouping: %s", e)
+
+        qs = Transaksi.objects.values_list('tanggal', 'jumlah', 'transaksi_choice')
+        grouped_income = defaultdict(float)
+        grouped_expense = defaultdict(float)
+
+        for t, jumlah, tx_choice in qs:
+            if t is None:
+                continue
+
+            # Gunakan tuple types di isinstance — ini aman
+            if isinstance(t, (datetime, date)):
+                # jika datetime ambil date(); jika date biarkan
+                d = t.date() if isinstance(t, datetime) else t
+            else:
+                # jika string, coba parse ISO; jika gagal, skip
+                try:
+                    # .fromisoformat dapat melempar; bungkus try/except
+                    parsed = datetime.fromisoformat(str(t))
+                    d = parsed.date()
+                except Exception:
+                    # debug: log tipe & contoh nilai yang aneh
+                    logger.debug("Skipping unparsable tanggal value: %r (type=%s)", t, type(t))
+                    continue
+
+            if tx_choice == 'P':
+                grouped_income[d] += float(jumlah or 0)
+            elif tx_choice == 'L':
+                grouped_expense[d] += float(jumlah or 0)
+
+        all_dates = sorted(set(list(grouped_income.keys()) + list(grouped_expense.keys())))
+        labels = [d.isoformat() for d in all_dates]
+        income_values = [grouped_income.get(d, 0.0) for d in all_dates]
+        expense_values = [grouped_expense.get(d, 0.0) for d in all_dates]
+
+    return JsonResponse({
         'labels': labels,
         'income_values': income_values,
         'expense_values': expense_values,
     })
-    
 from zeta import settings
 import os
 def fetch_resources(uri, rel):

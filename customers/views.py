@@ -2,7 +2,27 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .models import Customer
 import sweetify
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt  # jangan pakai ini kecuali perlu
+from django.shortcuts import render
+from .forms import CustomerForm
+import logging
+logger = logging.getLogger(__name__)
 
+@require_POST
+def create_customer_ajax(request):
+    logger.debug("AJAX create customer POST keys: %s", list(request.POST.keys()))
+    form = CustomerForm(request.POST)
+    if form.is_valid():
+        customer = form.save()
+        # label yang tampil di select — pakai first_name atau string representasi model
+        label = getattr(customer, 'first_name', str(customer))
+        return JsonResponse({'success': True, 'id': customer.id, 'label': label})
+    else:
+        logger.warning("CustomerForm errors: %s", form.errors)
+        errors = {k: [str(m) for m in v] for k, v in form.errors.items()}
+        return JsonResponse({'success': False, 'errors': errors}, status=400)
 
 @login_required(login_url="/accounts/login/")
 def customers_list_view(request):

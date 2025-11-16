@@ -4,7 +4,9 @@ from django.shortcuts import render, redirect
 from .models import Category, Product
 import sweetify
 
-
+from django.shortcuts import render
+from django.db.models import Sum, Count, Prefetch
+from sales.models import Sale, SaleDetail
 @login_required(login_url="/accounts/login/")
 def categories_list_view(request):
     context = {
@@ -138,7 +140,13 @@ def categories_delete_view(request, category_id):
 
 @login_required(login_url="/accounts/login/")
 def products_list_view(request):
+    totals_per_product = (
+        SaleDetail.objects
+        .values('product__name')
+        .annotate(total_qty=Sum('quantity'))
+    )
     context = {
+        'totals_per_product': totals_per_product,
         "active_icon": "products",
         "products": Product.objects.all().order_by('-id')
     }

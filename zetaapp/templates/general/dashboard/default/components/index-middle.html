@@ -33,62 +33,57 @@
     <div class="card user-status">
       <div class="card-header pb-0">
         <div class="media">
-          <div class="media-body">
-            <h5>Transaksi Terakhir</h5>
-          </div>
-          <a href="{% url 'transaksi' %}" class="btn btn-primary btn-sm">Semua Transaksi
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              class="feather feather-arrow-right icon-xs ml-2">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg></a>
+          <h5>Jumlah Barang</h5>
         </div>
       </div>
       <div class="card-body">
-        <div class="table-responsive mb-0">
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">Tanggal</th>
-                <th scope="col">Kategori</th>
-                <th scope="col">Keterangan</th>
-                <th scope="col">Nominal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for u in data %}
-              <tr>
-                <td>{{u.tanggal|date:"j M Y"  }} </td>
-                <td>{{u.kategori}}</td>
-                <td>{{u.keterangan}}</td>
-                {% if u.transaksi_choice == "P" %}
-                <td><span class="text-success">{{u.jumlah|floatformat:"0g"}}</span></td>
-                {% else %}
-                <td><span class="text-danger">{{u.jumlah|floatformat:"0g"}}</span></td>
-                {% endif %}
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+        <div id="chartBar" style="max-width: 700px; margin: 35px auto;"></div>
       </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+  fetch("{% url 'product_summary' %}")
+    .then(response => response.json())
+    .then(data => {
+      const productNames = data.product_names;
+      const productTotals = data.product_totals;
+
+      const options = {
+        chart: { type: 'bar', height: 200 },
+        plotOptions: {
+          bar: {
+            vertical: true,
+            distributed: true,
+            barHeight: '60%',
+          }
+        },
+        series: [{ name: 'Jumlah (kg)', data: productTotals }],
+        xaxis: { categories: productNames },
+        dataLabels: { enabled: true },
+        colors: ['#1E90FF', '#FF5733', '#28B463', '#9B59B6', '#F4D03F']
+      };
+
+      const chart = new ApexCharts(document.querySelector("#chartBar"), options);
+      chart.render();
+    })
+    .catch(error => console.error('Error fetching data:', error));
+</script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function () {
 
     // Ganti 'daily', 'monthly', atau 'yearly' sesuai dengan kebutuhan Anda
-    fetch(`/analisis_chart/`)
+    fetch("{% url 'analsis_chart' %}")
       .then(response => response.json())
       .then(data => {
         var options = {
           labels: data.labels_don,
           series: data.values_don,
           dataLabels: {
-            enabled: true,
+            enabled: false,
             formatter: function (val) {
               return val + "%"
             },
@@ -99,9 +94,6 @@
           },
           legend: {
             position: 'bottom'
-          },
-          dataLabels: {
-            enabled: false,
           },
           states: {
             hover: {
@@ -140,7 +132,7 @@
             }
 
           ],
-          colors: [zetaAdminConfig.primary, zetaAdminConfig.secondary, zetaAdminConfig.success, zetaAdminConfig.info, zetaAdminConfig.warning],
+          colors: ['#1E90FF', '#FF5733', '#28B463', '#9B59B6', '#F4D03F']
         };
         var chart = new ApexCharts(document.querySelector("#revenue"), options);
         chart.render();

@@ -7,6 +7,7 @@ urlpatterns = [
     # List customers
     path('', views.customers_list_view, name='customers_list'),
     # Add customer
+    path('customers/create-ajax/', views.create_customer_ajax, name='create_customer_ajax'),
     path('add', views.customers_add_view, name='customers_add'),
     # Update customer
     path('update/<str:customer_id>',

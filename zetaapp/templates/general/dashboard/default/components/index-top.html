@@ -66,9 +66,9 @@
             <h3 class="mb-0">
               <span class="text-muted me-1">Rp</span>{{sisa_saldo|floatformat:"0g"}}
             </h3>
-            {%  if total_pengeluaran_harian > total_pemasukan_harian %}
+            {% if total_pengeluaran_harian > total_pemasukan_harian %}
             <small>Dana Tidak tersedia</small>
-            {%  else %}
+            {% else %}
             <small>Dana tersedia</small>
             {% endif %}
           </div>
@@ -182,4 +182,4 @@
       </div>
     </div>
   </div>
-  
+</div>

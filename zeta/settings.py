@@ -29,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 # ALLOWED_HOSTS = ['web-production-1f347.up.railway.app']
 
-CSRF_TRUSTED_ORIGINS = ['https://web-production-1f347.up.railway.app']
+# CSRF_TRUSTED_ORIGINS = ['https://web-production-1f347.up.railway.app']
 
 
 # Application definition
@@ -96,12 +96,12 @@ DATABASES = {
 }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ppj2',   # Replace with your actual database name
-        'USER': 'postgres',   # Replace with your actual database user
-        'PASSWORD': 'tatam123',   # Replace with your actual database password
-        'HOST': 'localhost',   # Set to the hostname where your PostgreSQL server is running
-        'PORT': '5432',   # Set to the port number where your PostgreSQL server is running
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'sqlite3',   # Replace with your actual database name
+        # 'USER': 'postgres',   # Replace with your actual database user
+        # 'PASSWORD': 'tatam123',   # Replace with your actual database password
+        # 'HOST': 'localhost',   # Set to the hostname where your PostgreSQL server is running
+        # 'PORT': '5432',   # Set to the port number where your PostgreSQL server is running
     }
 
 }

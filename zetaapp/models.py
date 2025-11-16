@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 
 
 # Create your models here.
@@ -101,7 +102,58 @@ class Profito(models.Model):
 
     def __str__(self):
         return f"Jumlah: {self.jumlah_brg}, Harga Jual: {self.harga_jual}, Harga Beli: {self.harga_beli}"
+
+
+class Profito2(models.Model):
+    # Info barang / transaksi
+    tanggal = models.DateField(auto_now_add=True)
+    nama_barang = models.CharField(max_length=100)
     
+    # Harga beli & jual
+    harga_beli = models.DecimalField(max_digits=15, decimal_places=0, validators=[MinValueValidator(0)])
+    harga_jual = models.DecimalField(max_digits=15, decimal_places=0, validators=[MinValueValidator(0)])
+    
+    # Biaya operasional
+    solar = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    karung = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    ongkos_kirim = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    ongkos_muat = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    ongkos_lain = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    ongkos_sortir = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    ongkos_giling = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    biaya_darurat_mesin = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    
+    # Hasil perhitungan otomatis
+    hpp = models.DecimalField(max_digits=15, decimal_places=0, blank=True, null=True)
+    profit = models.DecimalField(max_digits=15, decimal_places=0, blank=True, null=True)
+    profit_margin = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    
+    keterangan = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-tanggal']
+
+    def save(self, *args, **kwargs):
+        # Hitung total biaya operasional
+        total_biaya_operasional = (
+            self.solar + self.karung + self.ongkos_kirim + self.ongkos_muat +
+            self.ongkos_lain + self.ongkos_sortir + self.ongkos_giling + self.biaya_darurat_mesin
+        )
+        
+        # Hitung HPP
+        self.hpp = self.harga_beli + total_biaya_operasional
+        
+        # Hitung profit
+        self.profit = self.harga_jual - self.hpp
+        
+        # Hitung profit margin
+        self.profit_margin = (self.profit / self.harga_jual * 100) if self.harga_jual else 0
+        
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.nama_barang} - {self.tanggal}"
+
 class Tabungan(models.Model):
     PEMASUKAN = 'P'
     PENGELUARAN = 'L'

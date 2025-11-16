@@ -35,7 +35,7 @@
                 <tr>
                   <th rowspan="2">NO</th>
                   <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
-                  <th rowspan="2" scope="col" class="text-center">KATEGORI</th>
+                  <!-- <th rowspan="2" scope="col" class="text-center">KATEGORI</th> -->
                   <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
                   <th colspan="2" scope="col" class="text-center">JENIS</th>
                   <th rowspan="2" scope="col" class="text-center">OPSI</th>
@@ -50,7 +50,7 @@
                 <tr class="text-center">
                   <td>{{forloop.counter}}</td>
                   <td>{{u.tanggal|date:"d-m-Y"}}</td>
-                  <td>{{u.kategori}}</td>
+                  <!-- <td>{{u.kategori}}</td> -->
                   <td style="width:30%">{{u.keterangan }}</td>
                   <td class="text-center">
                     {% if u.transaksi_choice == "P" %}
@@ -174,7 +174,7 @@
                         {{form.kategori}}
                       </div>
                       <div class="mb-3">
-                        <label class="col-form-label pt-0">Nominal</label>
+                        <label for="id_jumlah" class="col-form-label pt-0">Nominal</label>
                         {{form.jumlah}}
                       </div>
                       <div class="mb-3">
@@ -230,42 +230,6 @@
     </div>
   </div>
 </div>
-<script>
-  // Dengan Rupiah
-  var denganRupiah = document.getElementById('{{ form.jumlah.id }}');
-  denganRupiah.addEventListener('keyup', function (e) {
-    denganRupiah.value = formatRupiah(this.value, 'Rp. ');
-  });
-
-  // Fungsi
-  function formatRupiah(angka, prefix) {
-    var number_string = angka.replace(/[^,\d]/g, '').toString(),
-      split = number_string.split(','),
-      sisa = split[0].length % 3,
-      rupiah = split[0].substr(0, sisa),
-      ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-    if (ribuan) {
-      separator = sisa ? '.' : '';
-      rupiah += separator + ribuan.join('.');
-    }
-
-    if (split[1] != undefined) {
-      // Handle decimal part
-      rupiah += ',' + split[1];
-    }
-
-    // Add additional handling for millions
-    if (rupiah.length > 7) {
-      var jutaan = Math.floor(rupiah.length / 3);
-      for (var i = 1; i <= jutaan; i++) {
-        rupiah = rupiah.slice(0, -(i * 3 + (i - 1))) + '.' + rupiah.slice(-(i * 3 + (i - 1)));
-      }
-    }
-
-    return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
-  }
-</script>
 
 <!-- Individual column searching (text inputs) Ends-->
 <!-- Container-fluid Ends-->
@@ -281,5 +245,53 @@
 <script src="{% static 'assets/js/ecommerce.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="{% static 'assets/js/product-list-custom.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rupiahInput = document.getElementById('id_jumlah');
+    if (!rupiahInput) return;
+
+    function formatRupiah(value) {
+        let number_string = value.replace(/[^,\d]/g, '').toString();
+        let split = number_string.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        return rupiah ? 'Rp ' + rupiah : '';
+    }
+
+    // Live formatting saat mengetik
+    rupiahInput.addEventListener('input', function (e) {
+        let cursorPos = this.selectionStart;
+        let originalLength = this.value.length;
+
+        this.value = formatRupiah(this.value);
+
+        let newLength = this.value.length;
+        this.setSelectionRange(cursorPos + (newLength - originalLength), cursorPos + (newLength - originalLength));
+    });
+
+    // Sebelum submit, ubah ke angka polos untuk disimpan Django
+    const form = rupiahInput.closest('form');
+    if (form) {
+        form.addEventListener('submit', function () {
+            let raw = rupiahInput.value.replace(/[^0-9]/g, '');
+            rupiahInput.value = raw ? raw : '0';
+        });
+    }
+
+    // Format nilai awal (edit form)
+    if (rupiahInput.value) {
+        rupiahInput.value = formatRupiah(rupiahInput.value);
+    }
+});
+</script>
+
 <!-- Plugins JS Ends-->
 {% endblock scriptcontent %}

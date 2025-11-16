@@ -6,10 +6,9 @@ urlpatterns = [
 
     # dashboard paths
 
-    path('', views.menuPage,name='menu'),
-    path('dashboard/', views.indexPage,name='dashboard'),
-    path('dashboard_absensi/', views.Absensi,name='absensi'),
-    path('dashboard_pos/', views.Pos,name='pos'),
+    path('', views.indexPage,name='dashboard'),
+    path('api/product-summary/', views.get_product_summary, name='product_summary'),
+
     # POS
     path('product/', include('products.urls')),
     path('pegawai/', include('pegawai.urls')),
@@ -39,6 +38,7 @@ urlpatterns = [
 
     #profit
     path('profit/', views.profit,name='profit'),
+    path('profit/create/', views.profit_create,name='profit_create'),
     path('profit/<pk>/delete/', views.DeleteProf,name='deletepr'),
     path('profit/<pk>/update/', views.UpdatePr,name='updatepr'),
 

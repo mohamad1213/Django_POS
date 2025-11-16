@@ -22,9 +22,9 @@
         <div class="card">
           <div class="card-header pb-0">
             <div class="order-place" style="text-align: right;">
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                Tambah Transaksi
-              </button>
+              <a href="{% url 'profit_create' %}" class="btn btn-primary" >
+                Tambah Profit
+              </a>
             </div>
           </div>
           <div class="card-body">
@@ -58,7 +58,7 @@
                   <td class="text-center">
                     {{u.jumlah_brg}}
                   </td>
-                  
+
                   <td class="text-center">Rp. {{u.calculate_profit|floatformat:"0g" }}</td>
                   <td>
                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
@@ -89,7 +89,7 @@
                         Apakah Kamu yakin menghapus Profit ini:
                         <h4 class="bold">
                           nama {{u.nama_suplayer}} ditanggal {{u.date|date:"d-m-Y"}}
-                        </h4> 
+                        </h4>
                       </div>
                       <div class="card-footer border-0 pt-0" style="text-align: right;">
                         <button class="btn btn-warning" type="reset">Batal</button>
@@ -163,37 +163,86 @@
                   </div>
                   <div class="modal-body">
                     <form class="form theme-form" method="POST" enctype="multipart/form-data">
-                      {% load crispy_forms_tags %}
                       {% csrf_token %}
+                      {% load crispy_forms_tags %}
+
                       <div class="mb-3">
                         <label class="col-form-label pt-0">Tanggal</label>
-                        {{form.date}}
+                        {{ form.tanggal }}
                       </div>
                       <div class="mb-3">
-                        <label class="col-form-label pt-0">Nama Suplayer</label>
-                        {{form.nama_suplayer}}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Harga Jual</label>
-                        {{form.harga_jual}}
+                        <label class="col-form-label pt-0">Nama Barang</label>
+                        {{ form.nama_barang }}
                       </div>
                       <div class="mb-3">
                         <label class="col-form-label pt-0">Harga Beli</label>
-                        {{form.harga_beli}}
+                        {{ form.harga_beli }}
                       </div>
                       <div class="mb-3">
-                        <label class="col-form-label pt-0">Kg</label>
-                        {{form.jumlah_brg}}
+                        <label class="col-form-label pt-0">Harga Jual</label>
+                        {{ form.harga_jual }}
                       </div>
+
+                      <!-- Biaya Operasional -->
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Solar</label>
+                        {{ form.solar }}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Karung</label>
+                        {{ form.karung }}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Ongkos Kirim</label>
+                        {{ form.ongkos_kirim }}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Ongkos Muat</label>
+                        {{ form.ongkos_muat }}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Ongkos Lain</label>
+                        {{ form.ongkos_lain }}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Ongkos Sortir</label>
+                        {{ form.ongkos_sortir }}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Ongkos Giling</label>
+                        {{ form.ongkos_giling }}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Biaya Darurat Mesin</label>
+                        {{ form.biaya_darurat_mesin }}
+                      </div>
+
+                      <!-- Keterangan -->
                       <div class="mb-3">
                         <label class="col-form-label pt-0">Keterangan</label>
-                        {{form.description}}
+                        {{ form.keterangan }}
                       </div>
+
+                      <!-- HPP / Profit live -->
+                      <div class="mb-3">
+                        <label>HPP</label>
+                        <input type="text" id="id_hpp" class="form-control" readonly>
+                      </div>
+                      <div class="mb-3">
+                        <label>Profit</label>
+                        <input type="text" id="id_profit" class="form-control" readonly>
+                      </div>
+                      <div class="mb-3">
+                        <label>Profit Margin (%)</label>
+                        <input type="text" id="id_profit_margin" class="form-control" readonly>
+                      </div>
+
                       {% if form.errors %}
                       <div class="alert alert-danger" id="msg">
                         {{ form.errors }}
                       </div>
                       {% endif %}
+
                       <div class="card-footer border-0 pt-0" style="text-align: right;">
                         <button class="btn btn-warning" type="reset">Cancel</button>
                         <button class="btn btn-primary" type="submit">Submit</button>
@@ -211,6 +260,38 @@
 </div>
 {% endblock content %}
 {% block scriptcontent %}
+<script>
+  function parseRupiah(value) {
+    return parseInt(value.replace(/[^0-9]/g, '')) || 0;
+  }
+  function formatRupiah(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+  function hitungProfit() {
+    let harga_beli = parseRupiah(document.getElementById('id_harga_beli').value);
+    let harga_jual = parseRupiah(document.getElementById('id_harga_jual').value);
+
+    let biayaElems = document.querySelectorAll('#id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin');
+    let total_biaya_operasional = 0;
+    biayaElems.forEach(el => {
+      total_biaya_operasional += parseRupiah(el.value);
+    });
+
+    let hpp = harga_beli + total_biaya_operasional;
+    let profit = harga_jual - hpp;
+    let profit_margin = harga_jual ? (profit / harga_jual * 100).toFixed(2) : 0;
+
+    document.getElementById('id_hpp').value = 'Rp ' + formatRupiah(hpp);
+    document.getElementById('id_profit').value = 'Rp ' + formatRupiah(profit);
+    document.getElementById('id_profit_margin').value = profit_margin + ' %';
+  }
+
+  // Live calculation saat input biaya/harga
+  document.querySelectorAll('#id_harga_beli, #id_harga_jual, #id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin').forEach(el => {
+    el.addEventListener('input', hitungProfit);
+  });
+  window.addEventListener('DOMContentLoaded', hitungProfit);
+</script>
 <script>
   $(document).ready(function () {
     $('#example').DataTable({
