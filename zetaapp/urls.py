@@ -41,8 +41,13 @@ urlpatterns = [
     path('profit/create/', views.profit_create,name='profit_create'),
     path('profit/<pk>/delete/', views.DeleteProf,name='deletepr'),
     path('profit/<pk>/update/', views.UpdatePr,name='updatepr'),
-
-
+    
+    path('stok/', views.stockin_list,name='stockin_list'),
+    path('stok/create/', views.stockin_create,name='stockin_create'),
+    path("stockin/update/<int:pk>/", views.stockin_update, name="stockin_update"),
+    path("stockin/delete/<int:pk>/", views.stockin_delete, name="stockin_delete"),
+    path("api/products/", views.product_search_api, name="product_search_api"),
+    
     
     #laporan
     path('laporan/', views.laporan, name='laporan'),

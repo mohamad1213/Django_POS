@@ -27,6 +27,7 @@ def create_customer_ajax(request):
 @login_required(login_url="/accounts/login/")
 def customers_list_view(request):
     context = {
+        "breadcrumb": {"parent": "pelanggan", "child": "Daftar Pelanggan"},
         "active_icon": "customers",
         "customers": Customer.objects.all()
     }

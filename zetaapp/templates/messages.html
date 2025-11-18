@@ -1,8 +1,15 @@
 {% load static %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 {% if messages %}
     {% for message in messages %}
         <script>
-            swal.fire('{{ message.tags }}', '{{ message }}', '{{ message.tags }}');
+            // Escape untuk mencegah JS injection
+            Swal.fire(
+                '{{ message.tags|escapejs }}',   // title (misal: success, error)
+                '{{ message|escapejs }}',       // text
+                '{{ message.tags|escapejs }}'   // icon (success, error, info, warning)
+            );
         </script>
     {% endfor %}
 {% endif %}

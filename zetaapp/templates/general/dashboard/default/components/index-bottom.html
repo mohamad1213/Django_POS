@@ -32,52 +32,43 @@
     </div>
   </div>
 </div>
+
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-
-    // Ganti 'daily', 'monthly', atau 'yearly' sesuai dengan kebutuhan Anda
+document.addEventListener('DOMContentLoaded', function () {
     fetch("{% url 'chart_data' %}")
-      .then(response => response.json())
-      .then(data => {
-        var options = {
-          dataLabels: {
-            enabled: true,
-          },
-          chart: {
-            height: 320,
-            type: "area",
-            zoom: {
-              enabled: false,
-            },
-          },
-          stroke: {
-            curve: "smooth",
-          },
-          series: [{
-            name: "Pemasukan",
-            data: data.income_values,
-            // color: 'rgb(16, 83, 156);',  // Set color for 'Pemasukan' line
-          },
-          {
-            name: "Pengeluaran",
-            data: data.expense_values,
-            // color: '#F28585',  // Set color for 'Pemasukan' line
-          }],
-          xaxis: {
-            categories: data.labels,
-          },
-
-          yaxis: {
-            labels: {
-              formatter: function (value) {
-                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-              }
-            },
-          },
-        }
-        var chartturnoverchart = new ApexCharts(
-          document.querySelector("#chart-line"), options);
-        chartturnoverchart.render();
-      });
-  });
+        .then(response => response.json())
+        .then(data => {
+            var options = {
+                chart: {
+                    type: "area",
+                    height: 320,
+                    zoom: { enabled: false },
+                },
+                stroke: { curve: "smooth" },
+                dataLabels: { enabled: true },
+                series: [
+                    { name: "Pemasukan", data: data.income_values },
+                    { name: "Pengeluaran", data: data.expense_values }
+                ],
+                xaxis: { categories: data.labels },
+                yaxis: {
+                    labels: {
+                        formatter: function(value) {
+                            return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                        }
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                        }
+                    }
+                }
+            };
+            var chart = new ApexCharts(document.querySelector("#chart-line"), options);
+            chart.render();
+        });
+});
 </script>

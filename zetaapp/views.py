@@ -34,7 +34,6 @@ from .models import *
 from io import BytesIO
 from xhtml2pdf import pisa
 from django.views import View
-import sweetify
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.db.models.functions import TruncDate
 #Dashboard
@@ -44,9 +43,91 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from sales.models import SaleDetail
 ## BERANDA PAGE
-import logging
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.forms import modelformset_factory, formset_factory
+from .models import StockIn
+from .forms import StockInForm
+from django.http import JsonResponse
+from .models import Product
+from django.views.decorators.http import require_GET
+from django.db.models import Q
+from django.shortcuts import render
+from django.db.models import Sum, Value
+from django.db.models.functions import TruncMonth, Coalesce
+from django.utils import timezone
+import calendar, json
+@require_GET
+def product_search_api(request):
+    q = request.GET.get('q', '').strip()
+    results = []
+    if q:
+        products = Product.objects.filter(name__icontains=q)[:20] | Product.objects.filter(sku__icontains=q)[:20]
+        for p in products:
+            results.append({'id': p.id, 'text': f'{p.sku} — {p.name}'})
+    return JsonResponse({'results': results})
+@login_required
+def stockin_create(request):
+    """
+    Menampilkan halaman untuk menambah banyak StockIn sekaligus menggunakan modelformset.
+    """
+    products = Product.objects.all()
+    errors = []
 
-logger = logging.getLogger(__name__)
+    if request.method == 'POST':
+        product_ids = request.POST.getlist('product[]')
+        quantities = request.POST.getlist('quantity[]')
+        references = request.POST.getlist('reference[]')
+        notes = request.POST.getlist('note[]')
+
+        for idx, (p_id, qty, ref, note) in enumerate(zip(product_ids, quantities, references, notes), start=1):
+            if not p_id or not qty:
+                errors.append(f"Baris {idx}: Produk dan jumlah harus diisi.")
+                continue
+            try:
+                product = Product.objects.get(id=p_id)
+                StockIn.objects.create(
+                    product=product,
+                    quantity=qty,
+                    reference=ref,
+                    note=note
+                )
+            except Product.DoesNotExist:
+                errors.append(f"Baris {idx}: Produk tidak ditemukan.")
+
+        if not errors:
+            return redirect('stockin_list')
+
+    return render(request, 'stok/stockin_form.html', {'products': products, 'errors': errors})
+
+
+@login_required
+def stockin_list(request):
+    stockins = StockIn.objects.select_related("product", "received_by").order_by("-received_at")
+    
+    return render(request, "stok/stockin_list.html", {"stockins": stockins,"breadcrumb": {"parent": "Stok Barang", "child": "Stok Barang"},})
+@login_required
+def stockin_delete(request, pk):
+    si = get_object_or_404(StockIn, pk=pk)
+    if request.method == "POST":
+        si.delete()
+        messages.success(request, "Data barang masuk berhasil dihapus.")
+        return redirect("stockin_list")
+    return redirect("stockin_list")
+
+def stockin_update(request, pk):
+    si = get_object_or_404(StockIn, pk=pk)
+    if request.method == "POST":
+        form = StockInForm(request.POST, instance=si)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Data barang masuk berhasil diperbarui.")
+        else:
+            messages.error(request, "Gagal memperbarui data.")
+    return redirect("stockin_list")
+
+
 
 def get_product_summary(request):
     data = (
@@ -164,7 +245,7 @@ def indexPage(request):
         .filter(tanggal__year=today.year, hutang_choice='P')
         .aggregate(total=Sum('jumlah'))['total'] or 0
     )
-
+    
     sisa_hutang = total_piutang - total_hutang
 
     context = {
@@ -197,7 +278,7 @@ def profit_create(request):
         form = ProfitForms(request.POST)
         if form.is_valid():
             form.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('profit')  # ganti sesuai nama url list
     else:
         form = ProfitForms()
@@ -206,34 +287,18 @@ def profit_create(request):
 
 @login_required(login_url="/accounts/login/")
 def profit(request):
-    data = Profito.objects.all().order_by('-date')
-    if request.POST :
-        form = ProfitForms(request.POST)
-        if form.is_valid():    
-            trform = form.save(commit=False)
-            trform.owner = request.user
-            trform.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
-            return redirect('/profit/')
-        else:
-            print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
-    else:
-        form = ProfitForms()
-        data = Profito.objects.all().order_by('-date','-id')
+    data = Profito2.objects.all()
     context = {
-        'form': form,
         'data':data,
-        "breadcrumb":{"parent":"Profit","child":"Transaksi"},
+        "breadcrumb":{"parent":"Profit","child":"Profit"},
     }
     return render(request, 'profit/profit.html', context)
 
 @login_required(login_url='/accounts/')
 def UpdatePr(request, pk):
     try :
-        data = Profito.objects.get(id=pk)
-    except Profito.DoesNotExist:
+        data = Profito2.objects.get(id=pk)
+    except Profito2.DoesNotExist:
         messages.error(request, 'Transaksi not found!', extra_tags="danger")
         return redirect('profit')
     if request.POST :
@@ -251,7 +316,7 @@ def UpdatePr(request, pk):
             form.owner = request.user
             form.save()
             user = request.user
-            applicant = Profito.objects.get(user=user)
+            applicant = Profito2.objects.get(user=user)
             applicant.jumlah_brg = jumlah_brg
             applicant.nama_suplayer = nama_suplayer
             applicant.harga_jual=harga_jual
@@ -259,12 +324,12 @@ def UpdatePr(request, pk):
             applicant.date=date
             applicant.description =description
             applicant.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('/profit/')
         else:
             print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
+            messages.error(request, 'Formulir tidak valid.')
+            messages.error(request, form.errors)
     context = {
     'form': form,
     "breadcrumb":{"parent":"profit","child":"Profit"},
@@ -272,8 +337,8 @@ def UpdatePr(request, pk):
     return render(request, 'profit/profit.html', context)
 
 def DeleteProf(request, pk):
-    Profito.objects.get(id=pk).delete()
-    sweetify.success(request, "Form Successfully Deleted")  
+    Profito2.objects.get(id=pk).delete()
+    messages.success(request, "Form Successfully Deleted")  
     return redirect('/profit/')
     
 #HUTANG ORTU
@@ -285,7 +350,7 @@ def hutang(request):
         if excel.is_valid():
             excel_file = request.FILES['excel_file']
             if not excel_file.name.endswith('.xlsx'):
-                sweetify.error(request, 'File bukan berformat Excel (.xlsx)')
+                messages.error(request, 'File bukan berformat Excel (.xlsx)')
                 return render(request, 'transaksi/index.html', {'excel': excel})
 
             df = pd.read_excel(excel_file, engine='openpyxl')
@@ -294,7 +359,7 @@ def hutang(request):
                 try:
                     tanggal = pd.to_datetime(row['tanggal'], format='%Y-%m-%d')
                 except ValueError:
-                    sweetify.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
+                    messages.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
                     continue
                 keterangan = row['keterangan']
                 pemasukan = row['pemasukan']
@@ -311,7 +376,7 @@ def hutang(request):
                     hutang_choice = HutangPiutang.HUTANG
                     jumlah = pengeluaran
                 else:
-                    sweetify.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
+                    messages.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
                     continue
 
                 # Memeriksa kategori
@@ -327,12 +392,12 @@ def hutang(request):
             trform = form.save(commit=False)
             trform.owner = request.user
             trform.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('/hutang/')
         else:
             print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
+            messages.error(request, 'Formulir tidak valid.')
+            messages.error(request, form.errors)
     else:
         form = HutangForms()
         excel = ExcelUploadForm()
@@ -341,44 +406,44 @@ def hutang(request):
         'form': form,
         'excel': excel,
         'data':data,
-        "breadcrumb":{"parent":"Hutang Piutang","child":"Transaksi"},
+        "breadcrumb":{"parent":"Hutang Ortu","child":"Hutang Ortu"},
     }
     return render(request, 'hutang/hutang.html', context)
 
 def DeleteHutang(request, pk):
     HutangPiutang.objects.get(id=pk).delete()
-    sweetify.success(request, "Form Successfully Deleted")  
+    messages.success(request, "Form Successfully Deleted")  
     return redirect('/hutang/')
 #HUTANG PEGAWAI
 def hutangPeg(request):
     data = HutPegawai.objects.all().order_by('-tanggal')
-    oji = Karyawan.objects.get(name='Oji')
-    bocil = Karyawan.objects.get(name='Bocil')
-    dul = Karyawan.objects.get(name='Dul')
-    amin = Karyawan.objects.get(name='Amin')
-    anis = Karyawan.objects.get(name='Anis')
     apin = Karyawan.objects.get(name='Apin')
+    andi = Karyawan.objects.get(name='Andi')
+    oman = Karyawan.objects.get(name='Oman')
+    agung = Karyawan.objects.get(name='Agung')
+    amin = Karyawan.objects.get(name='Pak Amin')
+    anis = Karyawan.objects.get(name='Pak Anis')
     today = timezone.now().date()
-    #Bocil
-    hutang_bocil = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=bocil).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    piutang_bocil= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=bocil).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    sisa_bocil = piutang_bocil - hutang_bocil
-    #Oji
-    hutang_oji = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=oji).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    piutang_oji= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=oji).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    sisa_oji = piutang_oji - hutang_oji
-    #amin
-    hutang_amin = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=amin).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    piutang_amin= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=amin).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    sisa_amin = piutang_amin - hutang_amin
-    #dul
-    hutang_dul = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=dul).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    piutang_dul= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=dul).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-    sisa_dul = piutang_dul - hutang_dul
+    #oman
+    hutang_oman = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=oman).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    piutang_oman= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=oman).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    sisa_oman = piutang_oman - hutang_oman
     #apin
     hutang_apin = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=apin).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     piutang_apin= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=apin).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     sisa_apin = piutang_apin - hutang_apin
+    #amin
+    hutang_amin = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=amin).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    piutang_amin= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=amin).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    sisa_amin = piutang_amin - hutang_amin
+    #andi
+    hutang_andi = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=andi).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    piutang_andi= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=andi).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    sisa_andi = piutang_andi - hutang_andi
+    #agung
+    hutang_agung = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=agung).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    piutang_agung= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=agung).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    sisa_agung = piutang_agung - hutang_agung
     #anis
     hutang_anis = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=anis).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     piutang_anis= HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='P',pegawai__name=anis).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
@@ -388,26 +453,35 @@ def hutangPeg(request):
         if form.is_valid():    
             trform = form.save(commit=False)
             trform.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('/hutangpeg/')
         else:
             print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
+            messages.error(request, 'Formulir tidak valid.')
+            messages.error(request, form.errors)
     else:
         form = HutangPegForms()
         data = HutPegawai.objects.all().order_by('-tanggal')
+    people = [
+        {"name": "Apin", "amount": sisa_apin},
+        {"name": "Andi", "amount": sisa_andi},
+        {"name": "Oman", "amount": sisa_oman},
+        {"name": "Agung", "amount": sisa_agung},
+        {"name": "anis", "amount": sisa_anis},
+        {"name": "Pak Amin", "amount": sisa_amin},
+    ]
     context = {
         'form': form,
         'data':data,
-        'bocil':sisa_bocil,
+        'people':people,
+        'oman':sisa_oman,
         'anis':sisa_anis,
+        'agung':sisa_agung,
         'apin':sisa_apin,
-        'oji':sisa_oji,
-        'dul':sisa_dul,
+        'andi':sisa_andi,
         'amin':sisa_amin,
         
-        "breadcrumb":{"parent":"Hutang Piutang Pegawai","child":"Hutang Pegawai"},
+        "breadcrumb":{"parent":"Hutang Pegawai","child":"HutangPegawai"},
     }
     return render(request, 'hutang_peg/hutang.html', context)
 
@@ -417,12 +491,12 @@ def UpdateHutangPeg(request, pk):
         form = HutangPegForms(request.POST or None, instance=instance)
         if form.is_valid():
             form.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('/hutangpeg/')
         else:
             print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
+            messages.error(request, 'Formulir tidak valid.')
+            messages.error(request, form.errors)
     else:
         form = HutangPegForms()
         data = HutPegawai.objects.all().order_by('-tanggal','-id')
@@ -436,7 +510,7 @@ def UpdateHutangPeg(request, pk):
 @login_required(login_url='/accounts/')
 def DeleteHutangPeg(request, pk):
     HutPegawai.objects.get(id=pk).delete()
-    sweetify.success(request, "Form Successfully Deleted")  
+    messages.success(request, "Form Successfully Deleted")  
     return redirect('/hutangpeg/')
 
 #TRANSAKSI
@@ -449,7 +523,7 @@ def transaksi(request):
         if excel.is_valid():
             excel_file = request.FILES['excel_file']
             if not excel_file.name.endswith('.xlsx'):
-                sweetify.error(request, 'File bukan berformat Excel (.xlsx)')
+                messages.error(request, 'File bukan berformat Excel (.xlsx)')
                 return render(request, 'transaksi/index.html', {'excel': excel})
 
             df = pd.read_excel(excel_file, engine='openpyxl')
@@ -458,7 +532,7 @@ def transaksi(request):
                 try:
                     tanggal = pd.to_datetime(row['tanggal'], format='%Y-%m-%d')
                 except ValueError:
-                    sweetify.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
+                    messages.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
                     continue
                 keterangan = row['keterangan']
                 nama_kategori = row['kategori_id']  # Menambahkan kolom kategori
@@ -477,7 +551,7 @@ def transaksi(request):
                     jenis_transaksi = Transaksi.PENGELUARAN
                     jumlah = pengeluaran
                 else:
-                    sweetify.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
+                    messages.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
                     continue
 
                 # Memeriksa kategori
@@ -517,7 +591,7 @@ def transaksi(request):
 @login_required(login_url='/accounts/')
 def DeleteTr(request, pk):
     Transaksi.objects.get(id=pk).delete()
-    sweetify.success(request, "Form Successfully Deleted")  
+    messages.success(request, "Form Successfully Deleted")  
     return redirect('/transaksi/')
 
 @login_required(login_url='/accounts/login/')
@@ -535,12 +609,12 @@ def UpdateTr(request, pk):
             transaksi_instance = form.save(commit=False)
             transaksi_instance.owner = request.user  # Set the owner field correctly
             transaksi_instance.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('transaksi')  # Ensure 'transaksi' is a named URL pattern
         else:
             print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
+            messages.error(request, 'Formulir tidak valid.')
+            messages.error(request, form.errors)
 
     context = {
         'form': form,
@@ -723,7 +797,7 @@ def import_excel(request):
         if form.is_valid():
             excel_file = request.FILES['excel_file']
             if not excel_file.name.endswith('.xlsx'):
-                sweetify.error(request, 'File bukan berformat Excel (.xlsx)')
+                messages.error(request, 'File bukan berformat Excel (.xlsx)')
                 return render(request, 'transaksi/index.html', {'excel': form})
 
             df = pd.read_excel(excel_file, engine='openpyxl')
@@ -732,7 +806,7 @@ def import_excel(request):
                 try:
                     tanggal = pd.to_datetime(row['tanggal'], format='%Y-%m-%d')
                 except ValueError:
-                    sweetify.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
+                    messages.warning(request, f"Format tanggal tidak valid pada baris {index + 2}. Baris diabaikan.")
                     continue
                 keterangan = row['keterangan']
                 nama_kategori = row['kategori_id']  # Menambahkan kolom kategori
@@ -751,7 +825,7 @@ def import_excel(request):
                     jenis_transaksi = Transaksi.PENGELUARAN
                     jumlah = pengeluaran
                 else:
-                    sweetify.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
+                    messages.warning(request, 'Kolom pemasukan atau pengeluaran harus diisi')
                     continue
 
                 # Memeriksa kategori
@@ -766,7 +840,7 @@ def import_excel(request):
                     owner_id=owner_id
                 )
 
-            sweetify.success(request, 'Data berhasil diimpor.')
+            messages.success(request, 'Data berhasil diimpor.')
             return redirect('transaksi')
     else:
         form = ExcelUploadForm()
@@ -809,32 +883,47 @@ def AnalasisChart(request):
     })
 
 
-#chart donut
-@login_required(login_url="/accounts/login/")
-def chart_data(request):
+from django.http import JsonResponse
+from django.db.models import Sum, Value
+from django.db.models.functions import TruncDate, TruncMonth, Coalesce
+from django.utils import timezone
+from collections import defaultdict
+import calendar, logging
+
+from .models import Transaksi
+
+logger = logging.getLogger(__name__)
+
+def chart_data(request, period='monthly'):
+    """
+    period: 'daily', 'monthly', 'yearly'
+    """
     try:
-        # Coba gunakan TruncDate (efisien di DB)
-        daily_qs = (
-            Transaksi.objects
-            .annotate(tanggal_hanya=TruncDate('tanggal'))
-            .values('tanggal_hanya', 'transaksi_choice')
-            .annotate(total_jumlah=Sum('jumlah'))
-            .order_by('tanggal_hanya')
-        )
+        qs = Transaksi.objects.filter(owner=request.user)
 
-        # Kumpulkan tanggal unik (sebagai date objects)
-        dates = []
-        for row in daily_qs:
-            d = row.get('tanggal_hanya')
-            if d is not None and d not in dates:
-                dates.append(d)
+        if period == 'daily':
+            qs = qs.annotate(period_date=TruncDate('tanggal'))
+        else:  # monthly
+            qs = qs.annotate(period_date=TruncMonth('tanggal'))
 
-        idx_map = {d: i for i, d in enumerate(dates)}
-        income_values = [0.0] * len(dates)
-        expense_values = [0.0] * len(dates)
+        qs = (qs
+              .values('period_date', 'transaksi_choice')
+              .annotate(total_jumlah=Coalesce(Sum('jumlah'), Value(0)))
+              .order_by('period_date'))
 
-        for row in daily_qs:
-            d = row.get('tanggal_hanya')
+        # mapping unique dates/months
+        unique_dates = []
+        for row in qs:
+            d = row.get('period_date')
+            if d is not None and d not in unique_dates:
+                unique_dates.append(d)
+
+        idx_map = {d: i for i, d in enumerate(unique_dates)}
+        income_values = [0.0] * len(unique_dates)
+        expense_values = [0.0] * len(unique_dates)
+
+        for row in qs:
+            d = row.get('period_date')
             if d is None:
                 continue
             i = idx_map[d]
@@ -845,38 +934,28 @@ def chart_data(request):
             elif choice == 'L':
                 expense_values[i] += amount
 
-        labels = [d.isoformat() for d in dates]
+        # labels
+        if period == 'monthly':
+            labels = [f"{calendar.month_abbr[d.month]} {d.year}" for d in unique_dates]
+        elif period == 'daily':
+            labels = [d.isoformat() for d in unique_dates]
+        else:  # yearly
+            labels = [str(d.year) for d in unique_dates]
 
     except Exception as e:
-        # Fallback aman: grouping di Python
-        logger.exception("TruncDate failed, fallback grouping: %s", e)
-
-        qs = Transaksi.objects.values_list('tanggal', 'jumlah', 'transaksi_choice')
+        logger.exception("Chart data fallback due to error: %s", e)
+        # fallback manual
+        qs = Transaksi.objects.filter(owner=request.user).values_list('tanggal', 'jumlah', 'transaksi_choice')
         grouped_income = defaultdict(float)
         grouped_expense = defaultdict(float)
 
-        for t, jumlah, tx_choice in qs:
+        for t, jumlah, choice in qs:
             if t is None:
                 continue
-
-            # Gunakan tuple types di isinstance — ini aman
-            if isinstance(t, (datetime, date)):
-                # jika datetime ambil date(); jika date biarkan
-                d = t.date() if isinstance(t, datetime) else t
-            else:
-                # jika string, coba parse ISO; jika gagal, skip
-                try:
-                    # .fromisoformat dapat melempar; bungkus try/except
-                    parsed = datetime.fromisoformat(str(t))
-                    d = parsed.date()
-                except Exception:
-                    # debug: log tipe & contoh nilai yang aneh
-                    logger.debug("Skipping unparsable tanggal value: %r (type=%s)", t, type(t))
-                    continue
-
-            if tx_choice == 'P':
+            d = t.date() if hasattr(t, 'date') else t
+            if choice == 'P':
                 grouped_income[d] += float(jumlah or 0)
-            elif tx_choice == 'L':
+            elif choice == 'L':
                 grouped_expense[d] += float(jumlah or 0)
 
         all_dates = sorted(set(list(grouped_income.keys()) + list(grouped_expense.keys())))
@@ -887,10 +966,9 @@ def chart_data(request):
     return JsonResponse({
         'labels': labels,
         'income_values': income_values,
-        'expense_values': expense_values,
+        'expense_values': expense_values
     })
-from zeta import settings
-import os
+
 def fetch_resources(uri, rel):
     path = os.path.join(uri.replace(settings.STATIC_URL, ""))
     return path
@@ -1043,12 +1121,12 @@ def tabungan(request):
         if form.is_valid():    
             trform = form.save(commit=False)
             trform.save()
-            sweetify.success(request, "Formulir Berhasil Dibuat")
+            messages.success(request, "Formulir Berhasil Dibuat")
             return redirect('/tabungan/')
         else:
             print(form.errors)
-            sweetify.error(request, 'Formulir tidak valid.')
-            sweetify.error(request, form.errors)
+            messages.error(request, 'Formulir tidak valid.')
+            messages.error(request, form.errors)
     else:
         form = TabunganForms()
         data = Tabungan.objects.all().order_by('-date','-id')

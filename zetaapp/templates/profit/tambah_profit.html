@@ -32,64 +32,63 @@
 
                             <div class="row g-3">
 
+                                <!-- Nama Barang -->
                                 <div class="col-md-6">
                                     <label class="form-label">Nama Barang</label>
-                                    {{ form.nama_barang}}
+                                    {{ form.nama_barang }}
                                 </div>
 
-                                <!-- Harga Beli & Harga Jual -->
+                                <!-- Berat Input -->
                                 <div class="col-md-6">
-                                    <label class="form-label">Harga Beli</label>
-                                    {{ form.harga_beli }}
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Harga Jual</label>
-                                    {{ form.harga_jual }}
+                                    <label class="form-label">Berat Masuk (kg)</label>
+                                    {{ form.berat_input }}
                                 </div>
 
-                                <!-- Biaya Operasional: 2 kolom -->
-                                <h4 class="col-12 mt-3">Biaya Operasional</h4>
-
+                                <!-- Harga Beli & Jual per kg -->
                                 <div class="col-md-6">
+                                    <label class="form-label">Harga Beli per kg</label>
+                                    {{ form.harga_beli_per_kg }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Harga Jual per kg</label>
+                                    {{ form.harga_jual_per_kg }}
+                                </div>
+
+                                <!-- Biaya Operasional -->
+                                <h4 class="col-12 mt-3">Biaya Operasional (per kg)</h4>
+
+                                <div class="col-md-4">
                                     <label class="form-label">Solar</label>
                                     {{ form.solar }}
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label">Karung</label>
                                     {{ form.karung }}
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label">Ongkos Kirim</label>
                                     {{ form.ongkos_kirim }}
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label">Ongkos Muat</label>
                                     {{ form.ongkos_muat }}
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Ongkos Lain</label>
-                                    {{ form.ongkos_lain }}
-                                </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label">Ongkos Sortir</label>
                                     {{ form.ongkos_sortir }}
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label">Ongkos Giling</label>
                                     {{ form.ongkos_giling }}
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Biaya Darurat Mesin</label>
-                                    {{ form.biaya_darurat_mesin }}
+
+                                <!-- Susutan -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Susutan (%)</label>
+                                    {{ form.susutan_persen }}
                                 </div>
 
-                                <!-- Keterangan full width -->
-                                <div class="col-12">
-                                    <label class="form-label">Keterangan</label>
-                                    {{ form.keterangan}}
-                                </div>
-
-                                <!-- HPP / Profit live -->
+                                <!-- Hasil Kalkulasi Live -->
                                 <h4 class="col-12 mt-3">Hasil Kalkulasi</h4>
                                 <div class="col-md-4">
                                     <label class="form-label">HPP</label>
@@ -103,6 +102,15 @@
                                     <label class="form-label">Profit Margin (%)</label>
                                     <input type="text" id="id_profit_margin" class="form-control" readonly>
                                 </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tabungan (%)</label>
+                                    {{ form.tabungan_persen }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tabungan Total</label>
+                                    <input type="text" id="id_tabungan_total" class="form-control" readonly>
+                                </div>
+
 
                                 <!-- Error -->
                                 {% if form.errors %}
@@ -119,7 +127,7 @@
                                     <button type="submit" class="btn btn-primary">Simpan</button>
                                 </div>
 
-                            </div> <!-- end row -->
+                            </div>
                         </form>
                     </div>
 
@@ -129,38 +137,70 @@
     </div>
 </div>
 
-<!-- JS Live Kalkulasi -->
 <script>
-    function parseRupiah(value) {
-        return parseInt(value.replace(/[^0-9]/g, '')) || 0;
+    function calculateProfit() {
+        // Ambil nilai input
+        let beratInput = parseFloat(document.getElementById("id_berat_input").value) || 0;
+        let hargaBeli = parseFloat(document.getElementById("id_harga_beli_per_kg").value) || 0;
+        let hargaJual = parseFloat(document.getElementById("id_harga_jual_per_kg").value) || 0;
+
+        let solar = parseFloat(document.getElementById("id_solar").value) || 0;
+        let karung = parseFloat(document.getElementById("id_karung").value) || 0;
+        let ongkosKirim = parseFloat(document.getElementById("id_ongkos_kirim").value) || 0;
+        let ongkosMuat = parseFloat(document.getElementById("id_ongkos_muat").value) || 0;
+        let ongkosSortir = parseFloat(document.getElementById("id_ongkos_sortir").value) || 0;
+        let ongkosGiling = parseFloat(document.getElementById("id_ongkos_giling").value) || 0;
+
+        let susutanPersen = parseFloat(document.getElementById("id_susutan_persen").value) || 5;
+
+        // Total biaya operasional per kg
+        let totalBiayaOperasional = solar + karung + ongkosKirim + ongkosMuat + ongkosSortir + ongkosGiling;
+
+        // HPP per kg
+        let hppPerKg = hargaBeli + totalBiayaOperasional;
+
+        // Berat output setelah susut
+        let beratOutput = beratInput * (1 - susutanPersen / 100);
+
+        // Total HPP
+        let totalHpp = hppPerKg * beratInput;
+
+        // Total Revenue
+        let totalRevenue = hargaJual * beratOutput;
+
+        // Profit
+        let profit = totalRevenue - totalHpp;
+
+        // Profit Margin %
+        let profitMargin = totalRevenue ? (profit / totalRevenue * 100) : 0;
+        // tabungan 
+        let tabunganPersen = parseFloat(document.getElementById("id_tabungan_persen").value) || 30;
+        let tabunganTotal = profit * tabunganPersen / 100;
+        
+        // Update input readonly
+        document.getElementById("id_tabungan_total").value = tabunganTotal.toFixed(0);
+        document.getElementById("id_hpp").value = totalHpp.toFixed(0);
+        document.getElementById("id_profit").value = profit.toFixed(0);
+        document.getElementById("id_profit_margin").value = profitMargin.toFixed(2);
     }
-    function formatRupiah(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
-    function hitungProfit() {
-        let harga_beli = parseRupiah(document.getElementById('id_harga_beli').value);
-        let harga_jual = parseRupiah(document.getElementById('id_harga_jual').value);
 
-        let biayaElems = document.querySelectorAll('#id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin');
-        let total_biaya_operasional = 0;
-        biayaElems.forEach(el => {
-            total_biaya_operasional += parseRupiah(el.value);
-        });
+    // Event listener semua input yang mempengaruhi perhitungan
+    let inputs = [
+        "id_berat_input", "id_harga_beli_per_kg", "id_harga_jual_per_kg",
+        "id_solar", "id_karung", "id_ongkos_kirim", "id_ongkos_muat",
+        "id_ongkos_sortir", "id_ongkos_giling", "id_susutan_persen"
+    ];
 
-        let hpp = harga_beli + total_biaya_operasional;
-        let profit = harga_jual - hpp;
-        let profit_margin = harga_jual ? (profit / harga_jual * 100).toFixed(2) : 0;
 
-        document.getElementById('id_hpp').value = 'Rp ' + formatRupiah(hpp);
-        document.getElementById('id_profit').value = 'Rp ' + formatRupiah(profit);
-        document.getElementById('id_profit_margin').value = profit_margin + ' %';
-    }
-
-    // Live calculation saat input biaya/harga
-    document.querySelectorAll('#id_harga_beli, #id_harga_jual, #id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin').forEach(el => {
-        el.addEventListener('input', hitungProfit);
+    inputs.forEach(id => {
+        let el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("input", calculateProfit);
+        }
     });
-    window.addEventListener('DOMContentLoaded', hitungProfit);
+
+    // Hitung pertama kali saat halaman load
+    window.addEventListener("load", calculateProfit);
 </script>
 
 {% endblock %}

@@ -4,7 +4,26 @@ from django.forms import ModelForm
 
 from .models import *
 # forms.py
+class StockInForm(forms.ModelForm):
+    class Meta:
+        model = StockIn
+        fields = ["product", "quantity", "reference","note" ]
+        widgets = {
+            "product": forms.Select(attrs={"class": "form-select form-select-sm"}),
+            "quantity": forms.NumberInput(attrs={
+                "class": "form-control form-control-sm",
+            }),
+            "reference ": forms.TextInput(attrs={"class": "form-control form-control-sm"}),
+            "note ": forms.TextInput(attrs={"class": "form-control form-control-sm"}),
+        }
 
+    def clean_quantity(self):
+        q = self.cleaned_data.get("quantity")
+        if q is None:
+            raise forms.ValidationError("Quantity wajib diisi.")
+        if q <= 0:
+            raise forms.ValidationError("Quantity harus lebih dari 0.")
+        return q
 class ExcelUploadForm(forms.Form):
     excel_file = forms.FileField(widget=forms.FileInput(attrs={'name':'excel_file', 'class':'form-control' ,'type':'file'}))
     class Meta:
@@ -74,28 +93,50 @@ class HutangPegForms(ModelForm):
         self.fields['hutang_choice'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.hutang.value}}'})
 
 
-class ProfitForms(ModelForm):
+class ProfitForms(forms.ModelForm):
     class Meta:
         model = Profito2
-        fields = '__all__'
+        fields = [
+            'nama_barang',
+            'berat_input',
+            'harga_beli_per_kg',
+            'harga_jual_per_kg',
+            'tabungan_persen',
+            'solar',
+            'karung',
+            'ongkos_kirim',
+            'ongkos_sortir',
+            'ongkos_giling',
+            'ongkos_muat',
+            'susutan_persen',
+        ]
         widgets = {
-            'tanggal': forms.DateInput(attrs={
-                'type':'date',
-                'class':'form-control'
-            }),
-            'nama_barang': forms.TextInput(attrs={'class':'form-control'}),
-            'harga_beli': forms.TextInput(attrs={'class':'form-control', 'id':'id_harga_beli', 'placeholder':'Rp 0'}),
-            'harga_jual': forms.TextInput(attrs={'class':'form-control', 'id':'id_harga_jual', 'placeholder':'Rp 0'}),
-            'solar': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_solar', 'placeholder':'Rp 0'}),
-            'karung': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_karung', 'placeholder':'Rp 0'}),
-            'ongkos_kirim': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_kirim', 'placeholder':'Rp 0'}),
-            'ongkos_muat': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_muat', 'placeholder':'Rp 0'}),
-            'ongkos_lain': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_lain', 'placeholder':'Rp 0'}),
-            'ongkos_sortir': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_sortir', 'placeholder':'Rp 0'}),
-            'ongkos_giling': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_ongkos_giling', 'placeholder':'Rp 0'}),
-            'biaya_darurat_mesin': forms.TextInput(attrs={'class':'form-control biaya', 'id':'id_biaya_darurat_mesin', 'placeholder':'Rp 0'}),
-            'keterangan': forms.Textarea(attrs={'class':'form-control', 'rows':3}),
+            'nama_barang': forms.TextInput(attrs={'class': 'form-control'}),
+            'berat_input': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'harga_beli_per_kg': forms.NumberInput(attrs={'class': 'form-control'}),
+            'harga_jual_per_kg': forms.NumberInput(attrs={'class': 'form-control'}),
+            'solar': forms.NumberInput(attrs={'class': 'form-control'}),
+            'karung': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ongkos_kirim': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ongkos_sortir': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ongkos_giling': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ongkos_muat': forms.NumberInput(attrs={'class': 'form-control'}),
+            'susutan_persen': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
+        labels = {
+            'nama_barang': 'Nama Barang',
+            'berat_input': 'Berat Masuk (kg)',
+            'harga_beli_per_kg': 'Harga Beli per kg',
+            'harga_jual_per_kg': 'Harga Jual per kg',
+            'solar': 'Biaya Solar per kg',
+            'karung': 'Biaya Karung per kg',
+            'ongkos_kirim': 'Ongkos Kirim per kg',
+            'ongkos_sortir': 'Biaya Sortir per kg',
+            'ongkos_giling': 'Biaya Giling per kg',
+            'ongkos_muat': 'Biaya Muat per kg',
+            'susutan_persen': 'Susutan (%)',
+        }
+
 class Profit2Forms(ModelForm):
     class Meta:
         model = Profito

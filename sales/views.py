@@ -19,6 +19,9 @@ from zetaapp.models import Transaksi
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Sum, Count
+from django.contrib import messages
+from django.shortcuts import redirect, render, get_object_or_404
+
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
@@ -34,6 +37,7 @@ def sales_list_view(request):
     )
 
     context = {
+        "breadcrumb": {"parent": "POS", "child": "Point Of Sale"},
         "active_icon": "sales",
         "sales": Sale.objects.all().order_by('-id'),
         'salesa': salesa,
@@ -42,8 +46,6 @@ def sales_list_view(request):
     return render(request, "sales/sales.html", context=context)
 
 
-from django.contrib import messages
-from django.shortcuts import redirect, render, get_object_or_404
 
 @login_required(login_url="/accounts/login/")
 def sales_add_view(request):
@@ -90,6 +92,7 @@ def sales_add_view(request):
         return JsonResponse(response_data)
 
     context = {
+        "breadcrumb": {"parent": "POS", "child": "Point Of Sale"},
         "active_icon": "sales",
         "customers": customers
     }
@@ -107,6 +110,8 @@ def sales_details_view(request, sale_id):
         details = SaleDetail.objects.filter(sale=sale)
 
         context = {
+            "breadcrumb": {"parent": "POS", "child": "Point Of Sale"},
+        
             "active_icon": "sales",
             "sale": sale,
             "details": details,
@@ -117,10 +122,6 @@ def sales_details_view(request, sale_id):
             request, 'There was an error getting the sale!', extra_tags="danger")
         print(e)
         return redirect('sales:sales_list')
-    
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
 
 @login_required(login_url="/accounts/login/")
 def delete_sale(request, sale_id):
@@ -146,20 +147,6 @@ def render_to_pdf(template_src, context_dict={}):
 	if not pdf.err:
 		return HttpResponse(result.getvalue(), content_type='application/pdf')
 	return None
-# @login_required(login_url="/accounts/login/")
-# def receipt_pdf_view(request, sale_id):
-#     # Get the sale
-#     sale = Sale.objects.get(id=sale_id)
-
-#     # Get the sale details
-#     details = SaleDetail.objects.filter(sale=sale)
-
-#     data = {
-#         "sale": sale,
-#         "details": details
-#     }
-
-#     return render(request, "sales/sales_receipt_pdf.html", context=data)
 
 class ViewPDF(View):
     def get(self, request, sale_id, *args, **kwargs,):

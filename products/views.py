@@ -146,6 +146,7 @@ def products_list_view(request):
         .annotate(total_qty=Sum('quantity'))
     )
     context = {
+        "breadcrumb": {"parent": "Barang", "child": "Daftar Barang"},
         'totals_per_product': totals_per_product,
         "active_icon": "products",
         "products": Product.objects.all().order_by('-id')

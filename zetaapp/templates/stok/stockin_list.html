@@ -22,7 +22,7 @@
         <div class="card">
           <div class="card-header pb-0">
             <div class="order-place" style="text-align: right;">
-              <a href="{% url 'profit_create' %}" class="btn btn-primary">
+              <a href="{% url 'stockin_create' %}" class="btn btn-primary">
                 Tambah Profit
               </a>
             </div>
@@ -31,37 +31,31 @@
             <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
               <thead>
                 <tr>
-                  <th>No</th>
-                  <th>Tanggal</th>
-                  <th>Nama Barang</th>
-                  <th>Berat(kg)</th>
-                  <th>HPP Total</th>
-                  <th>Revenue</th>
-                  <th>Profit</th>
-                  <th>Profit Margin (%)</th>
-                  <th>Tabungan</th>
-                  <th>Action</th>
+                  <th>NO</th>
+                  <th class="text-center">TANGGAL</th>
+                  <th class="text-center">PRODUK</th>
+                  <th class="text-center">JUMLAH</th>
+                  <th class="text-center">REFERENCE</th>
+                  <th class="text-center">DITERIMA OLEH</th>
+                  <th class="text-center">OPSI</th>
                 </tr>
               </thead>
               <tbody>
-                {% for t in data %}
-                <tr>
+                {% for u in stockins %}
+                <tr class="text-center">
                   <td>{{ forloop.counter }}</td>
-                  <td>{{ t.tanggal }}</td>
-                  <td>{{ t.nama_barang }}</td>
-                  <td>{{ t.berat_output}} Kg</td>
-                  <td>Rp. {{ t.total_hpp }}</td>
-                  <td>Rp. {{ t.total_revenue }}</td>
-                  <td>Rp. {{ t.profit }}</td>
-                  <td>Rp. {{ t.profit_margin|floatformat:2 }}</td>
-                  <td>Rp. {{ t.tabungan_total}}</td>
+                  <td class="text-center">{{ u.received_at|date:"d-m-Y H:i" }}</td>
+                  <td class="text-center">{{ u.product.name }}</td>
+                  <td class="text-center">{{ u.quantity }}</td>
+                  <td class="text-center">{{ u.reference }}</td>
+                  <td class="text-center">{{ u.received_by }}</td>
                   <td>
                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                       data-bs-target="#edit_tr">
                       <i class="fa fa-cog"></i>
                     </button>
                     <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                      data-bs-target="#hapus_pr">
+                      data-bs-target="#hapus_pr{{ u.id }}">
                       <i class="fa fa-trash"></i>
                     </button>
                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
@@ -70,29 +64,25 @@
                     </button>
                   </td>
                 </tr>
-                <div class="modal fade" id="hapus_pr" tabindex="-1" aria-labelledby="exampleModalLabel"
-                  aria-hidden="true">
+                <div class="modal fade" id="hapus_pr{{ u.id }}" tabindex="-1" aria-hidden="true">
                   <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="hapus_pr">
-                          Delete customer</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </button>
+                    <form method="post" action="{% url 'stockin_delete' u.id %}">
+                      {% csrf_token %}
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Delete Stock In</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          Apakah Kamu yakin menghapus item ini:
+                          <h4 class="bold">{{ u.product.name }} ditanggal {{ u.received_at|date:"d-m-Y" }}</h4>
+                        </div>
+                        <div class="card-footer border-0 pt-0 text-end">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                          <button type="submit" class="btn btn-danger">Hapus</button>
+                        </div>
                       </div>
-                      <div class="modal-body">
-                        Apakah Kamu yakin menghapus Profit ini:
-                        <h4 class="bold">
-                          nama {{u.nama_suplayer}} ditanggal {{u.date|date:"d-m-Y"}}
-                        </h4>
-                      </div>
-                      <div class="card-footer border-0 pt-0" style="text-align: right;">
-                        <button class="btn btn-warning" type="reset">Batal</button>
-                        <a href="{% url 'deletepr' t.id %}" class="text-decoration-none">
-                          <button type="button" class="btn btn-danger">Hapus</button>
-                        </a>
-                      </div>
-                    </div>
+                    </form>
                   </div>
                 </div>
                 <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
@@ -103,7 +93,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
-                        <form class="form theme-form" action="{% url 'updatepr' t.id %}" method="POST"
+                        <form class="form theme-form" action="{% url 'stockin_update' u.id %}" method="POST"
                           enctype="multipart/form-data">
                           {% load crispy_forms_tags %}
                           {% csrf_token %}
@@ -148,105 +138,6 @@
                 {% endfor %}
               </tbody>
             </table>
-            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-              aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <form class="form theme-form" method="POST" enctype="multipart/form-data">
-                      {% csrf_token %}
-                      {% load crispy_forms_tags %}
-
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Tanggal</label>
-                        {{ form.tanggal }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Nama Barang</label>
-                        {{ form.nama_barang }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Harga Beli</label>
-                        {{ form.harga_beli }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Harga Jual</label>
-                        {{ form.harga_jual }}
-                      </div>
-
-                      <!-- Biaya Operasional -->
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Solar</label>
-                        {{ form.solar }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Karung</label>
-                        {{ form.karung }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Kirim</label>
-                        {{ form.ongkos_kirim }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Muat</label>
-                        {{ form.ongkos_muat }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Lain</label>
-                        {{ form.ongkos_lain }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Sortir</label>
-                        {{ form.ongkos_sortir }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Giling</label>
-                        {{ form.ongkos_giling }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Biaya Darurat Mesin</label>
-                        {{ form.biaya_darurat_mesin }}
-                      </div>
-
-                      <!-- Keterangan -->
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Keterangan</label>
-                        {{ form.keterangan }}
-                      </div>
-
-                      <!-- HPP / Profit live -->
-                      <div class="mb-3">
-                        <label>HPP</label>
-                        <input type="text" id="id_hpp" class="form-control" readonly>
-                      </div>
-                      <div class="mb-3">
-                        <label>Profit</label>
-                        <input type="text" id="id_profit" class="form-control" readonly>
-                      </div>
-                      <div class="mb-3">
-                        <label>Profit Margin (%)</label>
-                        <input type="text" id="id_profit_margin" class="form-control" readonly>
-                      </div>
-
-                      {% if form.errors %}
-                      <div class="alert alert-danger" id="msg">
-                        {{ form.errors }}
-                      </div>
-                      {% endif %}
-
-                      <div class="card-footer border-0 pt-0" style="text-align: right;">
-                        <button class="btn btn-warning" type="reset">Cancel</button>
-                        <button class="btn btn-primary" type="submit">Submit</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
