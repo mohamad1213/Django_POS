@@ -1,0 +1,207 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
+
+<!-- Plugins css Ends-->
+{% endblock css %}
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+    {% include 'messages.html' %}
+    <!-- Container-fluid starts-->
+    <div class="container-fluid list-products">
+        <div class="row">
+            <!-- Individual column searching (text inputs) Starts-->
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <div class="order-place" style="text-align: right;">
+                            <h4>Formulir Profit</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form class="form theme-form">
+
+                            <div class="row g-3">
+
+                                <!-- Nama Barang -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Nama Barang</label>
+                                    <input type="text" value="{{ data.nama_barang }}" class="form-control" readonly>
+                                </div>
+
+                                <!-- Berat Input -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Berat Masuk (kg)</label>
+                                    <input type="text" value="{{ data.berat_input }}" class="form-control" readonly>
+                                </div>
+
+                                <!-- Harga Beli & Jual per kg -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Harga Beli per kg</label>
+                                    <input type="text" value="{{ data.harga_beli_per_kg }}" class="form-control"
+                                        readonly>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Harga Jual per kg</label>
+                                    <input type="text" value="{{ data.harga_jual_per_kg }}" class="form-control"
+                                        readonly>
+                                </div>
+
+                                <!-- Biaya Operasional -->
+                                <h4 class="col-12 mt-3">Biaya Operasional (per kg)</h4>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Solar</label>
+                                    <input type="text" value="{{ data.solar }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Karung</label>
+                                    <input type="text" value="{{ data.karung }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Ongkos Kirim</label>
+                                    <input type="text" value="{{ data.ongkos_kirim }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Ongkos Muat</label>
+                                    <input type="text" value="{{ data.ongkos_muat }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Ongkos Sortir</label>
+                                    <input type="text" value="{{ data.ongkos_sortir }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Ongkos Giling</label>
+                                    <input type="text" value="{{ data.ongkos_giling }}" class="form-control" readonly>
+                                </div>
+
+                                <!-- Susutan -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Susutan (%)</label>
+                                    <input type="text" value="{{ data.susutan_persen }}" class="form-control" readonly>
+                                </div>
+
+                                <!-- Kalkulasi -->
+                                <h4 class="col-12 mt-3">Hasil Kalkulasi</h4>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">HPP</label>
+                                    <input type="text" value="{{ data.hpp }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Profit</label>
+                                    <input type="text" value="{{ data.profit }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Profit Margin (%)</label>
+                                    <input type="text" value="{{ data.profit_margin }}" class="form-control" readonly>
+                                </div>
+
+                                <!-- Tabungan -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Tabungan (%)</label>
+                                    <input type="text" value="{{ data.tabungan_persen }}" class="form-control" readonly>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Tabungan Total</label>
+                                    <input type="text" value="{{ data.tabungan_total }}" class="form-control" readonly>
+                                </div>
+
+                                <!-- Back -->
+                                <div class="col-12 text-end mt-3">
+                                    <a href="{% url 'profit' %}" class="btn btn-secondary">Kembali</a>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateProfit() {
+        // Ambil nilai input
+        let beratInput = parseFloat(document.getElementById("id_berat_input").value) || 0;
+        let hargaBeli = parseFloat(document.getElementById("id_harga_beli_per_kg").value) || 0;
+        let hargaJual = parseFloat(document.getElementById("id_harga_jual_per_kg").value) || 0;
+
+        let solar = parseFloat(document.getElementById("id_solar").value) || 0;
+        let karung = parseFloat(document.getElementById("id_karung").value) || 0;
+        let ongkosKirim = parseFloat(document.getElementById("id_ongkos_kirim").value) || 0;
+        let ongkosMuat = parseFloat(document.getElementById("id_ongkos_muat").value) || 0;
+        let ongkosSortir = parseFloat(document.getElementById("id_ongkos_sortir").value) || 0;
+        let ongkosGiling = parseFloat(document.getElementById("id_ongkos_giling").value) || 0;
+
+        let susutanPersen = parseFloat(document.getElementById("id_susutan_persen").value) || 5;
+
+        // Total biaya operasional per kg
+        let totalBiayaOperasional = solar + karung + ongkosKirim + ongkosMuat + ongkosSortir + ongkosGiling;
+
+        // HPP per kg
+        let hppPerKg = hargaBeli + totalBiayaOperasional;
+
+        // Berat output setelah susut
+        let beratOutput = beratInput * (1 - susutanPersen / 100);
+
+        // Total HPP
+        let totalHpp = hppPerKg * beratInput;
+
+        // Total Revenue
+        let totalRevenue = hargaJual * beratOutput;
+
+        // Profit
+        let profit = totalRevenue - totalHpp;
+
+        // Profit Margin %
+        let profitMargin = totalRevenue ? (profit / totalRevenue * 100) : 0;
+        // tabungan 
+        let tabunganPersen = parseFloat(document.getElementById("id_tabungan_persen").value) || 30;
+        let tabunganTotal = profit * tabunganPersen / 100;
+
+        // Update input readonly
+        document.getElementById("id_tabungan_total").value = tabunganTotal.toFixed(0);
+        document.getElementById("id_hpp").value = totalHpp.toFixed(0);
+        document.getElementById("id_profit").value = profit.toFixed(0);
+        document.getElementById("id_profit_margin").value = profitMargin.toFixed(2);
+    }
+
+    // Event listener semua input yang mempengaruhi perhitungan
+    let inputs = [
+        "id_berat_input", "id_harga_beli_per_kg", "id_harga_jual_per_kg",
+        "id_solar", "id_karung", "id_ongkos_kirim", "id_ongkos_muat",
+        "id_ongkos_sortir", "id_ongkos_giling", "id_susutan_persen"
+    ];
+
+
+    inputs.forEach(id => {
+        let el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("input", calculateProfit);
+        }
+    });
+
+    // Hitung pertama kali saat halaman load
+    window.addEventListener("load", calculateProfit);
+</script>
+
+{% endblock %}

@@ -10,6 +10,131 @@
 {% endblock css %}
 {% block content %}
 <div class="page-body">
+  <style>
+    /* General small-screen adjustments */
+    @media (max-width: 768px) {
+      .order-place {
+        text-align: center;
+        margin-bottom: 12px;
+      }
+
+      .order-place .btn {
+        margin: 4px 2px;
+        width: auto;
+        font-size: 14px;
+      }
+    }
+
+    /* Make table wrapper horizontally scrollable on small screens */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Card-like table rows on very small screens */
+    @media (max-width: 480px) {
+      .responsive-table thead {
+        display: none;
+      }
+
+      /* hide header */
+      .responsive-table,
+      .responsive-table tbody,
+      .responsive-table tr,
+      .responsive-table td {
+        display: block;
+        width: 100%;
+      }
+
+      .responsive-table tr {
+        margin-bottom: 12px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 8px;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02);
+      }
+
+      .responsive-table td {
+        padding: 6px 10px;
+        text-align: left;
+        position: relative;
+      }
+
+      .responsive-table td[data-label]::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        display: inline-block;
+        width: 40%;
+        min-width: 110px;
+      }
+
+      .responsive-table td:last-child {
+        padding-top: 10px;
+      }
+
+      /* Smaller buttons and stack them */
+      .btn-group-sm .btn {
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+    }
+
+    /* Modal full-screen on small devices */
+    @media (max-width: 480px) {
+      .modal-dialog {
+        max-width: 100%;
+        margin: 0;
+        height: 100%;
+      }
+
+      .modal-content {
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      .modal-body {
+        overflow-y: auto;
+        padding-bottom: 72px;
+        /* space for footer */
+      }
+
+      .modal-footer,
+      .card-footer {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        padding: 12px;
+        border-top: 1px solid #e9ecef;
+        z-index: 10;
+      }
+    }
+
+    /* Adjust form inputs, make them full width on small screens */
+    @media (max-width: 480px) {
+
+      .form .form-control,
+      .mb-3 .form-control {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .rupiah {
+        font-size: 15px;
+      }
+    }
+
+    /* Tweak typography for small screens */
+    @media (max-width: 420px) {
+      body {
+        font-size: 14px;
+      }
+
+      .table td {
+        font-size: 13px;
+      }
+    }
+  </style>
+
   {% include 'layout/breadcrumb.html' %}
   {% include 'messages.html' %}
 
@@ -30,126 +155,127 @@
             </div>
           </div>
           <div class="card-body">
-            <!-- <div class="table-responsive"> -->
-            <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
-              <thead>
-                <tr>
-                  <th rowspan="2">NO</th>
-                  <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
-                  <!-- <th rowspan="2" scope="col" class="text-center">KATEGORI</th> -->
-                  <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
-                  <th colspan="2" scope="col" class="text-center">JENIS</th>
-                  <th rowspan="2" scope="col" class="text-center">OPSI</th>
-                </tr>
-                <tr>
-                  <th scope="col" class="text-center">PEMASUKAN</th>
-                  <th scope="col" class="text-center">PENGELUARAN</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for u in data %}
-                <tr class="text-center">
-                  <td>{{forloop.counter}}</td>
-                  <td>{{u.tanggal|date:"d-m-Y"}}</td>
-                  <!-- <td>{{u.kategori}}</td> -->
-                  <td style="width:30%">{{u.keterangan }}</td>
-                  <td class="text-center">
-                    {% if u.transaksi_choice == "P" %}
-                    Rp. {{u.jumlah|floatformat:"0g" }}
-                    {% else %}
-                    -
-                    {% endif %}
-                  </td>
-                  <td class="text-center">
-                    {% if u.transaksi_choice == "L" %}
-                    Rp. {{u.jumlah|floatformat:"0g" }}
-                    {% else %}
-                    -
-                    {% endif %}
-                  </td>
-                  <td>
-                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                      data-bs-target="#edit_tr">
-                      <i class="fa fa-cog"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#hapus_tr">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#lihat_tr">
-                      <i class="fa fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-                <div class="modal fade" id="hapus_tr" tabindex="-1" aria-labelledby="hapus_tr" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="hapus_tr">
-                          Hapus Transaksi</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </button>
-                      </div>
-                      <div class="modal-body">
-                        Apakah Kamu yakin ingin menghapus tabel transaksi ini:
-                        <h4 class="bold">
-                           nomer id {{u.id}}
-                        </h4>
-                      </div>
-                      <div class="card-footer border-0 pt-0" style="text-align: right;">
-                        <button class="btn btn-warning" type="reset">Cancel</button>
-                        <a href="{% url 'deletetr' u.id %}" class="text-decoration-none">
-                          <button type="button" class="btn btn-danger">Delete</button>
-                        </a>
+            <div class="table-responsive">
+              <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+                <thead>
+                  <tr>
+                    <th rowspan="2">NO</th>
+                    <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
+                    <!-- <th rowspan="2" scope="col" class="text-center">KATEGORI</th> -->
+                    <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
+                    <th colspan="2" scope="col" class="text-center">JENIS</th>
+                    <th rowspan="2" scope="col" class="text-center">OPSI</th>
+                  </tr>
+                  <tr>
+                    <th scope="col" class="text-center">PEMASUKAN</th>
+                    <th scope="col" class="text-center">PENGELUARAN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for u, form in forms_list %}
+                  <tr class="text-center">
+                    <td>{{forloop.counter}}</td>
+                    <td>{{u.tanggal|date:"d-m-Y"}}</td>
+                    <!-- <td>{{u.kategori}}</td> -->
+                    <td style="width:30%">{{u.keterangan }}</td>
+                    <td class="text-center">
+                      {% if u.transaksi_choice == "P" %}
+                      Rp. {{u.jumlah|floatformat:"0g" }}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if u.transaksi_choice == "L" %}
+                      Rp. {{u.jumlah|floatformat:"0g" }}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#edit_tr-{{u.pk}}">
+                        <i class="fa fa-cog"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#hapus_tr">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#lihat_tr">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <div class="modal fade" id="hapus_tr" tabindex="-1" aria-labelledby="hapus_tr" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="hapus_tr">
+                            Hapus Transaksi</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          Apakah Kamu yakin ingin menghapus tabel transaksi ini:
+                          <h4 class="bold">
+                            nomer id {{u.id}}
+                          </h4>
+                        </div>
+                        <div class="card-footer border-0 pt-0" style="text-align: right;">
+                          <button class="btn btn-warning" type="reset">Cancel</button>
+                          <a href="{% url 'deletetr' u.id %}" class="text-decoration-none">
+                            <button type="button" class="btn btn-danger">Delete</button>
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <form class="form theme-form" action="{% url 'updatetr' u.pk %}" method="POST" enctype="multipart/form-data">
+                  <div class="modal fade modal-edit" id="edit_tr-{{ u.pk }}" tabindex="-1"
+                    aria-labelledby="edit_tr-{{ u.pk }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h1 class="modal-title fs-5">Edit Transaksi</h1>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <form class="form theme-form" action="{% url 'updatetr' u.pk %}" method="POST"
+                            enctype="multipart/form-data">
                             {% csrf_token %}
                             <div class="form-group">
-                                <label for="id_tanggal">Tanggal</label>
-                                {{ form.tanggal }}
+                              <label for="id_tanggal">Tanggal</label>
+                              {{ form.tanggal }}
                             </div>
                             <div class="form-group">
-                                <label for="id_jenis_transaksi">Jenis</label>
-                                {{ form.transaksi_choice  }}
+                              <label for="id_jenis_transaksi">Jenis</label>
+                              {{ form.transaksi_choice }}
                             </div>
                             <div class="form-group">
-                                <label for="id_kategori">Kategori</label>
-                                {{ form.kategori }}
+                              <label for="id_kategori">Kategori</label>
+                              {{ form.kategori }}
                             </div>
                             <div class="form-group">
-                                <label for="id_jumlah">Nominal</label>
-                                {{ form.jumlah }}
+                              <label for="id_jumlah">Nominal</label>
+                              {{ form.jumlah }}
                             </div>
                             <div class="form-group">
-                                <label for="id_keterangan">Keterangan</label>
-                                {{ form.keterangan }}
+                              <label for="id_keterangan">Keterangan</label>
+                              {{ form.keterangan }}
                             </div>
-                            {% if form.errors %}
-                                <div class="alert alert-danger" id="msg">
-                                    {{ form.errors }}
-                                </div>
-                            {% endif %}
                             <div class="card-footer border-0 pt-0" style="text-align: right;">
-                                <button class="btn btn-warning" type="reset">Cancel</button>
-                                <button class="btn btn-primary" type="submit">Submit</button>
+                              <button class="btn btn-warning" type="reset">Cancel</button>
+                              <button class="btn btn-primary" type="submit">Submit</button>
                             </div>
-                        </form>
+                          </form>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                {% endfor %}
-              </tbody>
-            </table>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
             <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
               aria-hidden="true">
               <div class="modal-dialog">
@@ -248,50 +374,128 @@
 <script src="{% static 'assets/js/product-list-custom.js' %}"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const rupiahInput = document.getElementById('id_jumlah');
-    if (!rupiahInput) return;
+  document.addEventListener('DOMContentLoaded', function () {
 
-    function formatRupiah(value) {
-        let number_string = value.replace(/[^,\d]/g, '').toString();
-        let split = number_string.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        return rupiah ? 'Rp ' + rupiah : '';
+    function formatRupiahValue(value) {
+      let number_string = String(value).replace(/[^,\d]/g, '').toString();
+      if (!number_string) return '';
+      let split = number_string.split(',');
+      let sisa = split[0].length % 3;
+      let rupiah = split[0].substr(0, sisa);
+      let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+      if (ribuan) {
+        let separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+      }
+      return 'Rp ' + rupiah;
     }
 
-    // Live formatting saat mengetik
-    rupiahInput.addEventListener('input', function (e) {
+    function initRupiahInput(el) {
+      if (!el) return;
+
+      // Format awal (jika ada nilai awal berupa angka)
+      if (el.value && !el.value.trim().startsWith('Rp')) {
+        el.value = formatRupiahValue(el.value);
+      } else if (el.value && el.value.trim().startsWith('Rp')) {
+        // pastikan format konsisten
+        el.value = formatRupiahValue(el.value);
+      }
+
+      // input listener: live formatting
+      el.addEventListener('input', function (e) {
+        let cursorPos = this.selectionStart;
+        let originalLength = this.value.length;
+        this.value = formatRupiahValue(this.value);
+        let newLength = this.value.length;
+        let diff = newLength - originalLength;
+        try {
+          this.setSelectionRange(cursorPos + diff, cursorPos + diff);
+        } catch (err) {
+          // some browsers might throw when element not focused
+        }
+      });
+    }
+
+    // Inisialisasi untuk semua input rupiah yang ada di DOM sekarang
+    const allRupiahInputs = document.querySelectorAll('.rupiah');
+    allRupiahInputs.forEach(initRupiahInput);
+
+    // Jika ada modal Bootstrap, format input ketika modal tampil
+    // (untuk memastikan input yang tadinya tersembunyi juga ter-init)
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+      modal.addEventListener('shown.bs.modal', function () {
+        const inside = this.querySelectorAll('.rupiah');
+        inside.forEach(initRupiahInput);  // Hapus ini
+      });
+    });
+
+    // Sebelum submit: konversi semua .rupiah ke angka polos
+    document.addEventListener('submit', function (ev) {
+      const form = ev.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      const rupiahFields = form.querySelectorAll('.rupiah');
+      rupiahFields.forEach(input => {
+        let raw = String(input.value).replace(/[^0-9]/g, '');
+        input.value = raw ? raw : '0';
+      });
+    }, true); // use capture to ensure it runs before normal submit handlers
+
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    function formatRupiahValue(value) {
+      if (!value) return '';
+      let number_string = String(value).replace(/[^0-9]/g, '');
+      let sisa = number_string.length % 3;
+      let rupiah = number_string.substr(0, sisa);
+      let ribuan = number_string.substr(sisa).match(/\d{3}/gi);
+
+      if (ribuan) {
+        let separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+      }
+      return 'Rp ' + rupiah;
+    }
+
+    function initRupiahInput(el) {
+      if (!el) return;
+
+      // live typing formatting
+      el.addEventListener('input', function () {
         let cursorPos = this.selectionStart;
         let originalLength = this.value.length;
 
-        this.value = formatRupiah(this.value);
+        // hapus semua non-digit
+        let numeric = this.value.replace(/[^0-9]/g, '');
+        this.value = numeric ? formatRupiahValue(numeric) : '';
 
         let newLength = this.value.length;
-        this.setSelectionRange(cursorPos + (newLength - originalLength), cursorPos + (newLength - originalLength));
+        let diff = newLength - originalLength;
+        try { this.setSelectionRange(cursorPos + diff, cursorPos + diff); } catch { }
+      });
+    }
+
+    document.querySelectorAll('.modal-edit').forEach(modal => {
+      modal.addEventListener('shown.bs.modal', function () {
+        this.querySelectorAll('.rupiah').forEach(initRupiahInput);
+        // TIDAK MEMFORMAT VALUE AWAL
+      });
     });
 
-    // Sebelum submit, ubah ke angka polos untuk disimpan Django
-    const form = rupiahInput.closest('form');
-    if (form) {
-        form.addEventListener('submit', function () {
-            let raw = rupiahInput.value.replace(/[^0-9]/g, '');
-            rupiahInput.value = raw ? raw : '0';
-        });
-    }
+    // sebelum submit, konversi ke angka murni
+    document.addEventListener('submit', function (ev) {
+      const form = ev.target;
+      if (!(form instanceof HTMLFormElement)) return;
 
-    // Format nilai awal (edit form)
-    if (rupiahInput.value) {
-        rupiahInput.value = formatRupiah(rupiahInput.value);
-    }
-});
+      form.querySelectorAll('.rupiah').forEach(input => {
+        input.value = input.value.replace(/[^0-9]/g, '') || '0';
+      });
+    }, true);
+
+  });
 </script>
 
 <!-- Plugins JS Ends-->

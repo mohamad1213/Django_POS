@@ -8,6 +8,8 @@ from django.db import transaction
 import re
 from datetime import datetime, time
 from django.http import HttpResponse
+from decimal import Decimal, InvalidOperation
+from .helpers import *
 from django.shortcuts import render
 from collections import defaultdict
 from .models import *
@@ -288,58 +290,83 @@ def profit_create(request):
 @login_required(login_url="/accounts/login/")
 def profit(request):
     data = Profito2.objects.all()
+    profit_today = profit_today_value()
+    formatted = format_currency(profit_today, 'IDR', locale='id_ID')
+    datenow = timezone.now().strftime("%d-%m-%Y")
+    
     context = {
         'data':data,
+        'datenow':datenow,
+        'profit_today':formatted[:-3],
         "breadcrumb":{"parent":"Profit","child":"Profit"},
     }
     return render(request, 'profit/profit.html', context)
-
-@login_required(login_url='/accounts/')
 def UpdatePr(request, pk):
-    try :
-        data = Profito2.objects.get(id=pk)
-    except Profito2.DoesNotExist:
-        messages.error(request, 'Transaksi not found!', extra_tags="danger")
-        return redirect('profit')
-    if request.POST :
-        form = ProfitForms(request.POST or None, instance=data)
-        # form = TransaksiForms(request.POST, instance=formData)
-        if form.is_valid():    
-            # trform = form.save(commit=False)
-            form.instance.user =request.user
-            jumlah_brg =form.cleaned_data.get('jumlah_brg')
-            nama_suplayer =form.cleaned_data.get('nama_suplayer')
-            harga_jual =form.cleaned_data.get('harga_jual')
-            harga_beli =form.cleaned_data.get('harga_beli')
-            date =form.cleaned_data.get('date')
-            description =form.cleaned_data.get('description')
-            form.owner = request.user
-            form.save()
-            user = request.user
-            applicant = Profito2.objects.get(user=user)
-            applicant.jumlah_brg = jumlah_brg
-            applicant.nama_suplayer = nama_suplayer
-            applicant.harga_jual=harga_jual
-            applicant.harga_beli=harga_beli
-            applicant.date=date
-            applicant.description =description
-            applicant.save()
-            messages.success(request, "Formulir Berhasil Dibuat")
-            return redirect('/profit/')
+    data = get_object_or_404(Profito2, pk=pk)
+
+    if request.method == 'POST':
+        form = ProfitForms(request.POST, instance=data)
+        if form.is_valid():
+            # Simpan sementara untuk memanipulasi sebelum commit
+            obj = form.save(commit=False)
+            obj.user = request.user  # jika ada relasi user
+
+            # Ambil nilai dari cleaned_data dengan fallback aman
+            jumlah_brg = form.cleaned_data.get('jumlah_brg') or 0
+            harga_jual = form.cleaned_data.get('harga_jual') or 0
+            harga_beli = form.cleaned_data.get('harga_beli') or 0
+
+            # Konversi ke tipe yang sesuai (safely)
+            try:
+                jumlah = int(jumlah_brg)
+            except (TypeError, ValueError):
+                jumlah = 0
+
+            try:
+                hj = Decimal(str(harga_jual))
+            except (InvalidOperation, TypeError):
+                hj = Decimal('0')
+
+            try:
+                hb = Decimal(str(harga_beli))
+            except (InvalidOperation, TypeError):
+                hb = Decimal('0')
+
+            # Hitung profit per unit dan total profit
+            profit_unit = hj - hb
+            total_profit = profit_unit * jumlah
+
+            # Simpan ke field model (pastikan field ini ada di model)
+            # Ganti nama field jika model Anda memakai nama lain, mis. 'profit' atau 'profit_total'
+            obj.profit_unit = profit_unit
+            obj.total_profit = total_profit
+
+            obj.save()
+
+            messages.success(request, "Data profit berhasil diperbarui.")
+            return redirect('profit')  # gunakan nama url pattern jika ada
         else:
+            # debugging: tampilkan error form ke console / messages
             print(form.errors)
             messages.error(request, 'Formulir tidak valid.')
             messages.error(request, form.errors)
-    context = {
-    'form': form,
-    "breadcrumb":{"parent":"profit","child":"Profit"},
-    }
-    return render(request, 'profit/profit.html', context)
+    else:
+        # GET: tampilkan form dengan data instance
+        form = ProfitForms(instance=data)
 
+    context = {
+        'form': form,
+        "breadcrumb": {"parent": "profit", "child": "Profit"},
+    }
+    return render(request, 'profit/edit_profit.html', context)
 def DeleteProf(request, pk):
     Profito2.objects.get(id=pk).delete()
     messages.success(request, "Form Successfully Deleted")  
     return redirect('/profit/')
+
+def ViewProf(request, pk):
+    data = get_object_or_404(Profito2, id=pk)
+    return render(request, 'profit/view_profit.html', {"data":data})
     
 #HUTANG ORTU
 @login_required(login_url="/accounts/login/")
@@ -577,12 +604,15 @@ def transaksi(request):
             print(form.errors)
             messages.error(request, 'Formulir tidak valid.')
             messages.error(request, form.errors)
-    else:
-        form = TransaksiForms()
-        excel = ExcelUploadForm()
+    form = TransaksiForms()
+    excel = ExcelUploadForm()
+     # Buat list (transaksi, form_instance) untuk modal update
+    forms_list = [(t, TransaksiForms(instance=t)) for t in data]
+
     context = {
         'form': form,
         'excel': excel,
+        'forms_list': forms_list,
         'data':data,
         "breadcrumb":{"parent":"Transaksi","child":"Transaksi"},
     }
@@ -596,32 +626,21 @@ def DeleteTr(request, pk):
 
 @login_required(login_url='/accounts/login/')
 def UpdateTr(request, pk):
-    try:
-        data = Transaksi.objects.get(id=pk)
-    except Transaksi.DoesNotExist:
-        messages.error(request, 'Transaksi not found!', extra_tags="danger")
-        return redirect('transaksi')  # Ensure 'transaksi' is a named URL pattern
-
-    form = TransaksiForms(request.POST or None, instance=data)
-    
-    if request.POST:
+    transaksi = get_object_or_404(Transaksi, pk=pk, owner=request.user)
+    if request.method == 'POST':
+        form = TransaksiForms(request.POST, instance=transaksi)
         if form.is_valid():
-            transaksi_instance = form.save(commit=False)
-            transaksi_instance.owner = request.user  # Set the owner field correctly
-            transaksi_instance.save()
-            messages.success(request, "Formulir Berhasil Dibuat")
-            return redirect('transaksi')  # Ensure 'transaksi' is a named URL pattern
+            obj = form.save(commit=False)
+            obj.owner = request.user  # pastikan owner tetap ter-set
+            obj.save()
+            messages.success(request, "Transaksi berhasil diperbarui.")
+            return redirect('transaksi_list')
         else:
-            print(form.errors)
-            messages.error(request, 'Formulir tidak valid.')
-            messages.error(request, form.errors)
+            messages.error(request, "Terdapat error pada form. Mohon periksa kembali.")
+    else:
+        form = TransaksiForms(instance=transaksi)
 
-    context = {
-        'form': form,
-        "breadcrumb": {"parent": "Transaksi", "child": "Transaksi"},
-    }
-    return render(request, 'transaksi/index.html', context)
-
+    return render(request, 'transaksi/index.html', {'form': form, 'transaksi': transaksi})
 #TABUNGAN
 @login_required(login_url="/accounts/login/")
 def tabungan_update_view(request, id):

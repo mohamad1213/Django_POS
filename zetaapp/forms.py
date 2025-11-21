@@ -51,16 +51,16 @@ class TransaksiForms(ModelForm):
         model = Transaksi
         exclude = ['owner']
         widgets = {
-            'jumlah': forms.TextInput({'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','name':'rupiah','id':"id_jumlah"}),
-            'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.date.value|date:"d-m-Y"}}'}),
-            'keterangan': forms.Textarea(attrs={'rows': 3, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
+            'jumlah': forms.NumberInput({'type': 'number','class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da'}),
+            'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da'}),
+            'keterangan': forms.Textarea(attrs={'rows': 3, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da'})
         }
     def __init__(self, *args, **kwargs):
         super(TransaksiForms, self).__init__(*args, **kwargs)
         self.fields['kategori'].empty_label = 'Select item ...'
-        self.fields['kategori'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.kategori.value}}'})
+        self.fields['kategori'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da'})
         self.fields['transaksi_choice'].empty_label = 'Select item ...'
-        self.fields['transaksi_choice'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.transaksi_choice.value}}'})
+        self.fields['transaksi_choice'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da'})
 
 class HutangForms(ModelForm):
     class Meta:

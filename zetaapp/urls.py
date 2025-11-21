@@ -33,6 +33,7 @@ urlpatterns = [
     path('pdf_download/', views.DownloadPDF.as_view(), name="pdf_download"),
     path('hutangpeg/', views.hutangPeg, name='hutangpeg'),
     path('hutangpeg/<pk>/delete/', views.DeleteHutangPeg, name='DeleteHutangPeg'),
+    
     #Tabungan
     path('tabungan/', views.tabungan,name='tabungan'),
 
@@ -41,6 +42,9 @@ urlpatterns = [
     path('profit/create/', views.profit_create,name='profit_create'),
     path('profit/<pk>/delete/', views.DeleteProf,name='deletepr'),
     path('profit/<pk>/update/', views.UpdatePr,name='updatepr'),
+    path('profit/<pk>/view/', views.ViewProf,name='viewprof'),
+    # path('profit_today_json/', views.profit_today_json, name='profit_today_json'),
+    
     
     path('stok/', views.stockin_list,name='stockin_list'),
     path('stok/create/', views.stockin_create,name='stockin_create'),
