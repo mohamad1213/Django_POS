@@ -51,7 +51,7 @@ class TransaksiForms(ModelForm):
         model = Transaksi
         exclude = ['owner']
         widgets = {
-            'jumlah': forms.NumberInput({'type': 'number','class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da'}),
+            'jumlah': forms.TextInput({'class': 'form-control rupiah','style':'padding:6px 10px ;border: 1px solid #ced4da'}),
             'tanggal': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da'}),
             'keterangan': forms.Textarea(attrs={'rows': 3, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da'})
         }
@@ -158,9 +158,5 @@ class TabunganForms(ModelForm):
             'date': forms.DateInput(attrs={'class': 'form-control' , 'type':'date','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.date.value|date:"d-m-Y"}}'}),
             'description': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.keterangan.value}}'})
         }
-    def __init__(self, *args, **kwargs):
-        super(TabunganForms, self).__init__(*args, **kwargs)
-        self.fields['transaksi_choice'].empty_label = 'Select item ...'
-        self.fields['transaksi_choice'].widget.attrs.update({ 'class': 'form-control','style':'padding:6px 10px ;border: 1px solid #ced4da','value':'{{form.hutang.value}}'})
 
 

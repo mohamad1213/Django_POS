@@ -176,7 +176,7 @@ class Profito2(models.Model):
     profit_margin = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     tabungan_persen = models.DecimalField(max_digits=5, decimal_places=2, default=30)  # default 30%
     tabungan_total = models.DecimalField(max_digits=15, decimal_places=0, blank=True, null=True)
-    
+    profit_saved = models.BooleanField(default=False)
     keterangan = models.TextField(blank=True, null=True)
     class Meta:
         ordering = ['-tanggal']
@@ -220,17 +220,11 @@ class Profito2(models.Model):
         return f"{self.nama_barang} - {self.tanggal}"
 
 class Tabungan(models.Model):
-    PEMASUKAN = 'P'
-    PENGELUARAN = 'L'
-
-    JENIS_CHOICES = [
-        (PEMASUKAN, 'Pemasukan'),
-        (PENGELUARAN, 'Pengeluaran'),
-    ]
-    transaksi_choice= models.CharField(max_length=1, choices=JENIS_CHOICES)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='tabungans')
     nominal = models.DecimalField(max_digits=20, decimal_places=2)
     description = models.TextField()
-    date = models.DateField()
+    date = models.DateField(auto_now_add=True)
+
 
 class Pegawai(models.Model):
     nama = models.CharField(max_length=100)

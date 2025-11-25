@@ -43,6 +43,7 @@ urlpatterns = [
     path('profit/<pk>/delete/', views.DeleteProf,name='deletepr'),
     path('profit/<pk>/update/', views.UpdatePr,name='updatepr'),
     path('profit/<pk>/view/', views.ViewProf,name='viewprof'),
+    path('profit/<pk>/tabung/', views.profit_mark_tabung,name='profit_mark_tabung'),
     # path('profit_today_json/', views.profit_today_json, name='profit_today_json'),
     
     

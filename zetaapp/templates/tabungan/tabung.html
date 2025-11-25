@@ -33,15 +33,10 @@
             <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
               <thead>
                 <tr>
-                  <th rowspan="2">NO</th>
-                  <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
-                  <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
-                  <th colspan="2" scope="col" class="text-center">JENIS</th>
-                  <th rowspan="2" scope="col" class="text-center">OPSI</th>
-                </tr>
-                <tr>
-                  <th scope="col" class="text-center">PEMASUKAN</th>
-                  <th scope="col" class="text-center">PENGELUARAN</th>
+                  <th>NO</th>
+                  <th scope="col" class="text-center">TANGGAL</th>
+                  <th scope="col" class="text-center">KETERANGAN</th>
+                  <th scope="col" class="text-center">Jumlah Profit</th>
                 </tr>
                 <tr>
                 </tr>
@@ -53,18 +48,7 @@
                   <td>{{u.date|date:"d-m-Y"}}</td>
                   <td>{{u.description}}</td>
                   <td class="text-center">
-                    {%  if u.transaksi_choice == "P" %}
                     Rp. {{u.nominal|floatformat:"0g" }}
-                    {% else %}
-                    -
-                    {% endif %}
-                  </td>
-                  <td class="text-center">
-                    {%  if u.transaksi_choice == "L" %}
-                    Rp. {{u.nominal|floatformat:"0g" }}
-                    {% else %}
-                    -
-                    {% endif %}
                   </td>
                   <td>
                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#edit_tr">

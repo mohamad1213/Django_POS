@@ -48,7 +48,7 @@
           </div>
           <div class="card-body">
             <div class="table-responsive">
-              <table class="table table-bordered table-striped table-hover" id="basic-1">
+              <table class="table table-sm table-bordered table-striped table-hover" id="basic-1">
                 <thead class="table-light text-center">
                   <tr>
                     <th>No</th>
@@ -60,6 +60,7 @@
                     <th>Profit</th>
                     <th>Profit Margin (%)</th>
                     <th>Tabungan</th>
+                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -76,18 +77,27 @@
                     <td>Rp. {{ t.profit_margin|floatformat:2 }}</td>
                     <td>Rp. {{ t.tabungan_total}}</td>
                     <td>
+                      {% if not t.profit_saved %}
+                      <span class="badge bg-warning text-dark">Belum Ditabung</span>
+                      {% else %}
+                      <span class="badge bg-success">Sudah Ditabung</span>
+                      {% endif %}
+                    </td>
+                    <td>
                       <a href="{% url 'updatepr' t.id %}" class="btn btn-warning btn-sm">
                         <i class="fa fa-edit"></i>
                       </a>
-
                       <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
                         data-bs-target="#hapus_pr">
                         <i class="fa fa-trash"></i>
                       </button>
-                      <a href="{% url 'viewprof' t.id %}" type="button" class="btn btn-primary btn-sm">
+                      <a href="{% url 'viewprof' t.id %}" class="btn btn-primary btn-sm">
                         <i class="fa fa-eye"></i>
-
                       </a>
+                      {% if not t.profit_saved %}
+                      <a href="{% url 'profit_mark_tabung' t.id %}" class="btn btn-success btn-sm">✓</a>
+                      {% else %}
+                      {% endif %}
                     </td>
                   </tr>
                   <div class="modal fade" id="hapus_pr" tabindex="-1" aria-labelledby="exampleModalLabel"

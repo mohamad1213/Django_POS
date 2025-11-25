@@ -443,60 +443,6 @@
 
   });
 </script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-
-    function formatRupiahValue(value) {
-      if (!value) return '';
-      let number_string = String(value).replace(/[^0-9]/g, '');
-      let sisa = number_string.length % 3;
-      let rupiah = number_string.substr(0, sisa);
-      let ribuan = number_string.substr(sisa).match(/\d{3}/gi);
-
-      if (ribuan) {
-        let separator = sisa ? '.' : '';
-        rupiah += separator + ribuan.join('.');
-      }
-      return 'Rp ' + rupiah;
-    }
-
-    function initRupiahInput(el) {
-      if (!el) return;
-
-      // live typing formatting
-      el.addEventListener('input', function () {
-        let cursorPos = this.selectionStart;
-        let originalLength = this.value.length;
-
-        // hapus semua non-digit
-        let numeric = this.value.replace(/[^0-9]/g, '');
-        this.value = numeric ? formatRupiahValue(numeric) : '';
-
-        let newLength = this.value.length;
-        let diff = newLength - originalLength;
-        try { this.setSelectionRange(cursorPos + diff, cursorPos + diff); } catch { }
-      });
-    }
-
-    document.querySelectorAll('.modal-edit').forEach(modal => {
-      modal.addEventListener('shown.bs.modal', function () {
-        this.querySelectorAll('.rupiah').forEach(initRupiahInput);
-        // TIDAK MEMFORMAT VALUE AWAL
-      });
-    });
-
-    // sebelum submit, konversi ke angka murni
-    document.addEventListener('submit', function (ev) {
-      const form = ev.target;
-      if (!(form instanceof HTMLFormElement)) return;
-
-      form.querySelectorAll('.rupiah').forEach(input => {
-        input.value = input.value.replace(/[^0-9]/g, '') || '0';
-      });
-    }, true);
-
-  });
-</script>
 
 <!-- Plugins JS Ends-->
 {% endblock scriptcontent %}

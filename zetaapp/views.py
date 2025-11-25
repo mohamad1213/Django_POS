@@ -367,7 +367,27 @@ def DeleteProf(request, pk):
 def ViewProf(request, pk):
     data = get_object_or_404(Profito2, id=pk)
     return render(request, 'profit/view_profit.html', {"data":data})
-    
+
+@login_required(login_url="/accounts/login/")
+def profit_mark_tabung(request, pk):
+    profit = get_object_or_404(Profito2, pk=pk)
+    if profit.profit_saved != True:
+        # Update status profit
+        profit.profit_saved = True
+        profit.save()
+
+        # Tambahkan ke tabungan
+        Tabungan.objects.create(
+            nominal=profit.tabungan_total,
+            description=f"Tabungan dari profit: {profit.id}",
+            date=timezone.now(),
+        )
+        messages.success(request, "Profit berhasil ditandai sebagai sudah di tabung dan dana masuk ke tabungan.")
+    else:
+        messages.info(request, "Profit sudah pernah ditabung sebelumnya.")
+
+    return redirect('profit')
+
 #HUTANG ORTU
 @login_required(login_url="/accounts/login/")
 def hutang(request):
@@ -634,9 +654,10 @@ def UpdateTr(request, pk):
             obj.owner = request.user  # pastikan owner tetap ter-set
             obj.save()
             messages.success(request, "Transaksi berhasil diperbarui.")
-            return redirect('transaksi_list')
+            return redirect('transaksi')
         else:
             messages.error(request, "Terdapat error pada form. Mohon periksa kembali.")
+            print(form.errors)
     else:
         form = TransaksiForms(instance=transaksi)
 
