@@ -34,7 +34,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from .models import *
 from io import BytesIO
-from xhtml2pdf import pisa
+# from xhtml2pdf import pisa
 from django.views import View
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.db.models.functions import TruncDate
@@ -775,59 +775,59 @@ def ChartReport(request):
 
     return JsonResponse(data)
 
-#print PDF
-@login_required(login_url="/accounts/login/")
-def render_to_pdf(template_src, context_dict={}):
-	template = get_template(template_src)
-	html  = template.render(context_dict)
-	result = BytesIO()
-	pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
-	if not pdf.err:
-		return HttpResponse(result.getvalue(), content_type='application/pdf')
-	return None
+# #print PDF
+# @login_required(login_url="/accounts/login/")
+# def render_to_pdf(template_src, context_dict={}):
+# 	template = get_template(template_src)
+# 	html  = template.render(context_dict)
+# 	result = BytesIO()
+# 	pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+# 	if not pdf.err:
+# 		return HttpResponse(result.getvalue(), content_type='application/pdf')
+# 	return None
 
-class ViewPDF(View):
-    def get(self, request, *args, **kwargs):
-        today = timezone.now().date()
-        transaksi = Transaksi.objects.all().order_by('tanggal')
-        total_pengeluaran_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-        total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-        sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
+# class ViewPDF(View):
+#     def get(self, request, *args, **kwargs):
+#         today = timezone.now().date()
+#         transaksi = Transaksi.objects.all().order_by('tanggal')
+#         total_pengeluaran_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+#         total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+#         sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
 
-        data = {
-        'data': transaksi,
-        'pemasukan': total_pengeluaran_tahunan,
-        'pengeluaran':total_pengeluaran_tahunan,
-        'saldo':sisa_saldo
+#         data = {
+#         'data': transaksi,
+#         'pemasukan': total_pengeluaran_tahunan,
+#         'pengeluaran':total_pengeluaran_tahunan,
+#         'saldo':sisa_saldo
         
-        }
+#         }
 
 
-        pdf = render_to_pdf('generatepdf.html', data)
-        return HttpResponse(pdf, content_type='application/pdf')
+#         pdf = render_to_pdf('generatepdf.html', data)
+#         return HttpResponse(pdf, content_type='application/pdf')
 
-class DownloadPDF(View):
-    def get(self, request, *args, **kwargs):
-        today = timezone.now().date()
-        transaksi = Transaksi.objects.all().order_by('tanggal')
-        total_pengeluaran_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-        total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-        sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
+# class DownloadPDF(View):
+#     def get(self, request, *args, **kwargs):
+#         today = timezone.now().date()
+#         transaksi = Transaksi.objects.all().order_by('tanggal')
+#         total_pengeluaran_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+#         total_pemasukan_tahunan = Transaksi.objects.filter(tanggal__year=today.year, transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+#         sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
 
-        data = {
-        'data': transaksi,
-        'pemasukan': total_pengeluaran_tahunan,
-        'pengeluaran':total_pengeluaran_tahunan,
-        'saldo':sisa_saldo
+#         data = {
+#         'data': transaksi,
+#         'pemasukan': total_pengeluaran_tahunan,
+#         'pengeluaran':total_pengeluaran_tahunan,
+#         'saldo':sisa_saldo
 
-        }
-        pdf = render_to_pdf('generatepdf.html', data)
+#         }
+#         pdf = render_to_pdf('generatepdf.html', data)
 
-        response = HttpResponse(pdf, content_type='application/pdf')
-        filename = "Invoice_%s.pdf" %("12341231")
-        content = "attachment; filename='%s'" %(filename)
-        response['Content-Disposition'] = content
-        return response
+#         response = HttpResponse(pdf, content_type='application/pdf')
+#         filename = "Invoice_%s.pdf" %("12341231")
+#         content = "attachment; filename='%s'" %(filename)
+#         response['Content-Disposition'] = content
+#         return response
 
 #Wxport Excel
 @login_required(login_url="/accounts/login/")
@@ -1013,14 +1013,14 @@ def fetch_resources(uri, rel):
     path = os.path.join(uri.replace(settings.STATIC_URL, ""))
     return path
 
-def render_to_pdf(template_src, context_dict={}):
-    template = get_template(template_src)
-    html  = template.render(context_dict)
-    result = BytesIO()
-    pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)#, link_callback=fetch_resources)
-    if not pdf.err:
-        return HttpResponse(result.getvalue(), content_type='application/pdf')
-    return None
+# def render_to_pdf(template_src, context_dict={}):
+#     template = get_template(template_src)
+#     html  = template.render(context_dict)
+#     result = BytesIO()
+#     pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)#, link_callback=fetch_resources)
+#     if not pdf.err:
+#         return HttpResponse(result.getvalue(), content_type='application/pdf')
+#     return None
 # page layout views
 class GenerateInvoice(View):
     def get(self, request, pk, *args, **kwargs):

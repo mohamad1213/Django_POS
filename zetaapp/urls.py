@@ -29,8 +29,8 @@ urlpatterns = [
     # path('chart_data/<str:interval>/', views.chart_data, name='chart_data'),
     path('chart_data/', views.chart_data, name='chart_data'),
     path('analisis_chart/', views.AnalasisChart, name='analsis_chart'),
-    path('pdf_view/', views.ViewPDF.as_view(), name="pdf_view"),
-    path('pdf_download/', views.DownloadPDF.as_view(), name="pdf_download"),
+    # path('pdf_view/', views.ViewPDF.as_view(), name="pdf_view"),
+    # path('pdf_download/', views.DownloadPDF.as_view(), name="pdf_download"),
     path('hutangpeg/', views.hutangPeg, name='hutangpeg'),
     path('hutangpeg/<pk>/delete/', views.DeleteHutangPeg, name='DeleteHutangPeg'),
     
