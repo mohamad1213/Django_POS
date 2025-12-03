@@ -87,10 +87,10 @@ DATABASES = {
     "default": {
             "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
             "NAME": os.getenv("DB_NAME", "sqlite3"),
-            "USER": os.getenv("DB_USER"),
-            "PASSWORD": os.getenv("DB_PASSWORD"), 
-            "HOST": os.getenv("DB_HOST"),
-            "PORT": os.getenv("DB_PORT"),
+            # "USER": os.getenv("DB_USER"),
+            # "PASSWORD": os.getenv("DB_PASSWORD"), 
+            # "HOST": os.getenv("DB_HOST"),
+            # "PORT": os.getenv("DB_PORT"),
         }
 }
 
@@ -134,10 +134,9 @@ STATICFILES_FINDERS = [
     'sass_processor.finders.CssFinder',
 ]
 
-STATIC_URL = '/zetaapp/static/'
+STATIC_URL = '/zeta/zetaapp/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
+STATIC_ROOT = BASE_DIR / 'zetaapp/static'
 
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, 'static'),
