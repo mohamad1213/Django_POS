@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="author" content="Untree.co">
+	<link rel="shortcut icon" href="favicon.png">
+
+	<meta name="description" content="" />
+	<meta name="keywords" content="bootstrap, bootstrap4" />
+
+	<!-- Bootstrap CSS -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
+
+	<link href="css/tiny-slider.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+	<title>PPJ Pralon</title>
+</head>
+
+<body>
+
+	<!-- Start Header/Navigation -->
+	<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
+
+		<div class="container">
+			<a class="navbar-brand" href="index.html">PPJ Pralon<span>.</span></a>
+
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni"
+				aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbarsFurni">
+				<ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
+					<li>
+						<a class="nav-link" href="index.html">Beranda</a>
+					</li>
+					<!-- <li><a class="nav-link" href="shop.html">Shop</a></li> -->
+					<li><a class="nav-link" href="about.html">Tentang </a></li>
+					<li><a class="nav-link" href="services.html">Layanan</a></li>
+					<li class="nav-item active"><a class="nav-link" href="pk1.html">Produk</a></li>
+					<li><a class="nav-link" href="blog.html">Galeri</a></li>
+					<li><a class="nav-link" href="contact.html">Kontak</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<!-- Start Hero Section -->
+	<div class="hero">
+		<div class="container">
+			<div class="row justify-content-between">
+				<div class="col-lg-5">
+					<div class="intro-excerpt">
+						<h2>Produk Cacahan Plastik PVC</h2>
+						<p style="text-align: justify;" class="mb-4">Cacahan PVC adalah
+							material plastik daur ulang yang dihasilkan dari pipa PVC bekas yang dihancurkan secara
+							presisi. Produk ini cocok untuk kebutuhan industri pembuatan bahan pralon.</p>
+					</div>
+				</div>
+				<div class="col-lg-7">
+					<style>
+						/* Overlapping Image Container */
+						.image-container {
+							position: relative;
+							width: 400px;
+							height: 300px;
+						}
+
+						.overlapping-img {
+							position: absolute;
+							width: 400px;
+							height: 300px;
+							cursor: pointer;
+							transition: transform 0.3s ease;
+						}
+
+						.overlapping-img:hover {
+							transform: scale(1.05);
+							/* Efek zoom saat hover */
+						}
+
+						/* Mengatur posisi gambar bertumpuk */
+						.img1 {
+							top: 0;
+							left: 0;
+							z-index: 3;
+						}
+
+						.img2 {
+							top: 20px;
+							left: 20px;
+							z-index: 2;
+						}
+
+						.img3 {
+							top: 40px;
+							left: 40px;
+							z-index: 1;
+						}
+					</style>
+					<div class="hero-img-wrap">
+						<img src="images/bg-pp2.png" class="img-fluid hero-img">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Hero Section -->
+	<style>
+		.carousel-inner img {
+		  width: 100%; /* Mengatur lebar gambar agar sesuai dengan lebar kontainer */
+		  height: 400px; /* Mengatur tinggi gambar agar konsisten */
+		  object-fit: cover; /* Menjaga proporsi gambar agar tidak terdistorsi */
+		}
+	  </style>
+	<!-- Cacahan PK 1 -->
+
+	<div class="why-choose-section">
+		<div class="container">
+			<div class="row justify-content-between align-items-center">
+				<div class="col-md-6">
+					<div class="container">
+						<div id="pk1" class="carousel slide" data-bs-ride="false">
+							<div class="carousel-inner">
+								<div class="carousel-item active">
+									<a href="images/bahan/bahanpk11.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/bahanpk11.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 1">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/gilinganpk1.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/gilinganpk1.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 2">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/pk1.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/pk1.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 3">
+									</a>
+								</div>
+							</div>
+							<button class="carousel-control-prev" type="button" data-bs-target="#pk1"
+								data-bs-slide="prev">
+								<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Previous</span>
+							</button>
+							<button class="carousel-control-next" type="button" data-bs-target="#pk1"
+								data-bs-slide="next">
+								<span class="carousel-control-next-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Next</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h2 class="mb-3">Cacahan Plastik PVC PK 1</h2>
+					<p>Cacahan paralon PK 1 adalah material PVC daur ulang yang dihasilkan dari pipa bekas. Produk ini
+						cocok untuk kebutuhan industri plastik, konstruksi, dan aplikasi lainnya yang memerlukan bahan
+						PVC berkualitas.</p>
+					<h4>Spesifikasi </h4>
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item"><strong>Ukuran Cacahan:</strong> 10 mm</li>
+						<li class="list-group-item"><strong>Saringan:</strong> 12</li>
+						<li class="list-group-item"><strong>Bahan:</strong> 100% PVC daur ulang</li>
+						<li class="list-group-item"><strong>Warna:</strong> Natural atau campuran</li>
+					</ul>
+				</div>
+
+			</div>
+		</div>
+		<br><br>
+		<!-- Cacahan PK 2 -->
+		<div class="container">
+			<div class="row justify-content-between align-items-center">
+				<div class="col-md-6">
+					<div class="container">
+						<div id="pk2" class="carousel slide" data-bs-ride="false">
+							<div class="carousel-inner">
+								<div class="carousel-item active">
+									<a href="images/bahan/bahanpk2.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/bahanpk2.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 1">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/bahanpk22.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/bahanpk22.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 2">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/gilinganpk2.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/gilinganpk2.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 3">
+									</a>
+								</div>
+							</div>
+							<button class="carousel-control-prev" type="button" data-bs-target="#pk2"
+								data-bs-slide="prev">
+								<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Previous</span>
+							</button>
+							<button class="carousel-control-next" type="button" data-bs-target="#pk2"
+								data-bs-slide="next">
+								<span class="carousel-control-next-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Next</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h2 class="mb-3">Cacahan Plastik PVC PK 2</h2>
+					<p>Cacahan paralon PK 1 adalah material PVC daur ulang yang dihasilkan dari pipa bekas. Produk ini
+						cocok untuk kebutuhan industri plastik, konstruksi, dan aplikasi lainnya yang memerlukan bahan
+						PVC berkualitas.</p>
+					<h4>Spesifikasi </h4>
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item"><strong>Ukuran Cacahan:</strong> 10 mm</li>
+						<li class="list-group-item"><strong>Saringan:</strong> 12</li>
+						<li class="list-group-item"><strong>Bahan:</strong> 100% PVC daur ulang</li>
+						<li class="list-group-item"><strong>Warna:</strong> Putih Kualitas 2</li>
+					</ul>
+				</div>
+
+			</div>
+		</div>
+		<br><br>
+		<!-- Cacahan ABU 1 -->
+		<div class="container">
+			<div class="row justify-content-between align-items-center">
+				<div class="col-md-6">
+					<div class="container">
+						<div id="abu1" class="carousel slide" data-bs-ride="false">
+							<div class="carousel-inner">
+								<div class="carousel-item active">
+									<a href="images/bahan/bahan abu 2.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/bahan abu 2.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 1">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/bahanabu2.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/bahanabu2.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 2">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/glingan abu2.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/glingan abu2.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 3">
+									</a>
+								</div>
+							</div>
+							<button class="carousel-control-prev" type="button" data-bs-target="#abu1"
+								data-bs-slide="prev">
+								<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Previous</span>
+							</button>
+							<button class="carousel-control-next" type="button" data-bs-target="#abu1"
+								data-bs-slide="next">
+								<span class="carousel-control-next-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Next</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h2 class="mb-3">Cacahan Plastik PVC ABU</h2>
+					<p>Cacahan paralon ABU 1 adalah material PVC daur ulang yang dihasilkan dari pipa bekas. Produk ini
+						cocok untuk kebutuhan industri plastik, konstruksi, dan aplikasi lainnya yang memerlukan bahan
+						PVC berkualitas.</p>
+					<h4>Spesifikasi </h4>
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item"><strong>Ukuran Cacahan:</strong> 10 mm</li>
+						<li class="list-group-item"><strong>Saringan:</strong> 12</li>
+						<li class="list-group-item"><strong>Bahan:</strong> 100% PVC daur ulang</li>
+						<li class="list-group-item"><strong>Warna:</strong> ABU Kualitas 1</li>
+					</ul>
+				</div>
+
+			</div>
+		</div>
+		<br><br>
+		<!-- Cacahan ABU 2 -->
+		<!-- <div class="container">
+			<div class="row justify-content-between align-items-center">
+				<div class="col-md-6">
+					<div class="container">
+						<div id="abu2" class="carousel slide" data-bs-ride="false">
+							<div class="carousel-inner">
+								<div class="carousel-item active">
+									<a href="https://statik.tempo.co/data/2024/08/23/id_1330292/1330292_720.jpg"
+										data-lightbox="product-gallery">
+										<img src="https://statik.tempo.co/data/2024/08/23/id_1330292/1330292_720.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 1">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 2">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 3">
+									</a>
+								</div>
+							</div>
+							<button class="carousel-control-prev" type="button" data-bs-target="#abu2"
+								data-bs-slide="prev">
+								<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Previous</span>
+							</button>
+							<button class="carousel-control-next" type="button" data-bs-target="#abu2"
+								data-bs-slide="next">
+								<span class="carousel-control-next-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Next</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h2 class="mb-3">Cacahan Plastik PVC ABU 2</h2>
+					<p>Cacahan paralon ABU 2 adalah material PVC daur ulang yang dihasilkan dari pipa bekas. Produk ini
+						cocok untuk kebutuhan industri plastik, konstruksi, dan aplikasi lainnya yang memerlukan bahan
+						PVC berkualitas.</p>
+					<h4>Spesifikasi </h4>
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item"><strong>Ukuran Cacahan:</strong> 10 mm</li>
+						<li class="list-group-item"><strong>Saringan:</strong> 12</li>
+						<li class="list-group-item"><strong>Bahan:</strong> 100% PVC daur ulang</li>
+						<li class="list-group-item"><strong>Warna:</strong> abu dan putih</li>
+					</ul>
+				</div>
+
+			</div>
+		</div>
+		<br><br> -->
+		<!-- Cacahan mambo -->
+		<div class="container">
+			<div class="row justify-content-between align-items-center">
+				<div class="col-md-6">
+					<div class="container">
+						<div id="mambo" class="carousel slide" data-bs-ride="false">
+							<div class="carousel-inner">
+								<div class="carousel-item active">
+									<a href="images/bahan/bahanmambo.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/bahanmambo.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 1">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/bahanmambo2.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/bahanmambo2.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 2">
+									</a>
+								</div>
+								<div class="carousel-item">
+									<a href="images/bahan/gilinganmambo2.jpg"
+										data-lightbox="product-gallery">
+										<img src="images/bahan/gilinganmambo2.jpg"
+											class="d-block w-100 rounded shadow" alt="Gambar Produk 3">
+									</a>
+								</div>
+							</div>
+							<button class="carousel-control-prev" type="button" data-bs-target="#mambo"
+								data-bs-slide="prev">
+								<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Previous</span>
+							</button>
+							<button class="carousel-control-next" type="button" data-bs-target="#mambo"
+								data-bs-slide="next">
+								<span class="carousel-control-next-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Next</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h2 class="mb-3">Cacahan Plastik PVC Mambo</h2>
+					<p>Cacahan paralon Mambo adalah material PVC daur ulang yang dihasilkan dari pipa bekas. Produk ini
+						cocok untuk kebutuhan industri plastik, konstruksi, dan aplikasi lainnya yang memerlukan bahan
+						PVC berkualitas.</p>
+					<h4>Spesifikasi </h4>
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item"><strong>Ukuran Cacahan:</strong> 10 mm</li>
+						<li class="list-group-item"><strong>Saringan:</strong> 12</li>
+						<li class="list-group-item"><strong>Bahan:</strong> 100% PVC daur ulang</li>
+						<li class="list-group-item"><strong>Warna:</strong> Warna-warni</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</div>
+	<!-- Start Footer Section -->
+	<footer class="footer-section">
+		<div class="container relative">
+			<div class="row g-5 mb-5">
+				<div class="col-lg-4">
+					<div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">PPJ Pralon<span>.</span></a>
+					</div>
+					<p class="mb-4">Solusi terbaik untuk daur ulang paralon! Kami menyediakan hasil gilingan PVC yang
+						bersih, seragam, dan ramah lingkungan, siap mendukung kebutuhan industri Anda.</p>
+
+					<ul class="list-unstyled custom-social">
+						<li><a href="#"><span class="fa fa-brands fa-facebook-f"></span></a></li>
+						<li><a href="#"><span class="fa fa-brands fa-twitter"></span></a></li>
+						<li><a href="#"><span class="fa fa-brands fa-instagram"></span></a></li>
+						<li><a href="#"><span class="fa fa-brands fa-linkedin"></span></a></li>
+					</ul>
+				</div>
+
+				<div class="col-lg-8">
+					<div class="row links-wrap">
+						<div class="col-6 col-sm-6 col-md-3">
+							<ul class="list-unstyled">
+								<li><a href="#">Tentang</a></li>
+								<li><a href="#">Layanan</a></li>
+								<li><a href="#">Blog</a></li>
+								<li><a href="#">Kontak</a></li>
+							</ul>
+						</div>
+
+						<div class="col-6 col-sm-6 col-md-3">
+							<ul class="list-unstyled">
+								<li><a href="#">Support</a></li>
+								<li><a href="#">Knowledge base</a></li>
+								<li><a href="#">Live chat</a></li>
+							</ul>
+						</div>
+
+						<div class="col-6 col-sm-6 col-md-3">
+							<ul class="list-unstyled">
+								<li><a href="#">Jobs</a></li>
+								<li><a href="#">Our team</a></li>
+								<li><a href="#">Leadership</a></li>
+								<li><a href="#">Privacy Policy</a></li>
+							</ul>
+						</div>
+
+						<div class="col-6 col-sm-6 col-md-3">
+							<ul class="list-unstyled">
+								<li><a href="#">Paralon PVC Putih 1 (PK 1)</a></li>
+								<li><a href="#">Paralon PVC Putih 2 (PK 2)</a></li>
+								<li><a href="#">Abu Pralon Super</a></li>
+								<li><a href="#">Abu Pralon Macan</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+			<div class="border-top copyright">
+				<div class="row pt-4">
+					<div class="col-lg-6">
+						<p class="mb-2 text-center text-lg-start">Copyright &copy;
+							<script>document.write(new Date().getFullYear());</script>. All Rights Reserved. &mdash;
+							Designed with love by Mohamad Hatami
+						</p>
+					</div>
+
+					<div class="col-lg-6 text-center text-lg-end">
+						<ul class="list-unstyled d-inline-flex ms-auto">
+							<li class="me-4"><a href="#">Terms &amp; Conditions</a></li>
+							<li><a href="#">Privacy Policy</a></li>
+						</ul>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+	</footer>
+	<!-- End Footer Section -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		// Menghubungkan gambar yang di-click dengan carousel di dalam modal
+		const images = document.querySelectorAll('.overlapping-img');
+		const carousel = document.getElementById('imageCarousel');
+
+		images.forEach((img, index) => {
+			img.addEventListener('click', () => {
+				const bsCarousel = new bootstrap.Carousel(carousel);
+				bsCarousel.to(index);  // Pindah ke gambar yang diklik
+			});
+		});
+	</script>
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script src="js/tiny-slider.js"></script>
+	<script src="js/custom.js"></script>
+</body>
+
+</html>
