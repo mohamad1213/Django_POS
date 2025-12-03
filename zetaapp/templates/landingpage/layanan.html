@@ -1,0 +1,249 @@
+{% extends "landingpage/base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- Start Hero Section -->
+<div class="hero">
+    <div class="container">
+        <div class="row justify-content-between">
+            <div class="col-lg-5">
+                <div class="intro-excerpt">
+                    <h1>Layanan</h1>
+                    <p class="mb-4">Dedikasi Kami dalam Setiap Cacahan PVC Paralon untuk perkembangan industri</p>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="hero-img-wrap">
+                    <img src="{% static 'landingpage/images/bg-pp2.png' %}" class="img-fluid hero-img">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Hero Section -->
+
+
+
+<!-- Start Why Choose Us Section -->
+<div class="why-choose-section">
+    <div class="container">
+        <div class="row my-5">
+            <div class="col-6 col-md-6 col-lg-3 mb-4">
+                <div class="feature">
+                    <div class="icon">
+                        <img src="{% static 'landingpage/images/truck.svg' %}" alt="Image Pasokan" class="imf-fluid">
+                    </div>
+                    <h3>Pasokan Pralon Terjamin</h3>
+                    <p>Penyediaan bahan baku pralon PVC bekas yang stabil dan berkualitas, siap untuk proses
+                        penggilingan.</p>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-6 col-lg-3 mb-4">
+                <div class="feature">
+                    <div class="icon">
+                        <img src="{% static 'landingpage/images/bag.svg' %}" alt="Image Kualitas" class="imf-fluid">
+                    </div>
+                    <h3>Hasil Gilingan PVC Premium</h3>
+                    <p>Proses penggilingan menggunakan mesin terbaik untuk menghasilkan *flake* (serpihan) PVC
+                        berkualitas, konsisten, dan bebas kontaminan.</p>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-6 col-lg-3 mb-4">
+                <div class="feature">
+                    <div class="icon">
+                        <img src="{% static 'landingpage/images/support.svg' %}" alt="Image Custom" class="imf-fluid">
+                    </div>
+                    <h3>Pemrosesan *Batch* Besar</h3>
+                    <p>Menerima pesanan penggilingan PVC dalam jumlah besar (*massal*) dengan jadwal pengerjaan yang
+                        efisien untuk mitra industri Anda.</p>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-6 col-lg-3 mb-4">
+                <div class="feature">
+                    <div class="icon">
+                        <img src="{% static 'landingpage/images/return.svg' %}" alt="Image Harga" class="imf-fluid">
+                    </div>
+                    <h3>Kemitraan Jangka Panjang</h3>
+                    <p>Harga jual PVC gilingan yang kompetitif dan skema kerja sama yang saling menguntungkan untuk
+                        pembelian rutin.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<div class="product-section pt-0">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-md-12 col-lg-3 mb-5 mb-lg-0">
+                <h2 class="mb-4 section-title">Kualitas PVC Daur Ulang Terbaik.</h2>
+                <p class="mb-4">Kami memproduksi *flake* (serpihan) PVC daur ulang dari pralon berkualitas tinggi,
+                    diproses dengan ketelitian untuk menjamin kemurnian dan konsistensi warna. Cocok untuk berbagai
+                    aplikasi manufaktur baru.</p>
+                <p><a href="{% url 'produk' %}" class="btn">Lihat Semua Produk</a></p>
+            </div>
+            <div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
+                <a class="product-item" href="#">
+                    <img src="{% static 'landingpage/images/bahan/pk1-prod.png' %}" class="img-fluid product-thumbnail"
+                        alt="PVC Flake Putih Premium">
+                    <h3 class="product-title">Gilingan PK 1</h3>
+                    <span class="icon-cross">
+                        <img src="{% static 'landingpage/images/cross.svg' %}" class="img-fluid">
+                    </span>
+                </a>
+            </div>
+            <div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
+                <a class="product-item" href="#">
+                    <img src="{% static 'landingpage/images/bahan/pk2-prod.png' %}" class="img-fluid product-thumbnail"
+                        alt="PVC Flake Abu-abu Standar">
+                    <h3 class="product-title">PVC PK 1 Abu-abu Standar</h3>
+                    <strong class="product-price">Rp Harga/Kg</strong>
+
+                    <span class="icon-cross">
+                        <img src="{% static 'landingpage/images/cross.svg' %}" class="img-fluid">
+                    </span>
+                </a>
+            </div>
+            <div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
+                <a class="product-item" href="#">
+                    <img src="{% static 'landingpage/images/bahan/abu-prod.png' %}" class="img-fluid product-thumbnail"
+                        alt="PVC Powder Daur Ulang">
+                    <h3 class="product-title">PVC Powder Daur Ulang</h3>
+                    <strong class="product-price">Rp Harga/Kg</strong>
+
+                    <span class="icon-cross">
+                        <img src="{% static 'landingpage/images/cross.svg' %}" class="img-fluid">
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Product Section -->
+
+
+
+<!-- Start Testimonial Slider -->
+<div class="testimonial-section before-footer-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7 mx-auto text-center">
+                <h2 class="section-title">Testimonials</h2>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="testimonial-slider-wrap text-center">
+
+                    <div id="testimonial-nav">
+                        <span class="prev" data-controls="prev"><span class="fa fa-chevron-left"></span></span>
+                        <span class="next" data-controls="next"><span class="fa fa-chevron-right"></span></span>
+                    </div>
+
+                    <div class="testimonial-slider">
+
+                        <div class="item">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8 mx-auto">
+
+                                    <div class="testimonial-block text-center">
+                                        <blockquote class="mb-5">
+                                            <p>&ldquo;Donec facilisis quam ut purus rutrum lobortis. Donec vitae
+                                                odio quis nisl dapibus malesuada. Nullam ac aliquet velit. Aliquam
+                                                vulputate velit imperdiet dolor tempor tristique. Pellentesque
+                                                habitant morbi tristique senectus et netus et malesuada fames ac
+                                                turpis egestas. Integer convallis volutpat dui quis
+                                                scelerisque.&rdquo;</p>
+                                        </blockquote>
+
+                                        <div class="author-info">
+                                            <div class="author-pic">
+                                                <img src="{% static 'landingpage/images/person-1.png' %}"
+                                                    alt="Maria Jones" class="img-fluid">
+                                            </div>
+                                            <h3 class="font-weight-bold">Maria Jones</h3>
+                                            <span class="position d-block mb-3">CEO, Co-Founder, XYZ Inc.</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <!-- END item -->
+
+                        <div class="item">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8 mx-auto">
+
+                                    <div class="testimonial-block text-center">
+                                        <blockquote class="mb-5">
+                                            <p>&ldquo;Donec facilisis quam ut purus rutrum lobortis. Donec vitae
+                                                odio quis nisl dapibus malesuada. Nullam ac aliquet velit. Aliquam
+                                                vulputate velit imperdiet dolor tempor tristique. Pellentesque
+                                                habitant morbi tristique senectus et netus et malesuada fames ac
+                                                turpis egestas. Integer convallis volutpat dui quis
+                                                scelerisque.&rdquo;</p>
+                                        </blockquote>
+
+                                        <div class="author-info">
+                                            <div class="author-pic">
+                                                <img src="{% static 'landingpage/images/person-1.png' %}"
+                                                    alt="Maria Jones" class="img-fluid">
+                                            </div>
+                                            <h3 class="font-weight-bold">Maria Jones</h3>
+                                            <span class="position d-block mb-3">CEO, Co-Founder, XYZ Inc.</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <!-- END item -->
+
+                        <div class="item">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8 mx-auto">
+
+                                    <div class="testimonial-block text-center">
+                                        <blockquote class="mb-5">
+                                            <p>&ldquo;Donec facilisis quam ut purus rutrum lobortis. Donec vitae
+                                                odio quis nisl dapibus malesuada. Nullam ac aliquet velit. Aliquam
+                                                vulputate velit imperdiet dolor tempor tristique. Pellentesque
+                                                habitant morbi tristique senectus et netus et malesuada fames ac
+                                                turpis egestas. Integer convallis volutpat dui quis
+                                                scelerisque.&rdquo;</p>
+                                        </blockquote>
+
+                                        <div class="author-info">
+                                            <div class="author-pic">
+                                                <img src="{% static 'landingpage/images/person-1.png' %}"
+                                                    alt="Maria Jones" class="img-fluid">
+                                            </div>
+                                            <h3 class="font-weight-bold">Maria Jones</h3>
+                                            <span class="position d-block mb-3">CEO, Co-Founder, XYZ Inc.</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <!-- END item -->
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Testimonial Slider -->
+
+
+{% endblock content %}

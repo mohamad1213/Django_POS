@@ -9,19 +9,11 @@
     /* Batasi lebar maksimal */
   }
 
-  /* Perbaikan Visual untuk Logo Penuh agar sesuai dengan lebar baru */
   .logo-wrapper {
     padding: 20px 10px;
-    /* Sesuaikan padding vertikal dan horizontal */
-    text-align: left;
-    /* Pastikan logo tetap rata kiri di wrapper-nya */
+    text-align: center;
   }
 
-  /* Sesuaikan style di bawah ini jika sebelumnya Anda sudah menggunakannya */
-  /* ... (style untuk nav-link, active, hover, dll.) ... */
-
-
-  /* Media Query untuk Mobile/Tablet (Perlu diatur ulang agar tidak terlalu lebar di mobile) */
   @media (max-width: 991.98px) {
     .sidebar-wrapper {
       /* Lebar di mobile harus sedikit lebih kecil atau sama */
@@ -71,18 +63,18 @@
 <div class="sidebar-wrapper">
   <div>
     <div class="logo-wrapper d-none d-lg-block">
-      <a href="/">
-        <img class="img-fluid for-light" style="max-height: 40px; width: auto;"
+      <a href="{% url 'dashboard' %}">
+        <img class="img-fluid for-light" style="max-width: 200px; height: auto;"
           src="{% static 'assets/images/Logo2.png' %}" alt="Logo Light" />
-        <img class="img-fluid for-dark" style="max-height: 40px; width: auto;"
+        <img class="img-fluid for-dark" style="max-width: 200px; height: auto;"
           src="{% static 'assets/images/Logo2.png' %}" alt="Logo Dark" />
       </a>
       <div class="back-btn"><i class="fa fa-angle-left"></i></div>
     </div>
 
-    <div class="logo-icon-wrapper d-lg-none py-3 text-end ps-3">
-      <a href="/">
-        <img class="img-fluid" style="max-height: 35px; width: auto;" src="{% static 'assets/images/Logo2.png' %}"
+    <div class="logo-icon-wrapper d-lg-none py-3 text-center ps-3">
+      <a href="{% url 'dashboard' %}">
+        <img class="img-fluid" style="max-width: 200px; height: auto;" src="{% static 'assets/images/Logo2.png' %}"
           alt="Logo Icon" />
       </a>
     </div>
