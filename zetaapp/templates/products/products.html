@@ -36,175 +36,234 @@
             </div>
             {% endfor %}
         </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <div class="order-place text-md-end">
+                            <button type="button" class="btn btn-primary font-weight-bold w-md-auto"
+                                data-bs-toggle="modal" data-bs-target="#createProductModal">
+                                <i class="fas fa-plus me-2"></i>
+                                Tambah Produk Baru
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <div class="card-body">
+                            <table class="table table-bordered display table-striped dataTable no-footer" id="prodata">
+                                <thead>
+                                    <tr>
+                                        <th>NO</th>
+                                        <th>Nama</th>
+                                        <th>Kategori</th>
+                                        <th class="text-center">Harga</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in products %}
+                                    <tr>
+                                        <td>{{forloop.counter}}</td>
+                                        <td>{{p.name}}</td>
+                                        <td>{{p.category}}</td>
+                                        <td class="text-right">{{p.price|floatformat:0|intcomma }}</td>
+                                        {% if p.status == "ACTIVE" %}
+                                        <td class="text-center">
+                                            <span class="badge badge-success"
+                                                style="font-size:0.8em;">{{p.status}}</span>
+                                        </td>
+                                        {% elif p.status == "INACTIVE" %}
+                                        <td class="text-center">
+                                            <span class="badge badge-danger"
+                                                style="font-size:0.8em;">{{p.status}}</span>
+                                        </td>
+                                        {% endif %}
+                                        <td class="text-center">
+                                            <!--Update-->
+                                            <a href="{% url 'products:products_update' p.id %}"
+                                                class="text-decoration-none">
+                                                <button type="button" class="btn btn-warning btn-sm"
+                                                    data-bs-toggle="tooltip" title="Update product">
+                                                    <i class="fas fa-pen"></i>
+                                                </button>
+                                            </a>
+                                            <!--Delete modal-->
+                                            <!-- Button trigger modal -->
+                                            <a class="text-decoration-none">
+                                                <button rel="delete" type="button" class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal" data-bs-target="#delete_product">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </a>
 
-
-        <!-- DataTable -->
-        <div class="card shadow mb-12">
-            <div class="card-body">
-                <div class="row ml-0 mb-3" style="text-align: right;">
-                    <a href="{% url 'products:products_add' %}">
-                        <button type="button" class="btn btn-primary font-weight-bold">
-                            <i class="fas fa-plus mr-2"></i>
-                            Tambah barang
-                        </button>
-                    </a>
-                </div>
-                <div class="table-responsive">
-                    <div id="custom-buttons"></div>
-                    <table class="table table-bordered display table-striped dataTable no-footer" id="prodata">
-                        <thead>
-                            <tr>
-                                <th>NO</th>
-                                <th>Nama</th>
-                                <th>Kategori</th>
-                                <th class="text-center">Harga</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in products %}
-                            <tr>
-                                <td>{{forloop.counter}}</td>
-                                <td>{{p.name}}</td>
-                                <td>{{p.category}}</td>
-                                <td class="text-right">{{p.price|floatformat:0|intcomma }}</td>
-                                {% if p.status == "ACTIVE" %}
-                                <td class="text-center">
-                                    <span class="badge badge-success" style="font-size:0.8em;">{{p.status}}</span>
-                                </td>
-                                {% elif p.status == "INACTIVE" %}
-                                <td class="text-center">
-                                    <span class="badge badge-danger" style="font-size:0.8em;">{{p.status}}</span>
-                                </td>
-                                {% endif %}
-                                <td class="text-center">
-                                    <!--Update-->
-                                    <a href="{% url 'products:products_update' p.id %}" class="text-decoration-none">
-                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="tooltip"
-                                            title="Update product">
-                                            <i class="fas fa-pen"></i>
-                                        </button>
-                                    </a>
-                                    <!--Delete modal-->
-                                    <!-- Button trigger modal -->
-                                    <a class="text-decoration-none">
-                                        <button rel="delete" type="button" class="btn btn-danger btn-sm"
-                                            data-bs-toggle="modal" data-bs-target="#exampleModal">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </a>
-
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="exampleModal" tabindex="-1"
-                                        aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalLabel">Hapus Barang</h5>
-                                                    <button type="button" class="close" data-dismiss="modal"
-                                                        aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="delete_product" tabindex="-1"
+                                                aria-labelledby="delete_product" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="delete_product">
+                                                                Hapus Data Product</h5>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            Apakah Kamu yakin ingin menghapus data Product ini:
+                                                            <h4 class="bold">
+                                                                nomer id {{p.id}}
+                                                            </h4>
+                                                        </div>
+                                                        <div class="card-footer border-0 pt-0"
+                                                            style="text-align: right;">
+                                                            <button class="btn btn-warning" type="reset">Cancel</button>
+                                                            <a href="{% url 'products:products_delete' p.id %}"
+                                                                class="text-decoration-none">
+                                                                <button type="button"
+                                                                    class="btn btn-danger">Delete</button>
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <p>{{p.name}}</p>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Batal</button>
-                                                <a href="#" class="text-decoration-none">
-                                                    <a id="updateThisURL"
-                                                        href="{% url 'products:products_delete' p.id %}"
-                                                        class="text-decoration-none">
-                                                        <button type="button" class="btn btn-danger">Hapus</button>
-                                                    </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <div class="modal fade" id="createProductModal" tabindex="-1"
+                                    aria-labelledby="createProductModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="createProductModalLabel">Tambah Produk Baru
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
                                             </div>
+                                            <form class="form theme-form" method="POST" enctype="multipart/form-data">
+
+                                                <div class="modal-body">
+                                                    {% load crispy_forms_tags %}
+                                                    {% csrf_token %}
+
+                                                    <div class="row">
+
+                                                        <div class="mb-3 col-12 col-md-4">
+                                                            <label class="col-form-label pt-0">Name</label>
+                                                            {{form.name}}
+                                                        </div>
+
+                                                        <div class="mb-3 col-12 col-md-4">
+                                                            <label class="col-form-label pt-0">Category</label>
+                                                            {{form.category}}
+                                                        </div>
+
+                                                        <div class="mb-3 col-12 col-md-4">
+                                                            <label class="col-form-label pt-0">Price</label>
+                                                            {{form.price}}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="mb-3 col-12">
+                                                            <label class="col-form-label pt-0">Description</label>
+                                                            {{form.description}}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="mb-3 col-12 col-md-4">
+                                                            <label class="col-form-label pt-0">Status</label>
+                                                            {{form.status}}
+                                                        </div>
+                                                    </div>
+
+                                                    {% if form.errors %}
+                                                    <div class="alert alert-danger" id="msg">
+                                                        {{ form.errors }}
+                                                    </div>
+                                                    {% endif %}
+
+                                                </div>
+
+                                                <div
+                                                    class="modal-footer border-0 pt-0 d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+                                                    <button class="btn btn-secondary w-100 w-sm-auto" type="button"
+                                                        data-bs-dismiss="modal">Close</button>
+
+                                                    <button class="btn btn-primary font-weight-bold w-100 w-sm-auto"
+                                                        type="submit">Save Product</button>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
+                                </div>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
             </div>
         </div>
     </div>
-</div>
-</div>
-{% endblock content %}
-{% block scriptcontent %}
-<!-- Plugins JS start-->
-<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
-<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
-<script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
-<script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
-<script src="{% static 'assets/js/ecommerce.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-<script src="{% static 'assets/js/product-list-custom.js' %}"></script>\
-<!-- Datatables -->
-<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-<!--Datatable buttons-->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.print.min.js"></script>
-<!--Moment JS-->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    {% endblock content %}
+    {% block scriptcontent %}
+    <!-- Plugins JS start-->
+    <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+    <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'assets/js/product-list-custom.js' %}"></script>\
+    <!-- Datatables -->
+    <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+    <!--Datatable buttons-->
 
-<!--Datatables-->
-<script>
-    // Call the dataTables jQuery plugin
-    $(document).ready(function () {
-        var tblProducts = $('#prodata').DataTable({
-            dom: "<'row'<'col-sm-6'l><'col-sm-6'f>>" + // Layout lebih rapi: left = length, right = search
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>", // Informasi dan pagination di bawah
-            buttons: [
-                {
-                    extend: 'print',
-                    text: '<i class="fas fa-print"></i> Print',
-                    titleAttr: 'Cetak Data',
-                    className: 'btn btn-primary btn-sm',
-                    exportOptions: {
-                        columns: ':visible' // Hanya kolom yang terlihat yang dicetak
+    <!--Datatables-->
+    <script>
+        // Call the dataTables jQuery plugin
+        $(document).ready(function () {
+            var tblProducts = $('#prodata').DataTable({
+                dom: "<'row'<'col-sm-6'l><'col-sm-6'f>>" + // Layout lebih rapi: left = length, right = search
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-5'i><'col-sm-7'p>>", // Informasi dan pagination di bawah
+                buttons: [
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i> Print',
+                        titleAttr: 'Cetak Data',
+                        className: 'btn btn-primary btn-sm',
+                        exportOptions: {
+                            columns: ':visible' // Hanya kolom yang terlihat yang dicetak
+                        },
+                        customize: function (win) {
+                            $(win.document.body).css('font-size', '12px'); // Ukuran font cetak lebih kecil
+                            $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+                        }
                     },
-                    customize: function (win) {
-                        $(win.document.body).css('font-size', '12px'); // Ukuran font cetak lebih kecil
-                        $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+                ],
+                paging: true,
+                autoWidth: false,
+                responsive: true, // Tabel responsif di mobile
+                columnDefs: [
+                    { targets: [0], className: "text-center" }, // Kolom pertama rata tengah
+                    { targets: "_all", className: "align-middle" } // Semua kolom vertikal tengah
+                ],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                    paginate: {
+                        first: "Awal",
+                        last: "Akhir",
+                        next: "→",
+                        previous: "←"
                     }
-                },
-            ],
-            paging: true,
-            autoWidth: false,
-            responsive: true, // Tabel responsif di mobile
-            columnDefs: [
-                { targets: [0], className: "text-center" }, // Kolom pertama rata tengah
-                { targets: "_all", className: "align-middle" } // Semua kolom vertikal tengah
-            ],
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data",
-                info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-                paginate: {
-                    first: "Awal",
-                    last: "Akhir",
-                    next: "→",
-                    previous: "←"
                 }
-            }
+            });
+
+            // Tambahkan tombol ke dalam div custom
+            tblProducts.buttons().container().appendTo('#custom-buttons');
         });
 
-        // Tambahkan tombol ke dalam div custom
-        tblProducts.buttons().container().appendTo('#custom-buttons');
-    });
 
-
-</script>
-{% endblock scriptcontent %}
+    </script>
+    {% endblock scriptcontent %}

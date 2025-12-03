@@ -15,40 +15,39 @@
     <!-- Container-fluid starts-->
     <div class="container-fluid list-products">
         <div class="row">
-            <div class="col-sm-12">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header pb-0">
-                        <div class="order-place" style="text-align: right;">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#tambah">
-                                <i class="fas fa-plus mr-2"></i>
+                        <div class="order-place mb-3 text-start text-md-end">
+                            <button type="button" class="btn btn-primary btn-block btn-sm-md"
+                                data-bs-toggle="modal" data-bs-target="#tambah">
+                                <i class="fas fa-plus me-2"></i>
                                 Tambah Pelanggan
                             </button>
                         </div>
 
-                        <!-- DataTable -->
                         <div class="table-responsive">
-                            <div class="card-body">
+                            <div class="card-body p-0">
                                 <table class="table table-bordered display table-striped dataTable no-footer"
                                     id="basic-1">
                                     <thead>
                                         <tr>
                                             <th class="text-center">NO</th>
                                             <th class="text-center">Name</th>
-                                            <th class="text-center">Email</th>
+                                            <th class="text-center d-none d-sm-table-cell">Email</th>
                                             <th class="text-center">Phone</th>
-                                            <th class="text-center">Adress</th>
-                                            <th class="text-center">Actions</th>
+                                            <th class="text-center d-none d-md-table-cell">Address</th>
+                                            <th class="text-center actions-col-width">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for c in customers %}
                                         <tr>
-                                            <td>{{forloop.counter}}</td>
+                                            <td class="text-center">{{forloop.counter}}</td>
                                             <td>{{c.get_full_name}}</td>
-                                            <td>{{c.email}}</td>
-                                            <td>{{c.phone}}</td>
-                                            <td style="width:30%">{{c.address}}</td>
+                                            <td class="d-none d-sm-table-cell">{{c.email}}</td>
+                                            <td class="text-center">{{c.phone}}</td>
+                                            <td class="d-none d-md-table-cell">{{c.address}}</td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-warning" data-bs-toggle="modal"
                                                     data-bs-target="#update-{{c.id}}">

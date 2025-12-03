@@ -3,13 +3,29 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .models import Category, Product
 import sweetify
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from .models import Category
+from .forms import *
+from django.contrib import messages
 
 from django.shortcuts import render
 from django.db.models import Sum, Count, Prefetch
 from sales.models import Sale, SaleDetail
 @login_required(login_url="/accounts/login/")
 def categories_list_view(request):
+    if request.method == 'POST':
+        form = CategoriesForm(request.POST) 
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Formulir Berhasil Dibuat")   
+            return redirect('products:categories_list')
+    else:
+        form = CategoriesForm() 
+
     context = {
+        'form': form,
+        "breadcrumb": {"parent": "Kategori", "child": "Daftar Kategori"},
         "active_icon": "products_categories",
         "categories": Category.objects.all()
     }
@@ -17,56 +33,7 @@ def categories_list_view(request):
 
 
 @login_required(login_url="/accounts/login/")
-def categories_add_view(request):
-    context = {
-        "active_icon": "products_categories",
-        "category_status": Category.status.field.choices
-    }
-
-    if request.method == 'POST':
-        # Save the POST arguments
-        data = request.POST
-
-        attributes = {
-            "name": data['name'],
-            "status": data['state'],
-            "description": data['description']
-        }
-
-        # Check if a category with the same attributes exists
-        if Category.objects.filter(**attributes).exists():
-            sweetify.error(request, 'Category already exists!',
-                           extra_tags="warning")
-            return redirect('products:categories_add')
-
-        try:
-            # Create the category
-            new_category = Category.objects.create(**attributes)
-
-            # If it doesn't exist, save it
-            new_category.save()
-
-            sweetify.success(request, 'Category: ' +
-                             attributes["name"] + ' created successfully!', extra_tags="success")
-            return redirect('products:categories_list')
-        except Exception as e:
-            sweetify.success(
-                request, 'There was an error during the creation!', extra_tags="danger")
-            print(e)
-            return redirect('products:categories_add')
-
-    return render(request, "products/categories_add.html", context=context)
-
-
-@login_required(login_url="/accounts/login/")
 def categories_update_view(request, category_id):
-    """
-    Args:
-        request:
-        category_id : The category's ID that will be updated
-    """
-
-    # Get the category
     try:
         # Get the category to update
         category = Category.objects.get(id=category_id)
@@ -77,6 +44,7 @@ def categories_update_view(request, category_id):
         return redirect('products:categories_list')
 
     context = {
+        "breadcrumb": {"parent": "Kategori", "child": "Edit Kategori"},
         "active_icon": "products_categories",
         "category_status": Category.status.field.choices,
         "category": category
@@ -140,12 +108,21 @@ def categories_delete_view(request, category_id):
 
 @login_required(login_url="/accounts/login/")
 def products_list_view(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST) 
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Formulir Berhasil Dibuat")   
+            return redirect('products:products_list')
+    else:
+        form = ProductForm() 
     totals_per_product = (
         SaleDetail.objects
         .values('product__name')
         .annotate(total_qty=Sum('quantity'))
     )
     context = {
+        'form': form,
         "breadcrumb": {"parent": "Barang", "child": "Daftar Barang"},
         'totals_per_product': totals_per_product,
         "active_icon": "products",
@@ -259,25 +236,10 @@ def products_update_view(request, product_id):
 
 @login_required(login_url="/accounts/login/")
 def products_delete_view(request, product_id):
-    """
-    Args:
-        request:
-        product_id : The product's ID that will be deleted
-    """
-    try:
-        # Get the product to delete
-        product = Product.objects.get(id=product_id)
-        product.delete()
-        sweetify.success(request, '¡Product: ' + product.name +
-                         ' deleted!', extra_tags="success")
-        return redirect('products:products_list')
-    except Exception as e:
-        sweetify.success(
-            request, 'There was an error during the elimination!', extra_tags="danger")
-        print(e)
-        return redirect('products:products_list')
-
-
+    Product.objects.get(id=product_id).delete()
+    messages.success(request, "Data produk berhasil dihapus.")
+    return redirect("products:products_list")    
+    
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 

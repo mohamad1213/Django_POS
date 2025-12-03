@@ -267,8 +267,8 @@ def indexPage(request):
         'sisa_saldo': sisa_saldo,
         'data': data,
         'count': count,
-        'product_names': product_names,
-        'product_totals': product_totals,
+        # 'product_names': product_names,
+        # 'product_totals': product_totals,
     }
 
     return render(request, 'general/dashboard/default/index.html', context)
@@ -464,12 +464,12 @@ def DeleteHutang(request, pk):
 #HUTANG PEGAWAI
 def hutangPeg(request):
     data = HutPegawai.objects.all().order_by('-tanggal')
-    apin = Karyawan.objects.get(name='Apin')
-    andi = Karyawan.objects.get(name='Andi')
-    oman = Karyawan.objects.get(name='Oman')
-    agung = Karyawan.objects.get(name='Agung')
-    amin = Karyawan.objects.get(name='Pak Amin')
-    anis = Karyawan.objects.get(name='Pak Anis')
+    apin = Karyawan.objects.filter(name='Apin').first()
+    andi = Karyawan.objects.filter(name='Andi').first()
+    oman = Karyawan.objects.filter(name='Oman').first()
+    agung = Karyawan.objects.filter(name='Agung').first()
+    amin = Karyawan.objects.filter(name='Pak Amin').first()
+    anis = Karyawan.objects.filter(name='Pak Anis').first()
     today = timezone.now().date()
     #oman
     hutang_oman = HutPegawai.objects.filter(tanggal__year=today.year, hutang_choice='H', pegawai__name=oman).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
@@ -1025,7 +1025,8 @@ def render_to_pdf(template_src, context_dict={}):
 class GenerateInvoice(View):
     def get(self, request, pk, *args, **kwargs):
         try:
-            order_db = Transaksi.objects.get(id = pk, user = request.user, payment_status = 1)     #you can filter using order_id as well
+            order_db = Transaksi.objects.get(id = pk, user = request.user, payment_status = 1)  
+            #you can filter using order_id as well
         except:
             return HttpResponse("505 Not Found")
         data = {

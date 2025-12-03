@@ -2,12 +2,12 @@
 {% load sass_tags %}
 
 <div class="row">
-  <div class="col-xl-12 col-md-12 box-col-12">
+  <div class="col-12">
     <div class="card o-hidden">
       <div class="card-header pb-0">
         <div class="media">
           <div class="media-body">
-            <h5>Grafik pemasukan dan Pengeluaran</h5>
+            <h5>Grafik Pemasukan dan Pengeluaran</h5>
           </div>
           <div class="icon-box onhover-dropdown"><i data-feather="more-horizontal"></i>
             <div class="icon-box-show onhover-show-div">
@@ -33,42 +33,41 @@
   </div>
 </div>
 
-
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function () {
     fetch("{% url 'chart_data' %}")
-        .then(response => response.json())
-        .then(data => {
-            var options = {
-                chart: {
-                    type: "area",
-                    height: 320,
-                    zoom: { enabled: false },
-                },
-                stroke: { curve: "smooth" },
-                dataLabels: { enabled: true },
-                series: [
-                    { name: "Pemasukan", data: data.income_values },
-                    { name: "Pengeluaran", data: data.expense_values }
-                ],
-                xaxis: { categories: data.labels },
-                yaxis: {
-                    labels: {
-                        formatter: function(value) {
-                            return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                        }
-                    }
-                },
-                tooltip: {
-                    y: {
-                        formatter: function(value) {
-                            return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                        }
-                    }
-                }
-            };
-            var chart = new ApexCharts(document.querySelector("#chart-line"), options);
-            chart.render();
-        });
-});
+      .then(response => response.json())
+      .then(data => {
+        var options = {
+          chart: {
+            type: "area",
+            height: 320,
+            zoom: { enabled: false },
+          },
+          stroke: { curve: "smooth" },
+          dataLabels: { enabled: true },
+          series: [
+            { name: "Pemasukan", data: data.income_values },
+            { name: "Pengeluaran", data: data.expense_values }
+          ],
+          xaxis: { categories: data.labels },
+          yaxis: {
+            labels: {
+              formatter: function (value) {
+                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+              }
+            }
+          },
+          tooltip: {
+            y: {
+              formatter: function (value) {
+                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+              }
+            }
+          }
+        };
+        var chart = new ApexCharts(document.querySelector("#chart-line"), options);
+        chart.render();
+      });
+  });
 </script>

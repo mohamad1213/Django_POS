@@ -16,13 +16,13 @@
   {% include 'messages.html' %}
   <!-- Container-fluid starts-->
   <div class="container-fluid list-products">
-    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+
+    <div class="card text-white bg-primary mb-3" style="max-width: 100%;">
       <div class="card-header d-flex justify-content-between align-items-center">
         <div style="color: black;">
           <small>Profit</small>
           <strong>Hari Ini</strong>
         </div>
-        <!-- ikon kecil -->
         <div>
           <i class="bi bi-cash-stack" style="font-size:1.6rem;"></i>
         </div>
@@ -36,12 +36,11 @@
     </div>
 
     <div class="row">
-      <!-- Individual column searching (text inputs) Starts-->
       <div class="col-sm-12">
         <div class="card">
           <div class="card-header pb-0">
-            <div class="order-place" style="text-align: right;">
-              <a href="{% url 'profit_create' %}" class="btn btn-primary">
+            <div class="order-place d-grid gap-2 d-md-block text-md-end mb-3">
+              <a href="{% url 'profit_create' %}" class="btn btn-primary w-md-auto">
                 Tambah Profit
               </a>
             </div>

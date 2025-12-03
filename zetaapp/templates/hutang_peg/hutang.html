@@ -83,174 +83,179 @@
       </div>
     </div>
     <div class="row">
-      <div class="card stat-card">
+      <div class="card stat-card col-sm-12">
         <div class="card-header pb-0">
-          <div class="order-place" style="text-align: right;">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+          <div class="order-place d-grid gap-2 d-md-block text-md-end mb-3">
+            <button type="button" class="btn btn-primary w-md-auto" data-bs-toggle="modal"
+              data-bs-target="#exampleModal">
               Tambah Hutang
             </button>
           </div>
         </div>
         <div class="card-body">
-          <!-- <div class="table-responsive"> -->
-          <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
-            <thead>
-              <tr>
-                <th rowspan="2">NO</th>
-                <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
-                <th rowspan="2" scope="col" class="text-center">PEGAWAI</th>
-                <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
-                <th colspan="2" scope="col" class="text-center">JENIS</th>
-                <th rowspan="2" scope="col" class="text-center">OPSI</th>
-              </tr>
-              <tr>
-                <th scope="col" class="text-center">HUTANG</th>
-                <th scope="col" class="text-center">PIUTANG</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for u in data %}
-              <tr class="text-center">
-                <td>{{forloop.counter}}</td>
-                <td>{{u.tanggal|date:"d-m-Y"}}</td>
-                <td>{{u.pegawai}}</td>
-                <td>{{u.keterangan}}</td>
-                <td class="text-center">
-                  {% if u.hutang_choice == "H" %}
-                  Rp. {{u.jumlah|floatformat:"0g" }}
-                  {% else %}
-                  -
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  {% if u.hutang_choice == "P" %}
-                  Rp. {{u.jumlah|floatformat:"0g" }}
-                  {% else %}
-                  -
-                  {% endif %}
-                </td>
-                <td>
-                  <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#edit_tr">
-                    <i class="fa fa-cog"></i>
-                  </button>
-                  <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#hapus_hut">
-                    <i class="fa fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-              <div class="modal fade" id="hapus_hut" tabindex="-1" aria-labelledby="hapus_hut" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="hapus_hut">
-                        Hapus hutang</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="table-responsive">
+            <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
+              <thead>
+                <tr>
+                  <th rowspan="2" class="text-center">NO</th>
+                  <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
+                  <th rowspan="2" scope="col" class="text-center d-none d-md-table-cell">PEGAWAI</th>
+                  <th rowspan="2" scope="col" class="text-center d-none d-sm-table-cell">KETERANGAN</th>
+                  <th colspan="2" scope="col" class="text-center">JENIS</th>
+                  <th rowspan="2" scope="col" class="text-center">OPSI</th>
+                </tr>
+                <tr>
+                  <th scope="col" class="text-center">HUTANG</th>
+                  <th scope="col" class="text-center">PIUTANG</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in data %}
+                <tr class="text-center">
+                  <td>{{forloop.counter}}</td>
+                  <td>{{u.tanggal|date:"d-m-Y"}}</td>
+                  <td class="d-none d-md-table-cell text-start">{{u.pegawai}}</td>
+                  <td class="d-none d-sm-table-cell text-start">{{u.keterangan}}</td>
+
+                  <td class="text-center">
+                    {% if u.hutang_choice == "H" %}
+                    Rp. {{u.jumlah|floatformat:"0g" }}
+                    {% else %}
+                    -
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    {% if u.hutang_choice == "P" %}
+                    Rp. {{u.jumlah|floatformat:"0g" }}
+                    {% else %}
+                    -
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <div class="d-flex justify-content-center flex-column flex-sm-row gap-1">
+                      <button type="button" class="btn btn-warning btn-sm w-100 w-sm-auto" data-bs-toggle="modal"
+                        data-bs-target="#edit_tr-{{u.id}}">
+                        <i class="fa fa-cog d-block d-sm-inline-block"></i>
+                        <span class="d-inline-block d-sm-none ms-1">Edit</span>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm w-100 w-sm-auto" data-bs-toggle="modal"
+                        data-bs-target="#hapus_hut-{{u.id}}">
+                        <i class="fa fa-trash d-block d-sm-inline-block"></i>
+                        <span class="d-inline-block d-sm-none ms-1">Hapus</span>
                       </button>
                     </div>
-                    <div class="modal-body">
-                      Apakah Kamu yakin ingin menghapus tabel hutang ini:
-                      <h4 class="bold">
-                        {{u.pegawai}} dengan nomer id {{u.id}}
-                      </h4>
-                    </div>
-                    <div class="card-footer border-0 pt-0" style="text-align: right;">
-                      <button class="btn btn-warning" type="reset">Cancel</button>
-                      <a href="{% url 'DeleteHutangPeg' u.id %}" class="text-decoration-none">
-                        <button type="button" class="btn btn-danger">Delete</button>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h1 class="modal-title fs-5" id="edit_tr">Edit Transaksi</h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <form class="form theme-form" action="{% url 'updatehut' u.id %}" method="POST"
-                        enctype="multipart/form-data">
-                        {% load crispy_forms_tags %}
-                        {% csrf_token %}
-                        {{form|crispy}}
-                        <!-- <div class="mb-3">
-                            <label class="col-form-label pt-0">Tanggal</label>
-                            {{form.tanggal}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Jenis</label>
-                            {{form.hutang_choice}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Nominal</label>
-                            {{form.jumlah}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Keterangan</label>
-                            {{form.keterangan}}
-                          </div> -->
-                        {% if form.errors %}
-                        <div class="alert alert-danger" id="msg">
-                          {{ form.errors }}
-                        </div>
-                        {% endif %}
-                        <div class="card-footer border-0 pt-0" style="text-align: right;">
-                          <button class="btn btn-warning" type="reset">Cancel</button>
-                          <button class="btn btn-primary" type="submit">Submit</button>
-                        </div>
-                      </form>
+                  </td>
+                </tr>
+
+                <div class="modal fade" id="hapus_hut-{{u.id}}" tabindex="-1" aria-labelledby="hapus_hut-{{u.id}}Label"
+                  aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="hapus_hut-{{u.id}}Label">
+                          Hapus Hutang
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        Apakah Kamu yakin ingin menghapus transaksi ini:
+                        <h4 class="bold">
+                          {{u.pegawai}} (ID: {{u.id}}) pada tanggal {{u.tanggal|date:"d-m-Y"}}?
+                        </h4>
+                      </div>
+                      <div
+                        class="modal-footer border-0 pt-0 d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+                        <button class="btn btn-warning w-100 w-sm-auto" type="button"
+                          data-bs-dismiss="modal">Cancel</button>
+                        <a href="{% url 'DeleteHutangPeg' u.id %}" class="text-decoration-none w-100 w-sm-auto">
+                          <button type="button" class="btn btn-danger w-100">Delete</button>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              {% endfor %}
-            </tbody>
-          </table>
-          <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                <div class="modal fade" id="edit_tr-{{u.id}}" tabindex="-1" aria-labelledby="edit_tr-{{u.id}}Label"
+                  aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="edit_tr-{{u.id}}Label">Edit Transaksi ({{u.pegawai}})</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <form class="form theme-form" action="{% url 'updatehut' u.id %}" method="POST"
+                          enctype="multipart/form-data">
+                          {% load crispy_forms_tags %}
+                          {% csrf_token %}
+
+                          {{form|crispy}}
+
+                          {% if form.errors %}
+                          <div class="alert alert-danger" id="msg">
+                            {{ form.errors }}
+                          </div>
+                          {% endif %}
+
+                          <div
+                            class="modal-footer border-0 pt-0 d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+                            <button class="btn btn-warning w-100 w-sm-auto" type="reset"
+                              data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary w-100 w-sm-auto" type="submit">Submit</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="modal-body">
-                  <form class="form theme-form" method="POST" enctype="multipart/form-data">
-                    {% load crispy_forms_tags %}
-                    {% csrf_token %}
-                    <div class="mb-3">
-                      <label class="col-form-label pt-0">Tanggal</label>
-                      {{form.tanggal}}
-                    </div>
-                    <div class="mb-3">
-                      <label class="col-form-label pt-0">Pegawai</label>
-                      {{form.pegawai}}
-                    </div>
-                    <div class="mb-3">
-                      <label class="col-form-label pt-0">Jenis</label>
-                      {{form.hutang_choice}}
-                    </div>
-                    <div class="mb-3">
-                      <label class="col-form-label pt-0">Nominal</label>
-                      {{form.jumlah}}
-                    </div>
-                    <div class="mb-3">
-                      <label class="col-form-label pt-0">Keterangan</label>
-                      {{form.keterangan}}
-                    </div>
-                    {% if form.errors %}
-                    <div class="alert alert-danger" id="msg">
-                      {{ form.errors }}
-                    </div>
-                    {% endif %}
-                    <div class="card-footer border-0 pt-0" style="text-align: right;">
-                      <button class="btn btn-warning" type="reset">Cancel</button>
-                      <button class="btn btn-primary" type="submit">Submit</button>
-                    </div>
-                  </form>
+
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+              aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form class="form theme-form" method="POST" enctype="multipart/form-data">
+                      {% load crispy_forms_tags %}
+                      {% csrf_token %}
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Tanggal</label>
+                        {{form.tanggal}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Pegawai</label>
+                        {{form.pegawai}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Jenis</label>
+                        {{form.hutang_choice}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Nominal</label>
+                        {{form.jumlah}}
+                      </div>
+                      <div class="mb-3">
+                        <label class="col-form-label pt-0">Keterangan</label>
+                        {{form.keterangan}}
+                      </div>
+                      {% if form.errors %}
+                      <div class="alert alert-danger" id="msg">
+                        {{ form.errors }}
+                      </div>
+                      {% endif %}
+                      <div class="card-footer border-0 pt-0" style="text-align: right;">
+                        <button class="btn btn-warning" type="reset">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
@@ -259,7 +264,6 @@
       </div>
     </div>
   </div>
-</div>
 </div>
 {% endblock content %}
 {% block scriptcontent %}
