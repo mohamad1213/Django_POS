@@ -1,0 +1,44 @@
+{% load static %}
+<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
+
+    <div class="container">
+        <a class="navbar-brand" href="index.html">PPJ Pralon<span>.</span></a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni"
+            aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarsFurni">
+            <ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
+
+                <li class="nav-item {% if request.path == '/' or request.path == '/landingpage/' %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'landingpage' %}">Beranda</a>
+                </li>
+
+                <li class="nav-item {% if 'tentang' in request.path %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'tentang' %}">Tentang</a>
+                </li>
+
+                <li class="nav-item {% if 'layanan' in request.path %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'layanan' %}">Layanan</a>
+                </li>
+
+                <li class="nav-item {% if 'produk' in request.path %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'produk' %}">Produk</a>
+                </li>
+
+                <li class="nav-item {% if 'galeri' in request.path %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'galeri' %}">Galeri</a>
+                </li>
+
+                <li class="nav-item {% if 'kontak' in request.path %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'kontak' %}">Kontak</a>
+                </li>
+
+                <li><a class="nav-link" href="/accounts/login/">Login</a></li>
+            </ul>
+        </div>
+    </div>
+
+</nav>

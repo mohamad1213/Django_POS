@@ -146,6 +146,20 @@ def get_product_summary(request):
         'product_names': product_names,
         'product_totals': product_totals
     })
+    
+def LandingPage(request):
+    return render(request, 'landingpage/index.html')
+def Tentang(request):
+    return render(request, 'landingpage/tentang.html')
+def Layanan(request):
+    return render(request, 'landingpage/layanan.html')
+def Produk(request):
+    return render(request, 'landingpage/produk.html')
+def Galeri(request):
+    return render(request, 'landingpage/galeri.html')
+def Kontak(request):
+    return render(request, 'landingpage/kontak.html')
+    
 @login_required(login_url="/accounts/login/")
 def indexPage(request):
     today = timezone.localtime(timezone.now()).date()

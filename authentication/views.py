@@ -48,7 +48,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 sweetify.success(request, f'Selamat anda berhasil Login {username}', extra_tags="success")
-                return redirect("/")
+                return redirect("dashboard")
             else:
                 msg = 'Invalid username or password!'
         else:

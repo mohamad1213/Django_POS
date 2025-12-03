@@ -6,7 +6,13 @@ urlpatterns = [
 
     # dashboard paths
 
-    path('', views.indexPage,name='dashboard'),
+    path('', views.LandingPage,name='landingpage'),
+    path('tentang/', views.Tentang,name='tentang'),
+    path('layanan/', views.Layanan,name='layanan'),
+    path('produk/', views.Produk,name='produk'),
+    path('galeri/', views.Galeri,name='galeri'),
+    path('kontak/', views.Kontak,name='kontak'),
+    path('dashboard/', views.indexPage,name='dashboard'),
     path('api/product-summary/', views.get_product_summary, name='product_summary'),
 
     # POS
