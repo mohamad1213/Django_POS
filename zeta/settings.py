@@ -134,10 +134,9 @@ STATICFILES_FINDERS = [
     'sass_processor.finders.CssFinder',
 ]
 
-STATIC_URL = '/zetaapp/static/'
+STATIC_URL = '/zeta/zetaapp/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
+STATIC_ROOT = BASE_DIR / 'zetaapp/static'
 
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, 'static'),
