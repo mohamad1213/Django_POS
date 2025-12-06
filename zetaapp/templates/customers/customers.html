@@ -34,7 +34,6 @@
                                         <tr>
                                             <th class="text-center">NO</th>
                                             <th class="text-center">Name</th>
-                                            <th class="text-center d-none d-sm-table-cell">Email</th>
                                             <th class="text-center">Phone</th>
                                             <th class="text-center d-none d-md-table-cell">Address</th>
                                             <th class="text-center actions-col-width">Actions</th>
@@ -44,8 +43,7 @@
                                         {% for c in customers %}
                                         <tr>
                                             <td class="text-center">{{forloop.counter}}</td>
-                                            <td>{{c.get_full_name}}</td>
-                                            <td class="d-none d-sm-table-cell">{{c.email}}</td>
+                                            <td>{{c.first_name}}</td>
                                             <td class="text-center">{{c.phone}}</td>
                                             <td class="d-none d-md-table-cell">{{c.address}}</td>
                                             <td class="text-center">

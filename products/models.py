@@ -1,7 +1,7 @@
 from django.db import models
 from django.forms import model_to_dict
 
-
+from django.contrib.auth.models import User
 class Category(models.Model):
     STATUS_CHOICES = (  # new
         ("ACTIVE", "Active"),

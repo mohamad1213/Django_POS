@@ -99,14 +99,22 @@
                                         {% csrf_token %}
                                         <div class="form-group">
                                             <label for="customer">Customer</label>
+                                            <small><a href="#" id="btn-add-customer">tambah</a></small>
                                             <select name="customer" class="form-control" id="searchbox_customers"
                                                 required>
-                                                <option value="" selected disabled hidden>Select the customer
-                                                </option>
+                                                <option value="" selected disabled hidden>Select the customer</option>
                                                 {% for customer in customers %}
                                                 <option value="{{customer.value}}">{{customer.label}}</option>
                                                 {% endfor %}
                                             </select>
+                                            <div id="new-customer-fields" style="display:none;" class="mt-2">
+                                                <input type="text" name="new_customer_name" class="form-control mb-2"
+                                                    placeholder="Nama customer">
+                                                <input type="text" name="new_customer_address" class="form-control mb-2"
+                                                    placeholder="Alamat customer">
+                                                <input type="text" name="new_customer_phone" class="form-control mb-2"
+                                                    placeholder="Nomor telepon">
+                                            </div>
                                         </div>
                                         <div class="form-group mt-4">
                                             <label>Subtotal</label>
@@ -156,7 +164,17 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.15/dist/sweetalert2.all.min.js"></script>
 
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
-
+<script>
+    $('#btn-add-customer').on('click', function (e) {
+        e.preventDefault();
+        $('#new-customer-fields').toggle();
+        if ($('#new-customer-fields').is(':visible')) {
+            $('#searchbox_customers').prop('disabled', true);
+        } else {
+            $('#searchbox_customers').prop('disabled', false);
+        }
+    });
+</script>
 <script>
     // Source: https://stackoverflow.com/a/32605063
     function roundTo(n, digits) {
@@ -512,6 +530,15 @@
 
         // Add the missing data to the sale object
         sale.items.customer = $('select[name="customer"]').val();
+        if ($('#new-customer-fields').is(':visible')) {
+            sale.items.new_customer_name = $('input[name="new_customer_name"]').val();
+            sale.items.new_customer_address = $('input[name="new_customer_address"]').val();
+            sale.items.new_customer_phone = $('input[name="new_customer_phone"]').val();
+        } else {
+            sale.items.new_customer_name = '';
+            sale.items.new_customer_address = '';
+            sale.items.new_customer_phone = '';
+        }
         console.log("Customer: " + sale.items.customer);
         sale.items.sub_total = parseCurrency($('input[name="sub_total"]').val());
         sale.items.amount_payed = parseCurrency($('[name="amount_payed"]').val());

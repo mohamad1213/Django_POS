@@ -1,7 +1,7 @@
 from dataclasses import field
 from django import forms
 from django.forms import ModelForm
-
+from django.forms import modelformset_factory
 from .models import *
 # forms.py
 class StockInForm(forms.ModelForm):
@@ -136,7 +136,71 @@ class ProfitForms(forms.ModelForm):
             'ongkos_muat': 'Biaya Muat per kg',
             'susutan_persen': 'Susutan (%)',
         }
+class ItemForm(forms.ModelForm):
+    class Meta:
+        model = Profito2
+        # Hanya field yang diinput per baris
+        fields = [
+            'nama_barang',
+            'berat_input',
+            'harga_beli_per_kg',
+            'harga_jual_per_kg',
+        ]
+        widgets = {
+             'nama_barang': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+             'berat_input': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
+             'harga_beli_per_kg': forms.NumberInput(attrs={'class': 'form-control form-control-sm'}),
+             'harga_jual_per_kg': forms.NumberInput(attrs={'class': 'form-control form-control-sm'}),
+         }
+        labels = {
+            'nama_barang': 'Nama Barang',
+            'berat_input': 'Berat Masuk (kg)',
+            'harga_beli_per_kg': 'Harga Beli/kg',
+            'harga_jual_per_kg': 'Harga Jual/kg',
+        }
 
+# Definisikan Formset untuk item
+ItemFormSet = modelformset_factory(
+    Profito2,
+    form=ItemForm,
+    extra=5,
+    can_delete=True,
+)
+# --- 2. Form untuk Biaya Global (GlobalCostForm) ---
+class GlobalCostForm(forms.ModelForm):
+    class Meta:
+        model = Profito2
+        # Hanya field biaya global yang diinput user
+        fields = [
+            'solar',
+            'karung',
+            'ongkos_kirim',
+            'ongkos_sortir',
+            'ongkos_giling',
+            'ongkos_muat',
+            'susutan_persen',
+            'tabungan_persen',
+        ]
+        widgets = {
+             'solar': forms.NumberInput(attrs={'class': 'form-control'}),
+             'karung': forms.NumberInput(attrs={'class': 'form-control'}),
+             'ongkos_kirim': forms.NumberInput(attrs={'class': 'form-control'}),
+             'ongkos_sortir': forms.NumberInput(attrs={'class': 'form-control'}),
+             'ongkos_giling': forms.NumberInput(attrs={'class': 'form-control'}),
+             'ongkos_muat': forms.NumberInput(attrs={'class': 'form-control'}),
+             'susutan_persen': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+             'tabungan_persen': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+         }
+        labels = {
+            'solar': 'Biaya Solar/kg',
+            'karung': 'Biaya Karung/kg',
+            'ongkos_kirim': 'Ongkos Kirim/kg',
+            'ongkos_sortir': 'Biaya Sortir/kg',
+            'ongkos_giling': 'Biaya Giling/kg',
+            'ongkos_muat': 'Biaya Muat/kg',
+            'susutan_persen': 'Susutan (%)',
+            'tabungan_persen': 'Tabungan (%)',
+        }
 class Profit2Forms(ModelForm):
     class Meta:
         model = Profito

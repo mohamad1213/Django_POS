@@ -74,7 +74,7 @@ def stockin_create(request):
     """
     Menampilkan halaman untuk menambah banyak StockIn sekaligus menggunakan modelformset.
     """
-    products = Product.objects.all()
+    products = Product.objects.filter(owner=request.user).order_by('name')
     errors = []
 
     if request.method == 'POST':
@@ -165,7 +165,7 @@ def indexPage(request):
     today = timezone.localtime(timezone.now()).date()
 
     # Ambil data terbaru (5)
-    data = Transaksi.objects.all().order_by('-tanggal')[:5]
+    data = Transaksi.objects.filter(owner=request.user).order_by('-tanggal')[:5]
 
     # Hitung jumlah total rows (untuk debug)
     count = Transaksi.objects.count()
@@ -183,13 +183,13 @@ def indexPage(request):
         product_totals = [p['total_qty'] for p in totals_per_product]
         total_pemasukan_harian = (
             Transaksi.objects
-            .filter(tanggal__date=today, transaksi_choice='P')
+            .filter(tanggal__date=today, transaksi_choice='P', owner=request.user)
             .aggregate(total=Sum('jumlah'))['total'] or 0
         )
 
         total_pengeluaran_harian = (
             Transaksi.objects
-            .filter(tanggal__date=today, transaksi_choice='L')
+            .filter(tanggal__date=today, transaksi_choice='L', owner=request.user)
             .aggregate(total=Sum('jumlah'))['total'] or 0
         )
 
@@ -206,13 +206,13 @@ def indexPage(request):
 
         total_pemasukan_harian = (
             Transaksi.objects
-            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='P')
+            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='P', owner=request.user)
             .aggregate(total=Sum('jumlah'))['total'] or 0
         )
 
         total_pengeluaran_harian = (
             Transaksi.objects
-            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='L')
+            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='L', owner=request.user)
             .aggregate(total=Sum('jumlah'))['total'] or 0
         )
 
@@ -221,25 +221,25 @@ def indexPage(request):
     # =========================
     total_pemasukan_bulanan = (
         Transaksi.objects
-        .filter(tanggal__month=today.month, transaksi_choice='P')
+        .filter(tanggal__month=today.month, transaksi_choice='P', owner=request.user)
         .aggregate(total=Sum('jumlah'))['total'] or 0
     )
 
     total_pengeluaran_bulanan = (
         Transaksi.objects
-        .filter(tanggal__month=today.month, transaksi_choice='L')
+        .filter(tanggal__month=today.month, transaksi_choice='L', owner=request.user)
         .aggregate(total=Sum('jumlah'))['total'] or 0
     )
 
     total_pemasukan_tahunan = (
         Transaksi.objects
-        .filter(tanggal__year=today.year, transaksi_choice='P')
+        .filter(tanggal__year=today.year, transaksi_choice='P', owner=request.user)
         .aggregate(total=Sum('jumlah'))['total'] or 0
     )
 
     total_pengeluaran_tahunan = (
         Transaksi.objects
-        .filter(tanggal__year=today.year, transaksi_choice='L')
+        .filter(tanggal__year=today.year, transaksi_choice='L', owner=request.user)
         .aggregate(total=Sum('jumlah'))['total'] or 0
     )
 
@@ -252,13 +252,13 @@ def indexPage(request):
     # Hutang/piutang
     total_hutang = (
         HutangPiutang.objects
-        .filter(tanggal__year=today.year, hutang_choice='H')
+        .filter(tanggal__year=today.year, hutang_choice='H',owner=request.user)
         .aggregate(total=Sum('jumlah'))['total'] or 0
     )
 
     total_piutang = (
         HutangPiutang.objects
-        .filter(tanggal__year=today.year, hutang_choice='P')
+        .filter(tanggal__year=today.year, hutang_choice='P',owner=request.user)
         .aggregate(total=Sum('jumlah'))['total'] or 0
     )
     
@@ -288,19 +288,71 @@ def indexPage(request):
     return render(request, 'general/dashboard/default/index.html', context)
 
 #PROFIT
-@login_required(login_url="/accounts/login/")
-def profit_create(request):
-    if request.method == 'POST':
-        form = ProfitForms(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Formulir Berhasil Dibuat")
-            return redirect('profit')  # ganti sesuai nama url list
-    else:
-        form = ProfitForms()
+# @login_required(login_url="/accounts/login/")
+# def profit_create(request):
+#     if request.method == 'POST':
+#         form = ProfitForms(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, "Formulir Berhasil Dibuat")
+#             return redirect('profit')  # ganti sesuai nama url list
+#     else:
+#         form = ProfitForms()
     
-    return render(request, 'profit/tambah_profit.html', {'form': form})
+#     return render(request, 'profit/tambah_profit.html', {'form': form})
 
+@login_required(login_url="/accounts/login/")
+def profit_create(request): # Nama view baru
+    if request.method == 'POST':
+        # 1. Inisialisasi kedua form dengan data POST
+        formset = ItemFormSet(request.POST, prefix='item') # Gunakan prefix
+        global_form = GlobalCostForm(request.POST, prefix='global') # Gunakan prefix
+
+        # 2. Validasi kedua form
+        if formset.is_valid() and global_form.is_valid():
+            
+            # Ambil data global yang sudah divalidasi
+            global_data = global_form.cleaned_data
+            
+            # Simpan formset dengan commit=False
+            instances = formset.save(commit=False)
+            
+            for instance in instances:
+                # 3. Masukkan data global ke setiap instance Formset
+                instance.solar = global_data['solar']
+                instance.karung = global_data['karung']
+                instance.ongkos_kirim = global_data['ongkos_kirim']
+                instance.ongkos_sortir = global_data['ongkos_sortir']
+                instance.ongkos_giling = global_data['ongkos_giling']
+                instance.ongkos_muat = global_data['ongkos_muat']
+                instance.susutan_persen = global_data['susutan_persen']
+                instance.tabungan_persen = global_data['tabungan_persen']
+                
+                # Setelah semua field terisi, panggil save() yang akan menjalankan perhitungan otomatis
+                instance.save()
+            
+            # Hapus objek yang ditandai untuk dihapus (jika ada)
+            for obj in formset.deleted_objects:
+                obj.delete()    
+                
+            messages.success(request, "Semua data profit berhasil disimpan.")
+            return redirect('profit') # Ganti sesuai URL list profit Anda
+        
+        else:
+            messages.error(request, "Terdapat kesalahan input. Mohon periksa kembali formulir.")
+    
+    else:
+        # Tampilkan form saat GET request
+        formset = ItemFormSet(queryset=Profito2.objects.none(), prefix='item')
+        # Tampilkan biaya global dengan nilai default dari model
+        global_form = GlobalCostForm(prefix='global')
+    
+    context = {
+        'formset': formset,
+        'global_form': global_form,
+        "breadcrumb": {"parent": "Profit", "child": "Input Multiple"},
+    }
+    return render(request, 'profit/tambah_profit.html', context)
 @login_required(login_url="/accounts/login/")
 def profit(request):
     data = Profito2.objects.all()
@@ -405,7 +457,7 @@ def profit_mark_tabung(request, pk):
 #HUTANG ORTU
 @login_required(login_url="/accounts/login/")
 def hutang(request):
-    data = HutangPiutang.objects.all().order_by('-tanggal')
+    data = HutangPiutang.objects.filter(owner=request.user).order_by('-tanggal')
     if request.POST :
         excel = ExcelUploadForm(request.POST, request.FILES)
         if excel.is_valid():
@@ -462,7 +514,7 @@ def hutang(request):
     else:
         form = HutangForms()
         excel = ExcelUploadForm()
-        data = HutangPiutang.objects.all().order_by('-tanggal','-id')
+        data = HutangPiutang.objects.filter(owner=request.user).order_by('-tanggal','-id')
     context = {
         'form': form,
         'excel': excel,
@@ -472,12 +524,12 @@ def hutang(request):
     return render(request, 'hutang/hutang.html', context)
 
 def DeleteHutang(request, pk):
-    HutangPiutang.objects.get(id=pk).delete()
+    HutangPiutang.objects.get(id=pk, owner=request.user).delete()
     messages.success(request, "Form Successfully Deleted")  
     return redirect('/hutang/')
 #HUTANG PEGAWAI
 def hutangPeg(request):
-    data = HutPegawai.objects.all().order_by('-tanggal')
+    data = HutPegawai.objects.filter(owner=request.user).order_by('-tanggal')
     apin = Karyawan.objects.filter(name='Apin').first()
     andi = Karyawan.objects.filter(name='Andi').first()
     oman = Karyawan.objects.filter(name='Oman').first()
@@ -522,7 +574,7 @@ def hutangPeg(request):
             messages.error(request, form.errors)
     else:
         form = HutangPegForms()
-        data = HutPegawai.objects.all().order_by('-tanggal')
+        data = HutPegawai.objects.filter(owner=request.user).order_by('-tanggal')
     people = [
         {"name": "Apin", "amount": sisa_apin},
         {"name": "Andi", "amount": sisa_andi},
@@ -577,7 +629,7 @@ def DeleteHutangPeg(request, pk):
 #TRANSAKSI
 @login_required(login_url="/accounts/login/")
 def transaksi(request):
-    data = Transaksi.objects.all().order_by('-id')
+    data = Transaksi.objects.filter(owner=request.user).order_by('-id')
         
     if request.POST :
         excel = ExcelUploadForm(request.POST, request.FILES)
@@ -914,14 +966,14 @@ def AnalasisChart(request):
     # Hitung total per kategori yang ada
     for kategori in categories:
         total_amount = (
-            Transaksi.objects.filter(kategori=kategori)
+            Transaksi.objects.filter(kategori=kategori, owner=request.user)
             .aggregate(Sum('jumlah'))['jumlah__sum'] or 0
         )
         data.append({'kategori': kategori.nama, 'jumlah': float(total_amount)})
 
     # Tambahkan kategori None → "Pengeluaran"
     total_none = (
-        Transaksi.objects.filter(kategori__isnull=True)
+        Transaksi.objects.filter(kategori__isnull=True, owner=request.user)
         .aggregate(Sum('jumlah'))['jumlah__sum'] or 0
     )
     if total_none > 0:
@@ -930,7 +982,7 @@ def AnalasisChart(request):
     # Siapkan data untuk chart donut
     labels_don = [item['kategori'] for item in data]
     values_don = [float(item['jumlah']) for item in data]
-
+    print(labels_don, values_don)
     return JsonResponse({
         'labels_don': labels_don,
         'values_don': values_don,
@@ -949,9 +1001,6 @@ from .models import Transaksi
 logger = logging.getLogger(__name__)
 
 def chart_data(request, period='monthly'):
-    """
-    period: 'daily', 'monthly', 'yearly'
-    """
     try:
         qs = Transaksi.objects.filter(owner=request.user)
 
@@ -1039,7 +1088,7 @@ def render_to_pdf(template_src, context_dict={}):
 class GenerateInvoice(View):
     def get(self, request, pk, *args, **kwargs):
         try:
-            order_db = Transaksi.objects.get(id = pk, user = request.user, payment_status = 1)  
+            order_db = Transaksi.objects.get(id=pk, owner= request.user, payment_status = 1)  
             #you can filter using order_id as well
         except:
             return HttpResponse("505 Not Found")

@@ -28,7 +28,7 @@ def is_ajax(request):
 
 @login_required(login_url="/accounts/login/")
 def sales_list_view(request):
-    salesa = Sale.objects.select_related('customer')  # Query utama
+    salesa = Sale.objects.filter(owner=request.user)  # Query utama
 
     totals = salesa.aggregate(
         total_transactions=Count('id'),
@@ -52,17 +52,33 @@ def sales_add_view(request):
     customers = [c.to_select2() for c in Customer.objects.all()]
 
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        import json
         try:
             data = json.loads(request.body)
+            customer_obj = None
+            new_name = data.get('new_customer_name', '').strip()
+            new_address = data.get('new_customer_address', '').strip()
+            new_phone = data.get('new_customer_phone', '').strip()
+            if new_name:
+                customer_obj, created = Customer.objects.get_or_create(
+                    first_name=new_name,
+                    defaults={
+                        'address': new_address,
+                        'phone': new_phone
+                    }
+                )
+            else:
+                customer_id = data.get('customer')
+                if customer_id:
+                    customer_obj = Customer.objects.get(id=int(customer_id), owner=request.user)
 
-            customer = Customer.objects.get(id=int(data['customer']))
+            
             sub_total = float(data['sub_total'])
             amount_payed = float(data['amount_payed'])
             amount_change = float(data['amount_change'])
 
             new_sale = Sale.objects.create(
-                customer=customer,
+                owner=request.user,
+                customer=customer_obj,
                 sub_total=sub_total,
                 amount_payed=amount_payed,
                 amount_change=amount_change
@@ -104,7 +120,7 @@ def sales_add_view(request):
 def sales_details_view(request, sale_id):
     try:
         # Get the sale
-        sale = Sale.objects.get(id=sale_id)
+        sale = Sale.objects.get(id=sale_id, owner=request.user)
 
         # Get the sale details
         details = SaleDetail.objects.filter(sale=sale)
@@ -125,7 +141,7 @@ def sales_details_view(request, sale_id):
 
 @login_required(login_url="/accounts/login/")
 def delete_sale(request, sale_id):
-    sale = get_object_or_404(Sale, id=sale_id)
+    sale = get_object_or_404(Sale, id=sale_id, owner=request.user)
 
     if request.method == "POST":
         # Hapus semua detail transaksi

@@ -46,9 +46,7 @@ def customers_add_view(request):
 
         attributes = {
             "first_name": data['first_name'],
-            "last_name": data['last_name'],
             "address": data['address'],
-            "email": data['email'],
             "phone": data['phone'],
         }
 
@@ -107,9 +105,7 @@ def customers_update_view(request, customer_id):
 
             attributes = {
                 "first_name": data['first_name'],
-                "last_name": data['last_name'],
                 "address": data['address'],
-                "email": data['email'],
                 "phone": data['phone'],
             }
 
