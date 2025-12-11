@@ -29,7 +29,7 @@ def customers_list_view(request):
     context = {
         "breadcrumb": {"parent": "pelanggan", "child": "Daftar Pelanggan"},
         "active_icon": "customers",
-        "customers": Customer.objects.all()
+        "customers": Customer.objects.filter(owner=request.user).order_by('-id'),
     }
     return render(request, "customers/customers.html", context=context)
 

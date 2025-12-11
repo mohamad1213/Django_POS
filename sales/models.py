@@ -40,7 +40,7 @@ class Sale(models.Model):
         if creating:
             # Buat transaksi pengeluaran otomatis
             Transaksi.objects.create(
-                owner=None,  # Bisa diisi user yang membuat sale
+                owner=self.owner,  # Bisa diisi user yang membuat sale
                 jumlah=self.sub_total,  # Jumlah pengeluaran = total penjualan
                 tanggal=self.date_added.date(),
                 keterangan=f"Penjualan {self.transaction_number}",

@@ -15,7 +15,7 @@ class CategoriesForm(ModelForm):
 class ProductForm(ModelForm):
     class Meta:
         model = Product
-        exclude = []
+        exclude = ['owner']
         widgets = {
             'status': forms.Select({'class': 'form-control', 'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
             'name': forms.TextInput(attrs={'class': 'form-control' ,'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
