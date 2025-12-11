@@ -104,7 +104,7 @@
                                             <td class="text-center">{{ forloop.counter }}</td>
                                             <td class="text-center">{{s.transaction_number }}</td>
                                             <td class="text-center">{{s.date_added|date:"d-m-Y"}}</td>
-                                            <td class="text-center">{{s.customer.get_full_name}}</td>
+                                            <td class="text-center">{{s.customer}}</td>
                                             <td class="text-right">Rp. {{s.sub_total|floatformat:"0g"}}</td>
                                             <td class="text-center">
                                                 <!--View-->

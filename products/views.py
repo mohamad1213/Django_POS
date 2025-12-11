@@ -27,7 +27,7 @@ def categories_list_view(request):
         'form': form,
         "breadcrumb": {"parent": "Kategori", "child": "Daftar Kategori"},
         "active_icon": "products_categories",
-        "categories": Category.objects.all()
+        "categories": Category.objects.filter(owner=request.user).order_by('-id')  
     }
     return render(request, "products/categories.html", context=context)
 
@@ -87,14 +87,9 @@ def categories_update_view(request, category_id):
 
 @login_required(login_url="/accounts/login/")
 def categories_delete_view(request, category_id):
-    """
-    Args:
-        request:
-        category_id : The category's ID that will be deleted
-    """
     try:
         # Get the category to delete
-        category = Category.objects.get(id=category_id)
+        category = Category.objects.get(id=category_id, owner=request.user)
         category.delete()
         sweetify.success(request, '¡Category: ' + category.name +
                          ' deleted!', extra_tags="success")
@@ -111,6 +106,7 @@ def products_list_view(request):
     if request.method == 'POST':
         form = ProductForm(request.POST) 
         if form.is_valid():
+            form.instance.owner = request.user
             form.save()
             messages.success(request, "Formulir Berhasil Dibuat")   
             return redirect('products:products_list')
@@ -118,6 +114,7 @@ def products_list_view(request):
         form = ProductForm() 
     totals_per_product = (
         SaleDetail.objects
+        .filter(product__owner=request.user)
         .values('product__name')
         .annotate(total_qty=Sum('quantity'))
     )
@@ -126,7 +123,7 @@ def products_list_view(request):
         "breadcrumb": {"parent": "Barang", "child": "Daftar Barang"},
         'totals_per_product': totals_per_product,
         "active_icon": "products",
-        "products": Product.objects.all().order_by('-id')
+        "products": Product.objects.filter(owner=request.user).order_by('-id')
     }
     return render(request, "products/products.html", context=context)
 
@@ -251,7 +248,7 @@ def get_products_ajax_view(request):
             data = []
 
             products = Product.objects.filter(
-                name__icontains=request.POST['term'])
+                name__icontains=request.POST['term'], owner=request.user, status="ACTIVE").order_by('name')
             for product in products[0:10]:
                 item = product.to_json()
                 data.append(item)

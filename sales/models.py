@@ -8,14 +8,14 @@ import string
 from django.db import models
 from django.utils import timezone
 from zetaapp.models import Transaksi
-
+from django.contrib.auth.models import User
 class CustomerCategory(models.Model):
     name = models.CharField(max_length=50, unique=True)
 class Sale(models.Model):
     date_added = models.DateTimeField(default=django.utils.timezone.now)
-    
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     customer = models.ForeignKey(
-        Customer, models.DO_NOTHING, db_column='customer')
+        Customer,on_delete=models.SET_NULL, null=True, blank=True, db_column='customer')
     transaction_number = models.CharField(max_length=20, unique=True)
     sub_total = models.FloatField(default=0)
     grand_total = models.FloatField(default=0)
@@ -40,7 +40,7 @@ class Sale(models.Model):
         if creating:
             # Buat transaksi pengeluaran otomatis
             Transaksi.objects.create(
-                owner=None,  # Bisa diisi user yang membuat sale
+                owner=self.owner,  # Bisa diisi user yang membuat sale
                 jumlah=self.sub_total,  # Jumlah pengeluaran = total penjualan
                 tanggal=self.date_added.date(),
                 keterangan=f"Penjualan {self.transaction_number}",

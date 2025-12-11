@@ -1,8 +1,10 @@
 from django.db import models
 from django.forms import model_to_dict
 
-
+from django.contrib.auth.models import User
 class Category(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    
     STATUS_CHOICES = (  # new
         ("ACTIVE", "Active"),
         ("INACTIVE", "Inactive")
@@ -26,6 +28,8 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    
     STATUS_CHOICES = (  # new
         ("ACTIVE", "Active"),
         ("INACTIVE", "Inactive")

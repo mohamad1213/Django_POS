@@ -284,7 +284,8 @@
                         class: 'text-center',
                         targets: [3],
                         render: function (data, type, row) {
-                            return '<input name="quantity" type="text" class="form-control form-control-xs text-center input-sm" autocomplete="off" value="' + row.quantity + '">';
+                            // Ganti kembali ke type="number" jika Anda ingin fitur default browser
+                            return '<input name="quantity" type="number" min="1" class="form-control form-control-xs text-center input-sm" autocomplete="off" value="' + row.quantity + '">';
                         },
                     },
                     {
@@ -368,28 +369,15 @@
                 };
             })
         }).on('change keyup', 'input[name="quantity"]', function () {
-            // 1. Ambil dan validasi kuantitas
             var quantity = parseInt($(this).val());
+            if (isNaN(quantity) || quantity <= 0) quantity = 1;
 
-            // VALIDASI PENTING: Jika NaN atau <= 0, paksa menjadi 1.
-            if (isNaN(quantity) || quantity <= 0) {
-                quantity = 1;
-                $(this).val(quantity); // Opsional: Perbarui input di layar menjadi '1'
-            }
-
-            // 2. Tentukan baris
             var tr = tblProducts.cell($(this).closest('td, li')).index();
-
-            // 3. Update objek sale dengan kuantitas yang aman
             sale.items.products[tr.row].quantity = quantity;
 
-            // 4. Hitung ulang
             sale.calculate_sale();
-
-            // 5. Update tampilan total produk di baris tersebut
             $('td:eq(4)', tblProducts.row(tr.row).node()).html(formatCurrency(sale.items.products[tr.row].total_product));
-
-            // Catatan: sale.list_product(); TIDAK diperlukan di sini jika Anda hanya mengubah <td> total.
+            sale.list_product();
         });
 
 

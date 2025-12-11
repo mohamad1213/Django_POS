@@ -74,7 +74,7 @@ def sales_add_view(request):
             else:
                 customer_id = data.get('customer')
                 if customer_id:
-                    customer_obj = Customer.objects.get(id=int(customer_id),owner=request.user)
+                    customer_obj = Customer.objects.get(id=int(customer_id))
 
             print("--- LOG 3: Customer Selesai Dikonfigurasi ---")
             # --- TRANSAKSI UTAMA (tetap sama) ---

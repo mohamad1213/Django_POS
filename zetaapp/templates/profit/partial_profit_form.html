@@ -1,0 +1,23 @@
+<tr class="formset-row" id="item-__prefix__">
+    <td>{{ form.nama_barang }}</td>
+    
+    <td>{{ form.berat_input }}</td>
+
+    <td>{{ form.harga_beli_per_kg }}</td>
+    
+    <td>{{ form.harga_jual_per_kg }}</td>
+
+    <td>
+        <input type="text" id="item-__prefix__-hpp" class="form-control form-control-sm readonly-result" readonly placeholder="HPP Total">
+    </td>
+
+    <td>
+        <input type="text" id="item-__prefix__-profit" class="form-control form-control-sm readonly-result" readonly placeholder="Profit Total">
+    </td>
+
+    <td class="text-center align-middle">
+        {{ form.id }}
+        <button type="button" class="btn btn-sm btn-danger remove-form-row">Hapus</button>
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+    </td>
+</tr>

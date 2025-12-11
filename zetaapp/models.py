@@ -83,6 +83,8 @@ class HutPegawai(models.Model):
         (HUTANG, 'Hutang'),
         (PIUTANG, 'Piutang'),
     ]
+    owner = models.ForeignKey(User,null=True, on_delete = models.DO_NOTHING,related_name='hutangpeg')
+
     pegawai = models.ForeignKey('Karyawan', on_delete=models.CASCADE)
     jumlah = models.DecimalField(max_digits=20, decimal_places=2)
     tanggal = models.DateField()

@@ -1,13 +1,10 @@
 {% extends 'base-other-page.html' %}{% load static %}
 {% load sass_tags %}
 {% block css %}
-<!-- Plugins css start-->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
-<!-- Plugins css Ends-->
 {% endblock css %}
 {% block content %}
-<!-- Loader starts-->
 <div class="loader-wrapper">
     <div class="loader">
         <div class="loader-bar"></div>
@@ -18,31 +15,15 @@
         <div class="loader-ball"></div>
     </div>
 </div>
-<!-- Loader ends-->
-<!-- page-wrapper Start-->
 <style>
-
-    /* Pastikan div cukup tinggi */
-    .col-xl-5-custom {
-        /* margin-top: 100px; */
-        /* Tambahkan margin atas */
-        min-height: 500px;
-        /* Sesuaikan agar gambar tidak terpotong */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Atur gambar agar tidak terpotong */
+    /* Styles for ALL screen sizes */
     .bg-img-cover {
         max-width: 100%;
         height: auto;
         object-fit: contain;
-        /* Pastikan gambar tetap proporsional */
         display: block;
     }
 
-    /* Jika gambar digunakan sebagai background */
     .bg-center {
         background-size: contain;
         background-repeat: no-repeat;
@@ -50,57 +31,116 @@
         width: 100%;
         height: 100%;
     }
+
+    /* Custom styles for larger screens (lg breakpoint and up: 992px) */
+    @media (min-width: 992px) {
+        .col-lg-5-custom { /* Ganti dari col-xl-5-custom ke col-lg-5-custom */
+            /* Keep the vertical centering for desktop view */
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    /* Styles specifically for SMALLER screens (mobile/tablet: below 992px) */
+    @media (max-width: 991.98px) {
+        .login-card-container {
+            /* HANYA gunakan tinggi minimum 100vh agar konten berada di tengah 
+               JIKA TINGGI LAYAR (vh) LEBIH BESAR dari tinggi konten.
+               Jika tinggi konten (form) lebih besar dari vh, maka konten akan 
+               mengambil tinggi alami (auto) dan dapat di-scroll di dalam body, 
+               TETAPI kita akan mematikan scroll di elemen <body>/<html> */
+            min-height: 100vh; 
+            display: flex;
+            align-items: center; /* Memusatkan vertikal */
+            justify-content: center; /* Memusatkan horizontal */
+            padding: 15px;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+            padding: 30px !important;
+        }
+        
+        /* 💡 SOLUSI UNTUK MENGHILANGKAN SCROLLBAR DENGAN MENGGUNAKAN flexbox: */
+        /* Pastikan elemen root dan body mengambil tinggi penuh dan tidak memiliki overflow yang tidak perlu */
+        html, body, section {
+            height: 100%;
+            /* overflow: hidden; */ /* Ini terlalu agresif, lebih baik atur pada row dan container */
+        }
+        
+        /* Menggunakan flexbox pada container terluar untuk centering yang lebih baik
+           dan mengatur overflow agar tidak ada scroll yang tidak perlu saat content pas 100vh */
+        .container-fluid {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .row {
+            flex-grow: 1; /* Biarkan baris mengisi sisa ruang */
+        }
+
+        /* ⚠️ Hapus scrollbar di elemen body agar tidak muncul saat form pas 100vh
+           Tetapi jika form lebih tinggi, kita harus mengizinkan scroll
+           Untuk kasus login, biasanya form tidak terlalu tinggi, jadi kita bisa menonaktifkan overflow y */
+        body {
+            /* overflow-y: hidden; */ /* Coba hilangkan ini jika konten tidak melebihi viewport */
+        }
+    }
 </style>
 
 <section>
     <div class="container-fluid p-0">
         <div class="row m-0">
-            <div class="col-xl-5 p-0 col-xl-5-custom">
+            <div class="col-lg-5 p-0 col-lg-5-custom d-none d-lg-block">
                 <img class="bg-img-cover bg-center" src="{% static 'assets/images/bg_login_true.jpg' %}" alt="Login Page">
             </div>
-            <div class="col-xl-7 p-0">
-                <div class="login-card">
-                    {% if msg %}
-                    <div class="mb-3 text-danger text-center"> {{ msg | safe }} </div>
-                    {% endif %}
-                    <form class="theme-form login-form" method="post">
-                        {% csrf_token %}
-                        <h4>Login PPJ Pralon</h4>
-                        <h6>Welcome back! Log in to your account.</h6>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <div class="input-group"><span class="input-group-text"><i class="icon-email"></i></span>
-                                {{ form.username }}
+
+            <div class="col-12 col-lg-7 p-0">
+                <div class="login-card-container"> 
+                    <div class="login-card">
+                        {% if msg %}
+                        <div class="mb-3 text-danger text-center"> {{ msg | safe }} </div>
+                        {% endif %}
+                        <form class="theme-form login-form" method="post">
+                            {% csrf_token %}
+                            <h4>Login PPJ Pralon</h4>
+                            <h6>Welcome back! Log in to your account.</h6>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <div class="input-group"><span class="input-group-text"><i class="icon-email"></i></span>
+                                    {{ form.username }}
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <div class="input-group"><span class="input-group-text"><i class="icon-lock"></i></span>
-                                {{ form.password }}
-                                <div class="show-hide"><span class="show"> </span></div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <div class="input-group"><span class="input-group-text"><i class="icon-lock"></i></span>
+                                    {{ form.password }}
+                                    <div class="show-hide"><span class="show"> </span></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group d-flex">
-                            <div class="checkbox">
-                                <input id="checkbox1" type="checkbox">
-                                <label class="text-muted" for="checkbox1">Remember password</label>
-                            </div><a class="link" href="/forget_password">Forgot password?</a>
-                        </div>
-                        <div class="form-group">
-                            <button class="btn btn-primary btn-block" name="login" type="submit">Sign in</button>
-                        </div>
-                        <p>Don't have account?<a class="ms-2" href="/register_simple">Create Account</a></p>
-                    </form>
+                            <div class="form-group d-flex">
+                                <div class="checkbox">
+                                    <input id="checkbox1" type="checkbox">
+                                    <label class="text-muted" for="checkbox1">Remember password</label>
+                                </div><a class="link" href="/forget_password">Forgot password?</a>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-primary btn-block" name="login" type="submit">Sign in</button>
+                            </div>
+                            <p>Don't have account?<a class="ms-2" href="/register_simple">Create Account</a></p>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- page-wrapper end-->
 {% endblock content %}
 {% block scriptcontent %}
-<!-- Plugins JS start-->
 <script src="{% static 'assets/js/sweet-alert/sweetalert.min.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Plugins JS Ends-->
 {% endblock scriptcontent %}
