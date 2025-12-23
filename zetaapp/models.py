@@ -63,6 +63,7 @@ class StockIn(models.Model):
 class ExcelUpload(models.Model):
     excel_files = models.FileField()
 class Kategori(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     nama = models.CharField(max_length=255)
 
     def __str__(self):
