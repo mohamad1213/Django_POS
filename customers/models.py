@@ -14,8 +14,13 @@ class Customer(models.Model):
         return self.first_name 
 
     def to_select2(self):
+        label = self.first_name
+        if self.phone:
+            label += f" | {self.phone}"
+        if self.address:
+             label += f" | {self.address}"
         item = {
-            "text": self.first_name,
-            "id": self.id
+            "label": label,
+            "value": self.id
         }
         return item
