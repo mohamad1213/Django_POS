@@ -17,16 +17,16 @@ PPJ Pralon Management System is a web-based application designed to manage PVC p
 ![Dashboard](screenshoots/dashboard.png)
 
 ### Transaction Management
-![Transaction Management](screenshoots/transactions.png)
+![Transaction Management](screenshoots/transaksi.png)
 
 ### POS Management
-![POS Management](screenshoots/pos_management.png)
+![POS Management](screenshoots/sales_add.png)
 
 ### Landing Page
-![Landing Page](screenshoots/landing_page.png)
+![Landing Page](screenshoots/landingpage.png)
 
 ### Login Page
-![Login Page](screenshoots/login_page.png)
+![Login Page](screenshoots/login.png)
 
 ## Installation
 1. Clone the repository:
