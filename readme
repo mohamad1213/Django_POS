@@ -1,81 +1,67 @@
-# Django POS (Point of Sale)
+# PPJ Pralon Management System
 
-## Deskripsi
-Django POS adalah aplikasi Point of Sale (POS) sederhana yang dibangun menggunakan framework Django. Aplikasi ini dirancang untuk mengelola transaksi penjualan, inventaris produk, dan pelaporan dasar di toko atau bisnis kecil. Proyek ini bertujuan untuk memberikan solusi open-source yang mudah digunakan dan dapat dikustomisasi.
+## Overview
+PPJ Pralon Management System is a web-based application designed to manage PVC pipe grinding and recycling operations efficiently. The system provides features for managing transactions, inventory, customers, and financial analysis.
 
-## Fitur Utama
-- **Manajemen Produk**: Tambah, edit, dan hapus produk dengan detail seperti nama, harga, stok, dan kategori.
-- **Transaksi Penjualan**: Proses penjualan real-time dengan kalkulasi otomatis total dan diskon.
-- **Inventaris**: Pantau stok produk dan dapatkan notifikasi saat stok rendah.
-- **Pelaporan**: Laporan penjualan harian, bulanan, dan tahunan.
-- **Autentikasi Pengguna**: Sistem login untuk admin dan kasir.
-- **UI Responsif**: Antarmuka web yang mudah digunakan dengan Bootstrap.
+## Features
+- **Dashboard**: Overview of daily income, expenses, and financial analysis.
+- **Transaction Management**: Add, view, and manage transactions with detailed records of income and expenses.
+- **POS Management**: Manage point-of-sale operations, including product data, customer data, and category data.
+- **Financial Analysis**: Analyze financial data to track profits and expenses.
+- **Savings Management**: Manage savings and track balances.
+- **User Authentication**: Secure login and account management.
 
-## Teknologi yang Digunakan
-- **Backend**: Django (Python)
-- **Database**: SQLite (default), dapat dikonfigurasi untuk PostgreSQL atau MySQL
-- **Frontend**: HTML, CSS, JavaScript (dengan Bootstrap)
-- **Lainnya**: Django REST Framework (jika ada API)
+## Screenshots
 
-## Instalasi
-Ikuti langkah-langkah berikut untuk menjalankan proyek ini di mesin lokal Anda.
+### Dashboard
+![Dashboard](screenshoots/dashboard.png)
 
-### Prasyarat
-- Python 3.8 atau lebih baru
-- Git
-- Virtualenv (opsional, tetapi direkomendasikan)
+### Transaction Management
+![Transaction Management](./screenshoots/transactions.png)
 
-### Langkah Instalasi
-1. **Clone Repository**:
-```
-git clone https://github.com/mohamad1213/Django_POS.git cd Django_POS
+### POS Management
+![POS Management](./screenshoots/pos_management.png)
 
-```
-2. **Buat Virtual Environment**:
-```
-python -m venv venv source venv/bin/activate # Pada Windows: venv\Scripts\activate
-```
+### Landing Page
+![Landing Page](./screenshoots/landing_page.png)
 
-4. **Konfigurasi Database**:
-- Jalankan migrasi database:
-  ```
-  python manage.py migrate
-  ```
+### Login Page
+![Login Page](./screenshoots/login_page.png)
 
-5. **Buat Superuser** (untuk akses admin):
-```
-python manage.py createsuperuser
-```
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd template
+   ```
+3. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
+4. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. Apply migrations:
+   ```bash
+   python manage.py migrate
+   ```
+6. Run the development server:
+   ```bash
+   python manage.py runserver
+   ```
 
-6. **Jalankan Server**:
-```
-python manage.py runserver
-```
+## Usage
+1. Open your browser and navigate to `http://127.0.0.1:8000`.
+2. Log in using your credentials.
+3. Use the dashboard to manage transactions, inventory, and financial data.
 
-Akses aplikasi di `http://127.0.0.1:8000/`.
+## Contributing
+Feel free to fork this repository and submit pull requests. For major changes, please open an issue first to discuss what you would like to change.
 
-## Penggunaan
-- **Login**: Gunakan akun superuser untuk masuk ke panel admin di `/admin/`.
-- **Tambah Produk**: Dari panel admin, tambahkan produk baru.
-- **Proses Penjualan**: Akses halaman POS untuk memulai transaksi.
-- **Laporan**: Lihat laporan di bagian dashboard.
-
-## Kontribusi
-Kontribusi sangat diterima! Jika Anda ingin berkontribusi:
-1. Fork repository ini.
-2. Buat branch baru untuk fitur Anda: `git checkout -b fitur-baru`.
-3. Commit perubahan: `git commit -m 'Tambah fitur baru'`.
-4. Push ke branch: `git push origin fitur-baru`.
-5. Buat Pull Request.
-
-Pastikan untuk mengikuti standar kode Python (PEP 8) dan tambahkan tes jika diperlukan.
-
-## Lisensi
-Proyek ini dilisensikan di bawah MIT License. Lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.
-
-## Kontak
-- **Pembuat**: Mohamad1213
-- **Email**: [alamat email Anda, jika ada]
-- **GitHub**: [https://github.com/mohamad1213](https://github.com/mohamad1213)
-
-Jika Anda memiliki pertanyaan atau masalah, silakan buat issue di repository ini.
+## License
+This project is licensed under the MIT License.
