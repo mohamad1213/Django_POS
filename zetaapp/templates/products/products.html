@@ -10,28 +10,47 @@
 <!-- Plugins css Ends-->
 {% endblock css %}
 {% block content %}
+
+<style>
+    .card {
+        transition: .25s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 12px 25px rgba(0, 0, 0, .08) !important;
+    }
+
+    .rounded-4 {
+        border-radius: 16px !important;
+    }
+
+    .card small {
+        font-size: .85rem;
+    }
+
+    .card h2 {
+        font-weight: 700;
+    }
+</style>
 <div class="page-body">
     {% include 'layout/breadcrumb.html' %}
 
     <!-- Container-fluid starts-->
     <div class="container-fluid list-products">
-        <div class="row mb-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 mb-4">
             {% for item in totals_per_product %}
-            <div class="col-md-3 mb-3">
-                <div class="card shadow-sm text-center">
-                    <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted">{{ item.product__name }}</h6>
-                        <h3 class="card-title">{{ item.total_qty|default:0 }}</h3>
+            <div class="col">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+                        <small class="text-muted">Total {{ item.product__name }}</small>
+                        <h3 class="fw-bold mb-0 mt-2">{{ item.total_qty|default:0 }}</h3>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <div class="col-md-12">
-                <div class="card shadow-sm text-center">
-                    <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted">Belum ada barang</h6>
-                        <h3 class="card-title">0</h3>
-                    </div>
+            <div class="col">
+                <div class="alert alert-light text-center">
+                    Belum ada data barang.
                 </div>
             </div>
             {% endfor %}

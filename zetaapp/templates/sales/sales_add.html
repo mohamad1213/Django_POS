@@ -335,6 +335,48 @@
         });
         sale.list_product(); // Load initial empty table
 
+        // Populate products from OCR if present
+        {% if ocr_data_json %}
+        try {
+            const ocrData = {{ ocr_data_json|safe }};
+            if (ocrData && ocrData.items && ocrData.items.length > 0) {
+                ocrData.items.forEach(item => {
+                    const price = parseFloat(item.price) || 0.00;
+                    const qty = parseInt(item.qty) || 1;
+                    const name = item.name || "Item OCR";
+                    
+                    sale.add_product({
+                        id: null,
+                        number: number,
+                        name: name,
+                        price: price,
+                        quantity: qty,
+                        total_product: price * qty
+                    });
+                    number++;
+                });
+                sale.list_product();
+                
+                // Show a friendly alert to user that OCR was loaded
+                Swal.fire({
+                    title: 'Data OCR Dimasukkan!',
+                    text: `${ocrData.items.length} item dari struk belanja berhasil diimpor ke keranjang POS.`,
+                    icon: 'success',
+                    confirmButtonText: 'Oke'
+                });
+            } else if (ocrData && ocrData.total) {
+                Swal.fire({
+                    title: 'Hanya Total Terbaca',
+                    text: `OCR mendeteksi total belanja sebesar Rp ${ocrData.total.toLocaleString('id-ID')}, namun tidak menemukan daftar item barang secara detail. Silakan tambahkan barang secara manual.`,
+                    icon: 'info',
+                    confirmButtonText: 'Oke'
+                });
+            }
+        } catch (e) {
+            console.error("Error loading OCR data:", e);
+        }
+        {% endif %}
+
         // Select2 customers
         $('#searchbox_customers').select2({
             placeholder: "Pilih customer",

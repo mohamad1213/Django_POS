@@ -7,12 +7,13 @@ urlpatterns = [
     # List sales
     path('', views.sales_list_view, name='sales_list'),
     # Add sale
-    path('add', views.sales_add_view, name='sales_add'),
+    path('add/', views.sales_add_view, name='sales_add'),
     # Details sale
-    path('details/<str:sale_id>',
-         views.sales_details_view, name='sales_details'),
+    path('details/<str:sale_id>/',views.sales_details_view, name='sales_details'),
     path("sales/delete/<int:sale_id>/", views.delete_sale, name="delete_sale"),
 
     # Sale receipt PDF
-    path("pdf/<str:sale_id>", views.ViewPDF.as_view(), name="sales_receipt_pdf"),
+    path("pdf/<str:sale_id>/", views.ViewPDF.as_view(), name="sales_receipt_pdf"),
+    path("upload/",views.upload_receipt,name="upload_receipt"),
+    path("preview/",views.preview_receipt,name="preview_receipt"),
 ]

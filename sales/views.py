@@ -22,7 +22,47 @@ from django.contrib import messages
 from django.db.models import Sum, Count
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import render, redirect
+from django.core.files.storage import FileSystemStorage
 
+from .forms import ReceiptUploadForm
+from .services.ocr import read_receipt
+from .services.parser import parse_receipt
+
+
+from sales.services.ocr_services import process_receipt
+
+
+
+def upload_receipt(request):
+
+    if request.method != "POST":
+        return redirect("sales:sales_list")
+
+    image = request.FILES.get("file_transaksi")
+
+    if not image:
+        messages.error(request, "Silakan pilih gambar.")
+        return redirect("sales:sales_list")
+
+    result = process_receipt(image)
+
+    if not result["items"]:
+        messages.warning(request, "Produk tidak berhasil dideteksi.")
+
+    request.session["ocr_result"] = result
+
+    return redirect("sales:preview_receipt")
+def preview_receipt(request):
+    return render(
+        request,
+        "sales/preview_receipt.html",
+        {
+            "breadcrumb": {"parent": "POS", "child": "Preview Hasil OCR"},
+            "active_icon": "sales",
+            "data": request.session.get("ocr_result"),
+        },
+    )
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
@@ -115,23 +155,27 @@ def sales_add_view(request):
                     if not product_name:
                          raise ValueError("Nama produk baru tidak boleh kosong.")
                     print(f"--- LOG 6: Mencoba Membuat Produk BARU: {product_name} ---")
-                    try:
-                        default_category = Category.objects.get(name='Uncategorized', owner=request.user)
-                    except Category.DoesNotExist:
-                        # Jika kategori default tidak ada, Anda harus membuatnya atau menangani error
-                        # ASUMSI: Category adalah model yang sederhana
-                        default_category, created = Category.objects.get_or_create(
-                            name='Uncategorized', defaults={'owner': request.user}
+                    
+                    # Prevent duplicate product creation by checking if it already exists for this user
+                    existing_product = Product.objects.filter(name__iexact=product_name, owner=request.user).first()
+                    if existing_product:
+                        product_obj = existing_product
+                    else:
+                        try:
+                            default_category = Category.objects.get(name='Uncategorized', owner=request.user)
+                        except Category.DoesNotExist:
+                            default_category, created = Category.objects.get_or_create(
+                                name='Uncategorized', defaults={'owner': request.user}
+                            )
+                        new_product = Product.objects.create(
+                            name=product_name,
+                            price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
+                            owner=request.user,
+                            description='Deskripsi Produk Baru', # Wajib diisi
+                            status='ACTIVE',                      # Wajib diisi dari STATUS_CHOICES
+                            category=default_category
                         )
-                    new_product = Product.objects.create(
-                        name=product_name,
-                        price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
-                        owner=request.user,
-                        description='Deskripsi Produk Baru', # Wajib diisi
-                        status='ACTIVE',                      # Wajib diisi dari STATUS_CHOICES
-                        category=default_category
-                    )
-                    product_obj = new_product
+                        product_obj = new_product
                 else: # Produk Lama
                     try:
                         product_obj = Product.objects.get(
@@ -182,10 +226,21 @@ def sales_add_view(request):
                 'message': f'Terjadi kesalahan server: {str(e)}'
             }
             return JsonResponse(response_data, status=500)
+    # Check if there is OCR data in session and pop it
+    ocr_data = request.session.pop("ocr_result", None)
+    ocr_data_json = None
+    if ocr_data:
+        try:
+            ocr_data_json = json.dumps(ocr_data)
+        except Exception as e:
+            print("Error dumping OCR data JSON:", e)
+
     context = {
         "breadcrumb": {"parent": "POS", "child": "Point Of Sale"},
         "active_icon": "sales",
-        "customers": customers
+        "customers": customers,
+        "ocr_data": ocr_data,
+        "ocr_data_json": ocr_data_json,
     }
     return render(request, "sales/sales_add.html", context=context)
 

@@ -13,10 +13,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='tabungan',
-            name='transaksi_choice',
-        ),
+
         migrations.AddField(
             model_name='profito2',
             name='profit_saved',

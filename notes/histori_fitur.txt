@@ -1,0 +1,15 @@
+:
+📜 History Transaksi
+│
+├── Dashboard Ringkasan
+├── Daftar Transaksi
+├── Filter & Pencarian
+├── Detail Invoice
+├── Barang Terjual
+├── Profit per Transaksi
+├── Riwayat Edit (Audit Log)
+├── OCR History
+├── Lampiran / Foto Nota
+├── Export PDF / Excel
+├── Print Invoice
+└── Timeline Aktivitas

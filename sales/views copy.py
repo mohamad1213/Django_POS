@@ -22,7 +22,35 @@ from django.contrib import messages
 from django.db.models import Sum, Count
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import render, redirect
+from django.core.files.storage import FileSystemStorage
 
+from .forms import ReceiptUploadForm
+from .services.ocr import read_receipt
+from .services.parser import parse_receipt
+
+
+from sales.services.ocr_services import process_receipt
+
+
+def upload_receipt(request):
+    if request.method != "POST":
+        return redirect("sales:sales_list")
+
+    image = request.FILES.get("file_transaksi")
+
+    if not image:
+        return redirect("sales:sales_list")
+
+    request.session["ocr_result"] = process_receipt(image)
+
+    return redirect("sales:preview_receipt")
+def preview_receipt(request):
+    return render(
+        request,
+        "sales/preview_receipt.html",
+        {"data": request.session.get("ocr_result")},
+    )
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
@@ -74,7 +102,7 @@ def sales_add_view(request):
             else:
                 customer_id = data.get('customer')
                 if customer_id:
-                    customer_obj = Customer.objects.get(id=int(customer_id))
+                    customer_obj = Customer.objects.get(id=int(customer_id),owner=request.user)
 
             print("--- LOG 3: Customer Selesai Dikonfigurasi ---")
             # --- TRANSAKSI UTAMA (tetap sama) ---
@@ -96,58 +124,71 @@ def sales_add_view(request):
             print(f"--- LOG 4: Sale ID {new_sale.id} Dibuat ---")
 
             # --- SALE DETAIL & PRODUCT HANDLING ---
-            for product in data['products']:
+            for i, product in enumerate(data['products']):
                 product_obj = None
-                
+
                 # AMBIL NILAI HARGA DAN BERSIHKAN DAHULU
-                # Jika product.get('price') adalah None atau string kosong, gunakan 0.0
                 price_value = product.get('price')
                 if price_value in [None, '']:
                     price_float = 0.0
                 else:
-                    price_float = float(price_value)
-                
-                for i, product in enumerate(data['products']):
-                    print(f"--- LOG 5: Memproses Produk ke-{i} ---")
+                    try:
+                        price_float = float(price_value)
+                    except (TypeError, ValueError):
+                        price_float = 0.0
 
-                if not product.get('id'): # Produk Baru
+                # Log setiap produk yang diproses
+                print(f"--- LOG 5: Memproses Produk ke-{i} ---")
+
+                # Tangani produk baru atau lama
+                if not product.get('id'):  # Produk Baru
                     product_name = product.get('name', '').strip()
                     if not product_name:
-                         raise ValueError("Nama produk baru tidak boleh kosong.")
+                        raise ValueError("Nama produk baru tidak boleh kosong.")
                     print(f"--- LOG 6: Mencoba Membuat Produk BARU: {product_name} ---")
                     try:
                         default_category = Category.objects.get(name='Uncategorized', owner=request.user)
                     except Category.DoesNotExist:
-                        # Jika kategori default tidak ada, Anda harus membuatnya atau menangani error
-                        # ASUMSI: Category adalah model yang sederhana
                         default_category, created = Category.objects.get_or_create(
                             name='Uncategorized', defaults={'owner': request.user}
                         )
                     new_product = Product.objects.create(
                         name=product_name,
-                        price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
+                        price=price_float,
                         owner=request.user,
-                        description='Deskripsi Produk Baru', # Wajib diisi
-                        status='ACTIVE',                      # Wajib diisi dari STATUS_CHOICES
+                        description='Deskripsi Produk Baru',
+                        status='ACTIVE',
                         category=default_category
                     )
                     product_obj = new_product
-                else: # Produk Lama
+                else:  # Produk Lama
                     try:
                         product_obj = Product.objects.get(
-                            id=int(product['id']), 
+                            id=int(product['id']),
                             owner=request.user
                         )
                     except Product.DoesNotExist:
                         return JsonResponse({'success': False, 'message': f'Produk dengan ID {product["id"]} tidak ditemukan atau tidak memiliki izin.'}, status=404)
-                
-                # Buat SaleDetail
+
+                # Buat atau simpan SaleDetail (gunakan nilai default jika tidak tersedia)
+                quantity = product.get('quantity', 1)
+                try:
+                    quantity = int(quantity)
+                except (TypeError, ValueError):
+                    quantity = 1
+
+                total_product = product.get('total_product', 0.0)
+                try:
+                    total_product = float(total_product)
+                except (TypeError, ValueError):
+                    total_product = round(quantity * price_float, 2)
+
                 SaleDetail.objects.create(
                     sale=new_sale,
                     product=product_obj,
-                    price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
-                    quantity=int(product['quantity']),
-                    total_detail=float(product['total_product'])
+                    price=price_float,
+                    quantity=quantity,
+                    total_detail=total_product
                 )
             print("--- LOG 7: Semua Produk Diproses. Berhasil! ---")
                 

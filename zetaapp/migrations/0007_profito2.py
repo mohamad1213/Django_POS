@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('zetaapp', '0006_remove_transaksi_sale'),
+        ('zetaapp', '0005_transaksi_sale'),
     ]
 
     operations = [

@@ -1,83 +1,203 @@
 {% load static %} {% load sass_tags %}
+<style>
+  /* Styling untuk mengatur lebar sidebar */
+  .sidebar-wrapper {
+    /* Atur lebar default di desktop */
+    width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    background-color: #ffffff;
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
+    overflow-y: auto;
+    /* Lebar default untuk desktop */
+    max-width: 280px;
+    /* Batasi lebar maksimal */
+  }
+
+  /* Custom Scrollbar for Webkit */
+  .sidebar-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar-wrapper::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+  }
+
+  .sidebar-wrapper:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .logo-wrapper {
+    padding: 24px 20px;
+    text-align: center;
+    background-color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  @media (max-width: 991.98px) {
+    .sidebar-wrapper {
+      /* Lebar di mobile harus sedikit lebih kecil atau sama */
+      width: 250px;
+      max-width: 280px;
+      /* Tambahkan properti lain yang memastikan sidebar tersembunyi/muncul di mobile */
+      /* left: -280px; 
+            position: fixed; 
+            z-index: 1030; */
+    }
+  }
+
+  /* Styling Dasar Menu */
+  .sidebar-menu .nav-link {
+    color: #5b6e88;
+    font-weight: 500;
+    padding: 12px 20px;
+    margin: 4px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Styling Active/Hover */
+  .sidebar-menu .nav-link:hover,
+  .sidebar-menu .nav-link.active {
+    color: #4f46e5;
+    background-color: rgba(79, 70, 229, 0.05);
+  }
+
+  .sidebar-menu .nav-link i {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Indentasi Submenu */
+  .sidebar-main .collapse .nav-link {
+    padding-left: 48px !important;
+    font-size: 0.95rem;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  /* Rotasi Ikon Dropdown */
+  .sidebar-menu .fa-chevron-down {
+    font-size: 0.7em;
+    transition: transform 0.3s ease;
+    margin-left: auto;
+  }
+
+  /* Rotasi saat menu terbuka */
+  .sidebar-menu .nav-link[aria-expanded="true"] .fa-chevron-down {
+    transform: rotate(180deg);
+  }
+</style>
 <div class="sidebar-wrapper">
   <div>
-    <div class="logo-wrapper">
-      <a href="/"><img class="img-fluid for-light" style="height: 70px; width: 200px;"
-          src="{% static 'assets/images/Logo2.png' %}" alt="" />
-        <img class="img-fluid for-dark" src="{% static 'assets/images/Logo2.png' %}" alt="" /></a>
+    <div class="logo-wrapper d-none d-lg-block">
+      <a href="{% url 'dashboard' %}">
+        <img class="img-fluid for-light" style="max-width: 200px; height: auto;"
+          src="{% static 'assets/images/Logo2.png' %}" alt="Logo Light" />
+        <img class="img-fluid for-dark" style="max-width: 200px; height: auto;"
+          src="{% static 'assets/images/Logo2.png' %}" alt="Logo Dark" />
+      </a>
       <div class="back-btn"><i class="fa fa-angle-left"></i></div>
     </div>
-    <div class="logo-icon-wrapper">
-      <a href="/"><img class="img-fluid" style="height: 400px; width: 600px;"
-          src="{% static 'assets/images/Logo2.png' %}" alt="" /></a>
+
+    <div class="logo-icon-wrapper d-lg-none py-3 text-center ps-3">
+      <a href="{% url 'dashboard' %}">
+        <img class="img-fluid" style="max-width: 200px; height: auto;" src="{% static 'assets/images/Logo2.png' %}"
+          alt="Logo Icon" />
+      </a>
     </div>
+
     <br>
 
     <nav class="sidebar-main">
-      <div class="left-arrow" id="left-arrow">
-        <i data-feather="arrow-left"></i>
-      </div>
+      <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
       <br>
       <div id="sidebar-menu">
         <ul class="nav flex-column sidebar-menu">
-          <li class="nav-item mb-2">
+
+          <li class="nav-item mb-2 text-start">
             <a class="nav-link {% if url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
               <i data-feather="home" class="me-2"></i> Dashboard
             </a>
           </li>
 
-          <!-- Manajemen POS -->
-          <li class="nav-item mb-2">
+          <li class="nav-item mb-2 text-start">
             <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#Product" role="button" aria-expanded="false">
-              <span><i data-feather="shopping-cart" class="me-2"></i>Manajemen POS</span>
+              href="#Product" role="button"
+              aria-expanded="{% if 'products' in request.path or 'sales' in request.path %}true{% else %}false{% endif %}">
+              <span><i data-feather="shopping-cart" class="me-2"></i> Manajemen POS</span>
               <i class="fa fa-chevron-down"></i>
             </a>
-            <ul class="collapse list-unstyled ps-4" id="Product">
-              <li class="mb-1"><a class="nav-link" href="{% url 'sales:sales_list' %}">POS</a></li>
-              <li class="mb-1"><a class="nav-link" href="{% url 'products:products_list' %}">Data Barang</a></li>
-              <li class="mb-1"><a class="nav-link" href="{% url 'customers:customers_list' %}">Data Pelanggan</a></li>
-              <li class="mb-1"><a class="nav-link" href="{% url 'products:categories_list' %}">Data Kategori</a></li>
+            <ul
+              class="collapse list-unstyled ps-4 {% if 'products' in request.path or 'sales' in request.path %}show{% endif %}"
+              id="Product">
+              <li class="mb-1"><a class="nav-link {% if 'sales_list' in request.path %}active{% endif %}"
+                  href="{% url 'sales:sales_list' %}">POS</a></li>
+              <li class="mb-1"><a
+                  class="nav-link {% if 'products_list' in request.path and not 'categories_list' in request.path %}active{% endif %}"
+                  href="{% url 'products:products_list' %}">Data Barang</a></li>
+              <li class="mb-1"><a class="nav-link {% if 'customers_list' in request.path %}active{% endif %}"
+                  href="{% url 'customers:customers_list' %}">Data Pelanggan</a></li>
+              <li class="mb-1"><a class="nav-link {% if 'categories_list' in request.path %}active{% endif %}"
+                  href="{% url 'products:categories_list' %}">Data Kategori</a></li>
             </ul>
           </li>
+          
+          <li class="nav-item mb-2 text-start">
+            <a class="nav-link {% if url_name == 'stockin_list' %}active{% endif %}" href="{% url 'stockin_list' %}">
+              <i data-feather="activity" class="me-2"></i> Stok
+            </a>
+          </li>
 
-          <!-- Transaksi -->
-          <li class="nav-item mb-2">
+          <li class="nav-item mb-2 text-start">
             <a class="nav-link {% if url_name == 'transaksi' %}active{% endif %}" href="{% url 'transaksi' %}">
               <i data-feather="activity" class="me-2"></i> Transaksi
             </a>
           </li>
 
-          <!-- Manajemen Hutang -->
-          <li class="nav-item mb-2">
+          <li class="nav-item mb-2 text-start">
             <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#Hutang" role="button" aria-expanded="false">
+              href="#Hutang" role="button"
+              aria-expanded="{% if url_name == 'hutang' or url_name == 'hutangpeg' %}true{% else %}false{% endif %}">
               <span><i data-feather="credit-card" class="me-2"></i>Manajemen Hutang</span>
               <i class="fa fa-chevron-down"></i>
             </a>
-            <ul class="collapse list-unstyled ps-4" id="Hutang">
-              <li class="mb-1"><a class="nav-link" href="{% url 'hutang' %}">Hutang Ortu</a></li>
-              <li class="mb-1"><a class="nav-link" href="{% url 'hutangpeg' %}">Hutang Pegawai</a></li>
+            <ul
+              class="collapse list-unstyled ps-4 {% if url_name == 'hutang' or url_name == 'hutangpeg' %}show{% endif %}"
+              id="Hutang">
+              <li class="mb-1"><a class="nav-link {% if url_name == 'hutang' %}active{% endif %}"
+                  href="{% url 'hutang' %}">Hutang Ortu</a></li>
+              <li class="mb-1"><a class="nav-link {% if url_name == 'hutangpeg' %}active{% endif %}"
+                  href="{% url 'hutangpeg' %}">Hutang Pegawai</a></li>
             </ul>
           </li>
 
-          <!-- Profit -->
-          <li class="nav-item mb-2">
+          <li class="nav-item mb-2 text-start">
             <a class="nav-link {% if url_name == 'profit' %}active{% endif %}" href="{% url 'profit' %}">
               <i data-feather="trending-up" class="me-2"></i> Profit
             </a>
           </li>
 
-          <!-- Tabungan -->
-          <li class="nav-item mb-2">
+          <li class="nav-item mb-2 text-start">
             <a class="nav-link {% if url_name == 'tabungan' %}active{% endif %}" href="{% url 'tabungan' %}">
               <i data-feather="bar-chart-2" class="me-2"></i> Tabungan
             </a>
           </li>
 
-          <!-- Laporan -->
-          <li class="nav-item mb-2">
-            <a class="nav-link" href="{% url 'laporan' %}">
+          <li class="nav-item mb-2 text-start">
+            <a class="nav-link {% if url_name == 'laporan' %}active{% endif %}" href="{% url 'laporan' %}">
               <i data-feather="file-text" class="me-2"></i> Laporan
             </a>
           </li>

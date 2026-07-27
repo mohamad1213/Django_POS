@@ -60,6 +60,33 @@ from django.db.models import Sum, Value
 from django.db.models.functions import TruncMonth, Coalesce
 from django.utils import timezone
 import calendar, json
+from sales.models import Sale, SaleDetail
+
+@login_required(login_url="/accounts/login/")
+def transaksi_history(request):
+    # Perbaikan: filter menggunakan sale__owner karena SaleDetail tidak memiliki field owner secara langsung
+    data = SaleDetail.objects.filter(sale__owner=request.user).order_by('-id')
+    
+    # Menghitung ringkasan statistik untuk Hari Ini
+    today = timezone.localtime(timezone.now()).date()
+    sales_today = Sale.objects.filter(owner=request.user)
+    
+    total_transactions = sales_today.count()
+    total_revenue = sales_today.aggregate(total=Sum('sub_total'))['total'] or 0
+    total_items = SaleDetail.objects.filter(sale__in=sales_today).aggregate(total=Sum('quantity'))['total'] or 0
+    average_transaction = total_revenue / total_transactions if total_transactions > 0 else 0
+
+    context = {
+        'data': data,
+        'total_transactions': total_transactions,
+        'total_revenue': total_revenue,
+        'total_items': total_items,
+        'average_transaction': average_transaction,
+        "breadcrumb": {"parent": "Laporan", "child": "Histori Transaksi"},
+    }
+    return render(request, 'transaksi/transaksi_history.html', context)
+
+
 @require_GET
 def product_search_api(request):
     q = request.GET.get('q', '').strip()

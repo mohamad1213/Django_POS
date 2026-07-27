@@ -10,12 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='sale',
-            name='tax_amount',
-        ),
-        migrations.RemoveField(
-            model_name='sale',
-            name='tax_percentage',
-        ),
     ]
+

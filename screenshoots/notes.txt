@@ -1,0 +1,136 @@
+Berikut versi yang lebih rapi dan jelas dari kebutuhan fitur yang kamu inginkan:
+
+---
+
+## Fitur Baru
+
+### 1. Upload Transaksi dari Pihak Ketiga (e-Nota)
+
+Tambahkan fitur **Upload Transaksi** yang dapat membaca nota dari aplikasi pihak ketiga seperti **e-Nota Elektronik**.
+
+Referensi:
+[https://shopee.co.id/Software-e-Nota-Elektronik-Permanen-Android-Saja-i.462463598.20178325322](https://shopee.co.id/Software-e-Nota-Elektronik-Permanen-Android-Saja-i.462463598.20178325322)
+
+**Alur:**
+
+1. User mengunggah gambar nota (JPG, PNG, atau PDF).
+2. AI melakukan OCR untuk membaca isi nota.
+3. AI mengekstrak data seperti:
+
+   * Nama pelanggan
+   * Tanggal transaksi
+   * Nomor nota
+   * Daftar barang
+   * Jumlah
+   * Harga satuan
+   * Total pembayaran
+4. Hasil ekstraksi ditampilkan untuk dikonfirmasi user.
+5. Setelah disimpan, data otomatis masuk ke halaman:
+
+```
+/sales/
+```
+
+---
+
+### 2. Analisis AI pada Nota
+
+Tambahkan AI Vision untuk menganalisis gambar nota.
+
+Kemampuan AI:
+
+* Membaca tulisan meskipun posisi miring.
+* Mengenali format nota yang berbeda-beda.
+* Mengisi field transaksi secara otomatis.
+* Memberikan peringatan apabila ada data yang tidak terbaca atau meragukan.
+
+---
+
+### 3. Sidebar Baru: Analisis Keuangan
+
+Tambahkan menu sidebar baru:
+
+```
+Analisis Keuangan
+```
+
+Menu ini berisi beberapa dashboard, seperti:
+
+* Ringkasan Pendapatan
+* Total Profit
+* Total Pengeluaran
+* Margin Keuntungan
+* Grafik Penjualan
+* Grafik Profit
+* Barang Paling Menguntungkan
+* Barang Kurang Menguntungkan
+* Prediksi Keuntungan Menggunakan AI
+* Insight dan Rekomendasi AI
+
+---
+
+## Form Profit (Versi Baru)
+
+Buat form **Input Multiple Formulir Profit** yang lebih fleksibel.
+
+### Biaya Operasional Global
+
+Berisi biaya yang berlaku untuk seluruh transaksi, misalnya:
+
+* Solar
+* Gaji
+* Listrik
+* Sewa
+* Transport
+* Biaya lainnya (dinamis)
+
+---
+
+### Biaya Per Barang
+
+Setiap barang memiliki biaya yang dapat diatur secara terpisah (opsional).
+
+Contoh:
+
+| Barang  |  Berat | Harga Beli | Harga Jual | Biaya Gilingan | Biaya Bongkar | Biaya Lain | Profit |
+| ------- | -----: | ---------: | ---------: | -------------: | ------------: | ---------: | -----: |
+| Besi A  | 500 kg |      Rp... |      Rp... |              ✓ |         Rp... |      Rp... |  Rp... |
+| Plastik | 300 kg |      Rp... |      Rp... |              ✗ |         Rp... |      Rp... |  Rp... |
+
+**Catatan:**
+
+* Biaya **Gilingan** harus bersifat **opsional**, karena tidak semua barang memerlukan proses penggilingan.
+* Setiap jenis biaya dapat diaktifkan atau dinonaktifkan per barang.
+* User dapat menambahkan jenis biaya baru sesuai kebutuhan (custom).
+
+---
+
+## Perhitungan Profit
+
+Rumus profit dihitung secara otomatis:
+
+```
+Profit = Harga Jual
+       - Harga Beli
+       - Biaya Operasional Global (dibagi proporsional)
+       - Biaya Per Barang
+```
+
+AI juga dapat memberikan analisis seperti:
+
+* Barang dengan margin tertinggi.
+* Barang yang mengalami kerugian.
+* Estimasi keuntungan bersih.
+* Saran untuk meningkatkan profit berdasarkan histori transaksi.
+
+---
+
+## Tujuan Fitur
+
+Dengan fitur-fitur ini, pengguna cukup mengunggah foto nota, kemudian AI akan:
+
+1. Membaca isi nota secara otomatis.
+2. Mengisi data transaksi.
+3. Menyimpan transaksi ke modul **Sales**.
+4. Menghitung profit.
+5. Menampilkan analisis keuangan beserta rekomendasi berbasis AI melalui dashboard.

@@ -15,17 +15,21 @@ urlpatterns = [
     path('dashboard/', views.indexPage,name='dashboard'),
     path('api/product-summary/', views.get_product_summary, name='product_summary'),
 
+
     # POS
     path('product/', include('products.urls')),
     path('pegawai/', include('pegawai.urls')),
     path('customer/', include('customers.urls')),
-    path('sales/', include('sales.urls')),
     path('accounts/', include('authentication.urls')),
-    # Transaksi
-    path('transaksi/', views.transaksi,name='transaksi'),
+    
+    # Transaksi 
+    path('sales/', include('sales.urls')), #POS Kasir
+    # Input Manual
+    path('transaksi/', views.transaksi,name='transaksi'), 
     path('transaksi/<int:pk>/update/', views.UpdateTr,name='updatetr'),
     path('transaksi/<pk>/delete/', views.DeleteTr,name='deletetr'),
-
+    #Riwayat Transaski
+    path('transaksi-history/', views.transaksi_history,name='transaksi_history'),
     # HutangPiutang
     path('hutang/', views.hutang,name='hutang'),
     path('hutang/<pk>/delete/', views.DeleteHutang,name='deletehut'),

@@ -1,103 +1,179 @@
 {% load static %} {% load sass_tags %}
 <style>
-  /* Styling untuk mengatur lebar sidebar */
+  /* ===============================
+   Sidebar
+================================= */
+
   .sidebar-wrapper {
-    /* Atur lebar default di desktop */
-    width: 260px;
+    width: 250px;
+    max-width: 250px;
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1000;
-    background-color: #ffffff;
-    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
+    background: #fff;
+    box-shadow: 2px 0 18px rgba(0, 0, 0, .05);
     overflow-y: auto;
-    /* Lebar default untuk desktop */
-    max-width: 280px;
-    /* Batasi lebar maksimal */
   }
 
-  /* Custom Scrollbar for Webkit */
+  /* Scrollbar */
+
   .sidebar-wrapper::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .sidebar-wrapper::-webkit-scrollbar-track {
-    background: transparent;
+    width: 5px;
   }
 
   .sidebar-wrapper::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 20px;
+    background: #d6d6d6;
+    border-radius: 10px;
   }
 
-  .sidebar-wrapper:hover::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2);
+  .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #bcbcbc;
   }
+
+  /* ===============================
+   Logo
+================================= */
 
   .logo-wrapper {
-    padding: 24px 20px;
+    padding: 16px 15px;
     text-align: center;
-    background-color: #ffffff;
+    background: #fff;
     position: sticky;
     top: 0;
     z-index: 10;
+    border-bottom: 1px solid #f1f1f1;
   }
 
-  @media (max-width: 991.98px) {
-    .sidebar-wrapper {
-      /* Lebar di mobile harus sedikit lebih kecil atau sama */
-      width: 250px;
-      max-width: 280px;
-      /* Tambahkan properti lain yang memastikan sidebar tersembunyi/muncul di mobile */
-      /* left: -280px; 
-            position: fixed; 
-            z-index: 1030; */
-    }
+  .logo-wrapper img,
+  .logo-icon-wrapper img {
+    max-width: 145px !important;
+    height: auto;
   }
 
-  /* Styling Dasar Menu */
+  .logo-icon-wrapper {
+    padding: 12px 0;
+    text-align: center;
+  }
+
+  /* ===============================
+   Menu
+================================= */
+
+  .sidebar-menu {
+    padding-bottom: 20px;
+  }
+
+  .sidebar-menu .nav-item {
+    margin-bottom: 2px;
+  }
+
   .sidebar-menu .nav-link {
+
     color: #5b6e88;
+
+    font-size: .88rem;
+
     font-weight: 500;
-    padding: 12px 20px;
-    margin: 4px 12px;
+
+    padding: 10px 16px;
+
+    margin: 2px 10px;
+
     border-radius: 8px;
-    transition: all 0.3s ease;
+
+    transition: .25s;
+
     display: flex;
+
     align-items: center;
   }
 
-  /* Styling Active/Hover */
   .sidebar-menu .nav-link:hover,
   .sidebar-menu .nav-link.active {
+
+    background: #eef2ff;
+
     color: #4f46e5;
-    background-color: rgba(79, 70, 229, 0.05);
   }
+
+  /* Icon */
 
   .sidebar-menu .nav-link i {
-    width: 20px;
-    height: 20px;
+
+    width: 18px;
+
+    height: 18px;
+
+    margin-right: 10px;
   }
 
-  /* Indentasi Submenu */
+  /* ===============================
+   Submenu
+================================= */
+
   .sidebar-main .collapse .nav-link {
-    padding-left: 48px !important;
-    font-size: 0.95rem;
+
+    padding: 8px 16px 8px 42px !important;
+
+    font-size: .82rem;
+
     font-weight: 400;
-    margin-top: 2px;
+
+    color: #697586;
   }
 
-  /* Rotasi Ikon Dropdown */
+  .sidebar-main .collapse .nav-link:hover {
+
+    background: #f8f9ff;
+  }
+
+  /* ===============================
+   Chevron
+================================= */
+
   .sidebar-menu .fa-chevron-down {
-    font-size: 0.7em;
-    transition: transform 0.3s ease;
+
     margin-left: auto;
+
+    font-size: 10px;
+
+    transition: .3s;
   }
 
-  /* Rotasi saat menu terbuka */
   .sidebar-menu .nav-link[aria-expanded="true"] .fa-chevron-down {
+
     transform: rotate(180deg);
+  }
+
+  /* ===============================
+   Mobile
+================================= */
+
+  @media (max-width:991px) {
+
+    .sidebar-wrapper {
+
+      width: 240px;
+
+      max-width: 240px;
+    }
+
+    .logo-wrapper img {
+
+      max-width: 135px !important;
+    }
+
+  }
+
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 12px 20px 6px;
   }
 </style>
 <div class="sidebar-wrapper">
@@ -119,84 +195,267 @@
       </a>
     </div>
 
-    <br>
-
     <nav class="sidebar-main">
       <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
-      <br>
       <div id="sidebar-menu">
         <ul class="nav flex-column sidebar-menu">
 
-          <li class="nav-item mb-2 text-start">
+          <li class="sidebar-title mt-3">
+            MENU UTAMA
+          </li>
+          <!-- Dashboard -->
+          <li class="nav-item mb-2">
             <a class="nav-link {% if url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
-              <i data-feather="home" class="me-2"></i> Dashboard
+              <i data-feather="home" class="me-2"></i>
+              Dashboard
             </a>
           </li>
 
-          <li class="nav-item mb-2 text-start">
+          <!-- ========================= -->
+          <!-- TRANSAKSI -->
+          <!-- ========================= -->
+
+          <li class="nav-item mb-2">
             <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#Product" role="button"
-              aria-expanded="{% if 'products' in request.path or 'sales' in request.path %}true{% else %}false{% endif %}">
-              <span><i data-feather="shopping-cart" class="me-2"></i> Manajemen POS</span>
+              href="#transaksiMenu">
+
+              <span>
+                <i data-feather="repeat" class="me-2"></i>
+                Transaksi
+              </span>
+
               <i class="fa fa-chevron-down"></i>
             </a>
-            <ul
-              class="collapse list-unstyled ps-4 {% if 'products' in request.path or 'sales' in request.path %}show{% endif %}"
-              id="Product">
-              <li class="mb-1"><a class="nav-link {% if 'sales_list' in request.path %}active{% endif %}"
-                  href="{% url 'sales:sales_list' %}">POS</a></li>
-              <li class="mb-1"><a
-                  class="nav-link {% if 'products_list' in request.path and not 'categories_list' in request.path %}active{% endif %}"
-                  href="{% url 'products:products_list' %}">Data Barang</a></li>
-              <li class="mb-1"><a class="nav-link {% if 'customers_list' in request.path %}active{% endif %}"
-                  href="{% url 'customers:customers_list' %}">Data Pelanggan</a></li>
-              <li class="mb-1"><a class="nav-link {% if 'categories_list' in request.path %}active{% endif %}"
-                  href="{% url 'products:categories_list' %}">Data Kategori</a></li>
+
+            <ul class="collapse list-unstyled ps-4 show" id="transaksiMenu">
+
+              <li>
+                <a class="nav-link" href="{% url 'sales:sales_list' %}">
+                  POS Kasir
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="{% url 'transaksi' %}">
+                  Input Manual
+                </a>
+              </li>
+
+              <!-- <li>
+                <a class="nav-link" href="#">
+                  Import Excel
+                </a>
+              </li> -->
+
+              <li>
+                <a class="nav-link" href="{% url 'transaksi_history' %}">
+                  Riwayat Transaksi
+                </a>
+              </li>
+
             </ul>
           </li>
 
-          <li class="nav-item mb-2 text-start">
-            <a class="nav-link {% if url_name == 'transaksi' %}active{% endif %}" href="{% url 'transaksi' %}">
-              <i data-feather="activity" class="me-2"></i> Transaksi
-            </a>
-          </li>
+          <!-- ========================= -->
+          <!-- PERSEDIAAN -->
+          <!-- ========================= -->
 
-          <li class="nav-item mb-2 text-start">
+          <li class="nav-item mb-2">
+
             <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#Hutang" role="button"
-              aria-expanded="{% if url_name == 'hutang' or url_name == 'hutangpeg' %}true{% else %}false{% endif %}">
-              <span><i data-feather="credit-card" class="me-2"></i>Manajemen Hutang</span>
+              href="#stokMenu">
+
+              <span>
+                <i data-feather="archive" class="me-2"></i>
+                Persediaan
+              </span>
+
               <i class="fa fa-chevron-down"></i>
+
             </a>
-            <ul
-              class="collapse list-unstyled ps-4 {% if url_name == 'hutang' or url_name == 'hutangpeg' %}show{% endif %}"
-              id="Hutang">
-              <li class="mb-1"><a class="nav-link {% if url_name == 'hutang' %}active{% endif %}"
-                  href="{% url 'hutang' %}">Hutang Ortu</a></li>
-              <li class="mb-1"><a class="nav-link {% if url_name == 'hutangpeg' %}active{% endif %}"
-                  href="{% url 'hutangpeg' %}">Hutang Pegawai</a></li>
+
+            <ul class="collapse list-unstyled ps-4" id="stokMenu">
+
+              <li>
+                <a class="nav-link" href="{% url 'products:products_list' %}">
+                  Data Barang
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="{% url 'products:categories_list' %}">
+                  Kategori
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="{% url 'stockin_list' %}">
+                  Stok
+                </a>
+              </li>
+
             </ul>
+
           </li>
 
-          <li class="nav-item mb-2 text-start">
-            <a class="nav-link {% if url_name == 'profit' %}active{% endif %}" href="{% url 'profit' %}">
-              <i data-feather="trending-up" class="me-2"></i> Profit
+          <!-- ========================= -->
+          <!-- MASTER DATA -->
+          <!-- ========================= -->
+
+          <li class="nav-item mb-2">
+
+            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+              href="#masterMenu">
+
+              <span>
+                <i data-feather="database" class="me-2"></i>
+                Master Data
+              </span>
+
+              <i class="fa fa-chevron-down"></i>
+
             </a>
+
+            <ul class="collapse list-unstyled ps-4" id="masterMenu">
+
+              <li>
+                <a class="nav-link" href="{% url 'customers:customers_list' %}">
+                  Pelanggan
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="#">
+                  Supplier
+                </a>
+              </li>
+
+            </ul>
+
           </li>
 
-          <li class="nav-item mb-2 text-start">
-            <a class="nav-link {% if url_name == 'tabungan' %}active{% endif %}" href="{% url 'tabungan' %}">
-              <i data-feather="bar-chart-2" class="me-2"></i> Tabungan
+          <!-- ========================= -->
+          <!-- KEUANGAN -->
+          <!-- ========================= -->
+
+          <li class="nav-item mb-2">
+
+            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+              href="#keuanganMenu">
+
+              <span>
+                <i data-feather="dollar-sign" class="me-2"></i>
+                Keuangan
+              </span>
+
+              <i class="fa fa-chevron-down"></i>
+
             </a>
+
+            <ul class="collapse list-unstyled ps-4" id="keuanganMenu">
+
+              <li>
+                <a class="nav-link" href="{% url 'hutang' %}">
+                  Hutang
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="{% url 'tabungan' %}">
+                  Tabungan
+                </a>
+              </li>
+
+            </ul>
+
           </li>
 
-          <li class="nav-item mb-2 text-start">
+          <li class="sidebar-title mt-3">
+            ANALISIS
+          </li>
+
+          <!-- ========================= -->
+          <!-- ANALISIS -->
+          <!-- ========================= -->
+          <li class="nav-item mb-2">
+
+            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+              href="#analisisMenu">
+
+              <span>
+                <i data-feather="bar-chart-2" class="me-2"></i>
+                Analisis
+              </span>
+
+              <i class="fa fa-chevron-down"></i>
+
+            </a>
+
+            <ul class="collapse list-unstyled ps-4" id="analisisMenu">
+
+              <li>
+                <a class="nav-link" href="#">
+                  Dashboard Keuangan
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="#">
+                  Profit & Rugi
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="#">
+                  Tahunan
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="#">
+                  Bulanan
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="#">
+                  Barang Terlaris
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="#">
+                  Supplier Terbaik
+                </a>
+              </li>
+
+              <li>
+                <a class="nav-link" href="#">
+                  Pelanggan Terbaik
+                </a>
+              </li>
+
+            </ul>
+
+          </li>
+
+          <!-- ========================= -->
+          <!-- LAPORAN -->
+          <!-- ========================= -->
+
+          <li class="nav-item mb-2">
+
             <a class="nav-link {% if url_name == 'laporan' %}active{% endif %}" href="{% url 'laporan' %}">
-              <i data-feather="file-text" class="me-2"></i> Laporan
-            </a>
-          </li>
-        </ul>
 
+              <i data-feather="file-text" class="me-2"></i>
+
+              Laporan
+
+            </a>
+
+          </li>
+
+        </ul>
       </div>
       <div class="right-arrow" id="right-arrow">
         <i data-feather="arrow-right"></i>

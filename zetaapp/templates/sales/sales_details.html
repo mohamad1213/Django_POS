@@ -4,137 +4,146 @@
 <!-- Plugins css start-->
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
 <!-- Plugins css Ends-->
 {% endblock css %}
-{% block heading %}Sale ID: {{sale.id}}, details{% endblock heading %}
+
 {% block content %}
 <div class="page-body">
     {% include 'layout/breadcrumb.html' %}
 
-    <!-- Container-fluid starts-->
-    <div class="container-fluid list-products">
-        <div class="row ml-0 mb-3">
-            <a href="{% url 'sales:sales_list' %}">
-                <button type="button" class="btn btn-info font-weight-bold">
-                    <i class="fas fa-long-arrow-alt-left mr-2"></i>
-                    Go back
-                </button>
+    <div class="container-fluid">
+        <!-- Back and Print Actions -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{% url 'transaksi_history' %}" class="btn btn-light btn-sm text-dark border">
+                <i class="fa fa-arrow-left me-2"></i>Kembali ke Riwayat
             </a>
+            <div>
+                <a href="{% url 'sales:sales_receipt_pdf' sale.id %}" target="_blank"
+                    class="btn btn-primary btn-sm me-2">
+                    <i class="fa fa-print me-2"></i>Cetak Struk (PDF)
+                </a>
+            </div>
         </div>
 
-        <!--Sale products and details-->
-        <form action="{% url 'sales:sales_add' %}" class="saleForm" method="post">
-            <div class="row mt-3">
-                <div class="card col-md-12">
-                    <div class="card-body ml-0">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Invoice Header -->
+                        <div class="row border-bottom pb-4 mb-4">
+                            <div class="col-md-6">
+                                <h3 class="font-weight-bold text-primary mb-1">Invoice</h3>
+                                <p class="text-muted mb-0">No. Invoice: <strong
+                                        class="text-dark">{{sale.transaction_number }}</strong></p>
+                            </div>
+                            <div class="col-md-6 text-md-end text-start mt-3 mt-md-0">
+                                <span class="badge bg-success p-2 fs-6">Selesai / Lunas</span>
+                                <p class="text-muted mt-2 mb-0">Tanggal: <span
+                                        class="text-dark">{{sale.date_added|date:"d M Y H:i" }}</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Info Details -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <h5 class="text-primary font-weight-bold border-bottom pb-2 mb-3">Informasi Pelanggan
+                                </h5>
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td style="width: 120px;" class="text-muted">Nama Pelanggan</td>
+                                        <td>: <strong>{{ sale.customer.first_name|default:"Umum" }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">No. Telepon</td>
+                                        <td>: {{ sale.customer.phone|default:"-" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Alamat</td>
+                                        <td>: {{ sale.customer.address|default:"-" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-primary font-weight-bold border-bottom pb-2 mb-3">Detail Transaksi</h5>
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td style="width: 120px;" class="text-muted">Kasir</td>
+                                        <td>: {{ sale.owner.username|default:"-" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Table -->
+                        <h5 class="text-primary font-weight-bold border-bottom pb-2 mb-3">Daftar Produk</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered table-striped table-hover">
+                                <thead class="table-light text-center">
+                                    <tr>
+                                        <th style="width: 50px;">No</th>
+                                        <th>Nama Produk</th>
+                                        <th style="width: 180px;">Harga Satuan</th>
+                                        <th style="width: 120px;">Jumlah</th>
+                                        <th style="width: 200px;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detail in details %}
+                                    <tr>
+                                        <td class="text-center">{{ forloop.counter }}</td>
+                                        <td><strong>{{ detail.product.name }}</strong></td>
+                                        <td class="text-end">Rp. {{ detail.price|floatformat:"0g" }}</td>
+                                        <td class="text-center">{{ detail.quantity }}</td>
+                                        <td class="text-end font-weight-bold">Rp.
+                                            {{detail.total_detail|floatformat:"0g"}}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Tidak ada produk dalam transaksi
+                                            ini.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Summary -->
                         <div class="row">
-                            <!--Left column-->
-                            <div class="col-md-9 pl-0">
-                                <div class="card card-secondary">
-                                    <div class="card-header">Sale products</div>
-
-                                    <div class="card-body">
-                                        <!--Products table-->
-                                        <div class="card-body table-responsive p-0">
-                                            <table class="table table-hover text-nowrap" id="table_products">
-                                                <thead>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>Name</th>
-                                                        <th>Price</th>
-                                                        <th>Quantity</th>
-                                                        <th>Total</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for detail in details %}
-                                                    <tr>
-                                                        <td>{{forloop.counter}}</td>
-                                                        <td>{{detail.product.name}}</td>
-                                                        <td>{{detail.price}}</td>
-                                                        <td class="text-center">{{detail.quantity}}</td>
-                                                        <td>{{detail.total_detail}}</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <!--End Products table-->
+                            <div class="col-md-6 offset-md-6">
+                                <div class="card bg-light border-0">
+                                    <div class="card-body p-4">
+                                        <table class="table table-borderless mb-0">
+                                            <tr class="fs-6">
+                                                <td class="text-muted font-weight-bold">Total Belanja</td>
+                                                <td class="text-end font-weight-bold text-dark text-nowrap">Rp.
+                                                    {{sale.sub_total|floatformat:"0g" }}</td>
+                                            </tr>
+                                            <tr class="fs-6">
+                                                <td class="text-muted">Jumlah Bayar</td>
+                                                <td class="text-end text-dark text-nowrap">Rp.
+                                                    {{sale.amount_payed|floatformat:"0g" }}</td>
+                                            </tr>
+                                            <tr class="border-top fs-5">
+                                                <td class="text-success font-weight-bold pt-3">Kembalian</td>
+                                                <td class="text-end text-success font-weight-bold pt-3 text-nowrap">Rp.
+                                                    {{ sale.amount_change|floatformat:"0g" }}</td>
+                                            </tr>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
-                            <!--End Left column-->
-
-                            <!--Righ column-->
-                            <div class="col-md-3 pr-0">
-                                <div class="card card-secondary">
-                                    <div class="card-header">Sale details</div>
-                                    <div class="card-body">
-                                        {% csrf_token %}
-                                        <div class="form-group">
-                                            <label for="customer">Customer</label>
-                                            <select name="customer" class="form-control" id="searchbox_customers"
-                                                disabled readonly>
-                                                <option value="{{sale.customer.id}}">{{sale.customer.get_full_name}}
-                                                </option>
-                                            </select>
-                                            <div class="form-group mt-4">
-                                                <label>Sub Total</label>
-                                                <div class="input-group">
-                                                    <input name="sub_total" class="form-control"
-                                                        value="{{sale.sub_total}}" readonly>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Bayar</label>
-                                                <div class="input-group">
-                                                    <input name="amount_payed" class="form-control"
-                                                        value="{{sale.amount_payed}}" readonly>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Sisa</label>
-                                                <div class="input-group">
-                                                    <input name="amount_payed" class="form-control"
-                                                        value="{{sale.amount_change}}" readonly>
-                                                </div>
-                                            </div>
-
-
-                                        </div>
-                                        <!--End card-body-->
-                                    </div>
-                                    <!--End Right column-->
-                                </div>
-                                <!--End row-->
-                            </div>
-                            <!--End card-body-->
                         </div>
 
                     </div>
-        </form>
-        {% endblock content %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
 
-        <!-- Specific Page JS goes HERE  -->
-        {% block scriptcontent %}
-        <!-- Datatables -->
-        <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-        <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-        <!--Select2-->
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
-        <!--Bootstrap Touchspin-->
-        <script src="{% static 'assets/bootstrap-touchspin-master/src/jquery.bootstrap-touchspin.js' %}"></script>
-        <!--Sweet Alert-->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.15/dist/sweetalert2.all.min.js"></script>
-
-        <script>
-
-            // Products datatable
-
-            tblProducts = $('#table_products').DataTable({
-            });
-
-        </script>
-        {% endblock scriptcontent %}
+{% block scriptcontent %}
+<!-- Plugins JS start-->
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<!-- Plugins JS Ends-->
+{% endblock scriptcontent %}

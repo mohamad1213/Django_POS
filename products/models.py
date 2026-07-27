@@ -9,8 +9,7 @@ class Category(models.Model):
         ("ACTIVE", "Active"),
         ("INACTIVE", "Inactive")
     )
-
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256,)
     description = models.TextField(max_length=256)
     status = models.CharField(
         choices=STATUS_CHOICES,
@@ -34,8 +33,14 @@ class Product(models.Model):
         ("ACTIVE", "Active"),
         ("INACTIVE", "Inactive")
     )
-
-    name = models.CharField(max_length=256)
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False,
+        null=True,
+        blank=True
+    )
+    name = models.CharField(max_length=256, unique=True)
     description = models.TextField(max_length=256)
     status = models.CharField(
         choices=STATUS_CHOICES,
@@ -51,8 +56,24 @@ class Product(models.Model):
         # Table's name
         db_table = "Product"
 
+    def save(self, *args, **kwargs):
+        if not self.code:
+            last = Product.objects.filter(code__isnull=False).order_by("-id").first()
+
+            if last and last.code:
+                try:
+                    number = int(last.code.replace("BRG", "")) + 1
+                except ValueError:
+                    number = Product.objects.count() + 1
+            else:
+                number = 1
+
+            self.code = f"BRG{number:06d}"
+
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
-        return self.name
+        return f"{self.code} - {self.name}"
 
     def to_json(self):
         item = model_to_dict(self)

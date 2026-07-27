@@ -1,0 +1,168 @@
+{% extends 'base.html' %}{% load static %}
+
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+
+    <div class="container-fluid">
+        <!-- Status & Ringkasan Cepat -->
+        <div class="row">
+            <div class="col-sm-6 col-xl-4">
+                <div class="card o-hidden shadow-sm border-0" style="border-left: 5px solid #28a745 !important;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-success text-white p-3 rounded-3 me-3">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase font-weight-bold" style="font-size: 11px; letter-spacing: 1px;">Status Pemindaian</span>
+                                <h4 class="mb-0 text-success font-weight-bold">SUKSES</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-sm-6 col-xl-4">
+                <div class="card o-hidden shadow-sm border-0" style="border-left: 5px solid #246df5 !important;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-primary text-white p-3 rounded-3 me-3">
+                                <i class="fas fa-coins fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase font-weight-bold" style="font-size: 11px; letter-spacing: 1px;">Total Transaksi (OCR)</span>
+                                <h4 class="mb-0 text-primary font-weight-bold">Rp {{ data.total|default:"0"|floatformat:0 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-12 col-xl-4">
+                <div class="card o-hidden shadow-sm border-0" style="border-left: 5px solid #51bb25 !important;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-info text-white p-3 rounded-3 me-3">
+                                <i class="fas fa-box fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase font-weight-bold" style="font-size: 11px; letter-spacing: 1px;">Total Item Terbaca</span>
+                                <h4 class="mb-0 text-dark font-weight-bold">{{ data.items|length }} Item</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <!-- Hasil OCR -->
+            <div class="col-xl-8 col-lg-7 col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary font-weight-bold">
+                            <i class="fas fa-list-ol me-2"></i>Daftar Barang Terbaca
+                        </h5>
+                        <span class="badge bg-success-light text-success p-2 font-weight-bold">
+                            OCR Berhasil
+                        </span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="alert alert-light-info alert-dismissible fade show border-0 shadow-none mb-4" role="alert" style="background-color: #f0f7ff; color: #10539c;">
+                            <i class="fas fa-info-circle me-2"></i>Silakan periksa hasil deteksi item di bawah ini sebelum melanjutkan ke halaman POS (Transaksi Baru).
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" width="8%">#</th>
+                                        <th>Nama Barang</th>
+                                        <th class="text-center" width="15%">Jumlah</th>
+                                        <th class="text-end" width="20%">Harga Satuan</th>
+                                        <th class="text-end" width="20%">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in data.items %}
+                                    <tr>
+                                        <td class="text-center fw-bold text-muted">{{ forloop.counter }}</td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">{{ item.name }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 12px;">{{ item.qty }}</span>
+                                        </td>
+                                        <td class="text-end text-muted">
+                                            Rp {{ item.price|default:0|floatformat:0 }}
+                                        </td>
+                                        <td class="text-end fw-bold text-success">
+                                            Rp {{ item.subtotal|default:0|floatformat:0 }}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-5">
+                                            <div class="mb-3">
+                                                <i class="fas fa-file-invoice fa-3x text-muted opacity-30"></i>
+                                            </div>
+                                            <p class="mb-0">Tidak ada produk/barang yang terbaca secara detail dari OCR.</p>
+                                            <small class="text-muted">Namun total transaksi sebesar <strong>Rp {{ data.total|default:"0"|floatformat:0 }}</strong> berhasil dideteksi.</small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Tindakan -->
+            <div class="col-xl-4 col-lg-5 col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 text-dark font-weight-bold">Tindakan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-3">
+                            <a href="{% url 'sales:sales_add' %}" class="btn btn-success btn-lg d-flex align-items-center justify-content-center py-3 font-weight-bold">
+                                <i class="fas fa-cart-arrow-down me-2 fa-lg"></i>
+                                <span>Gunakan Data OCR</span>
+                            </a>
+                            <a href="{% url 'sales:sales_list' %}" class="btn btn-outline-secondary btn-lg d-flex align-items-center justify-content-center py-3">
+                                <i class="fas fa-upload me-2"></i>
+                                <span>Upload Struk Lain</span>
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4 p-3 bg-light rounded-3 border">
+                            <h6 class="font-weight-bold text-dark mb-2" style="font-size: 14px;"><i class="fas fa-lightbulb text-warning me-2"></i>Tips & Panduan</h6>
+                            <p class="text-muted small mb-0" style="line-height: 1.6; font-size: 12px;">
+                                Ketika Anda mengklik <strong>Gunakan Data OCR</strong>, sistem akan memindahkan data transaksi ini ke keranjang POS. Di halaman POS tersebut Anda dapat melengkapi informasi pelanggan, mengedit harga barang, atau menambahkan produk lainnya sebelum menuntaskan transaksi.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Raw OCR -->
+                <div class="card border-0 shadow-sm mt-3">
+                    <a class="card-header bg-white d-flex justify-content-between align-items-center text-decoration-none py-3" data-bs-toggle="collapse" href="#collapseRawOCR" role="button" aria-expanded="false" aria-controls="collapseRawOCR">
+                        <h6 class="mb-0 font-weight-bold text-muted" style="font-size: 14px;">
+                            <i class="fas fa-file-alt me-2 text-info"></i>Hasil Mentah Pembacaan (Raw OCR)
+                        </h6>
+                        <i class="fas fa-chevron-down text-muted"></i>
+                    </a>
+                    <div class="collapse" id="collapseRawOCR">
+                        <div class="card-body bg-dark p-3 rounded-bottom-3" style="max-height: 250px; overflow-y: auto;">
+                            <pre class="mb-0 text-success font-monospace" style="white-space: pre-wrap; font-size: 11px; font-family: 'Courier New', Courier, monospace; line-height: 1.4;">{{ data.raw|default:"Tidak ada data teks mentah." }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

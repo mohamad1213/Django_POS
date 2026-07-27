@@ -48,6 +48,7 @@
   <!-- Responsive css-->
   <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/responsive.scss' %}" />
 </head>
+{% load django_browser_reload %}
 
 <body class="{{layout}}">
   <!-- Loader starts-->
@@ -99,6 +100,7 @@
   {% block darkLayoutScript %}{% endblock %}
   <!-- login js-->
   <!-- Plugin used-->
+  {% django_browser_reload_script %}
 </body>
 
 </html>

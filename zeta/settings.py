@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'sass_processor',
     'crispy_bootstrap4',
+    'django_browser_reload',
     'crispy_forms',
     'zetaapp',
     'customers',
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
     'authentication',
     'sweetify'
 ]
+
+TESSERACT_CMD = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 SWEETIFY_SWEETALERT_LIBRARY = 'sweetalert2'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -49,6 +52,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
     # 'django.contrib.staticfiles.middleware.StaticFilesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
