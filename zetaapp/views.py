@@ -64,9 +64,14 @@ from sales.models import Sale, SaleDetail
 
 @login_required(login_url="/accounts/login/")
 def transaksi_history(request):
-    # Perbaikan: filter menggunakan sale__owner karena SaleDetail tidak memiliki field owner secara langsung
+    status_filter = request.GET.get('status', 'ALL').upper()
     data = SaleDetail.objects.filter(sale__owner=request.user).order_by('-id')
-    
+
+    if status_filter == 'LUNAS':
+        data = data.filter(models.Q(sale__amount_payed__gte=models.F('sale__sub_total')) | models.Q(sale__afkiran__status='LUNAS'))
+    elif status_filter == 'BELUM_LUNAS':
+        data = data.filter(models.Q(sale__amount_payed__lt=models.F('sale__sub_total')) | models.Q(sale__afkiran__status='PENDING'))
+
     # Menghitung ringkasan statistik untuk Hari Ini
     today = timezone.localtime(timezone.now()).date()
     sales_today = Sale.objects.filter(owner=request.user)
@@ -78,6 +83,7 @@ def transaksi_history(request):
 
     context = {
         'data': data,
+        'status_filter': status_filter,
         'total_transactions': total_transactions,
         'total_revenue': total_revenue,
         'total_items': total_items,

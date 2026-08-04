@@ -21,6 +21,8 @@ class Sale(models.Model):
     grand_total = models.FloatField(default=0)
     amount_payed = models.FloatField(default=0)
     amount_change = models.FloatField(default=0)
+    dp_amount = models.FloatField(default=0)
+    is_afkiran = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'Sales'
@@ -31,6 +33,14 @@ class Sale(models.Model):
     def sum_items(self):
         details = SaleDetail.objects.filter(sale=self.id)
         return sum([d.quantity for d in details])
+
+    def has_afkiran_items(self):
+        for detail in self.saledetail_set.select_related('product').all():
+            if detail.product and detail.product.name:
+                name = detail.product.name.lower()
+                if 'ps kaca' in name or 'ps warna' in name:
+                    return True
+        return False
     def save(self, *args, **kwargs):
         if not self.transaction_number:
             self.transaction_number = self.generate_invoice_number()
@@ -38,12 +48,12 @@ class Sale(models.Model):
         super().save(*args, **kwargs)  # Simpan sale dulu
 
         if creating:
-            # Buat transaksi pengeluaran otomatis
+            # Buat transaksi pengeluaran otomatis (Barang Masuk / Beli = Pengeluaran Kas)
             Transaksi.objects.create(
-                owner=self.owner,  # Bisa diisi user yang membuat sale
-                jumlah=self.sub_total,  # Jumlah pengeluaran = total penjualan
+                owner=self.owner,  # User yang membuat sale
+                jumlah=self.sub_total,  # Jumlah pengeluaran = total beli
                 tanggal=self.date_added.date(),
-                keterangan=f"Penjualan {self.transaction_number}",
+                keterangan=f"Barang Masuk (Beli) {self.transaction_number}",
                 transaksi_choice=Transaksi.PENGELUARAN,
                 kategori=None,
             )
@@ -60,7 +70,7 @@ class SaleDetail(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, db_column='product')
     price = models.FloatField()
-    quantity = models.IntegerField()
+    quantity = models.FloatField(default=0)
     total_detail = models.FloatField()
 
     class Meta:

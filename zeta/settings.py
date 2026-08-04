@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'products',
     'pegawai',
     'sales',
+    'purchases',
+    'afkiran',
     'authentication',
     'sweetify'
 ]
@@ -84,18 +86,17 @@ WSGI_APPLICATION = 'zeta.wsgi.application'
 
 DATABASE_URL = 'postgresql://postgres:aSkLFmBFFBUTcTtiIprzLvZOAuUqAbZX@monorail.proxy.rlwy.net:15409/railway'
 DATABASES = {
-    'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=1800)
-
-}
-DATABASES = {
     "default": {
-            "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
-            "NAME": os.getenv("DB_NAME", "sqlite3"),
-            # "USER": os.getenv("DB_USER"),
-            # "PASSWORD": os.getenv("DB_PASSWORD"), 
-            # "HOST": os.getenv("DB_HOST"),
-            # "PORT": os.getenv("DB_PORT"),
-        }
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.getenv("DB_NAME", "sqlite3"),
+        # "USER": os.getenv("DB_USER"),
+        # "PASSWORD": os.getenv("DB_PASSWORD"),
+        # "HOST": os.getenv("DB_HOST"),
+        # "PORT": os.getenv("DB_PORT"),
+        "OPTIONS": {
+            "timeout": 20,   # detik tunggu sebelum raise 'database is locked'
+        },
+    }
 }
 
 # Password validation

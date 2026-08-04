@@ -23,7 +23,9 @@ urlpatterns = [
     path('accounts/', include('authentication.urls')),
     
     # Transaksi 
-    path('sales/', include('sales.urls')), #POS Kasir
+    path('sales/', include('sales.urls')), # POS Penjualan (Barang Keluar)
+    path('purchases/', include('purchases.urls')), # POS Pembelian (Barang Masuk)
+    path('afkiran/', include('afkiran.urls', namespace='afkiran')), # Afkiran Sortir PS Kaca
     # Input Manual
     path('transaksi/', views.transaksi,name='transaksi'), 
     path('transaksi/<int:pk>/update/', views.UpdateTr,name='updatetr'),

@@ -16,10 +16,8 @@ from io import BytesIO
 from xhtml2pdf import pisa
 from django.views import View
 from django.http import JsonResponse
-from zetaapp.models import Transaksi
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F
+from zetaapp.models import Transaksi, Stock
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 from django.shortcuts import render, redirect
@@ -85,6 +83,17 @@ def sales_list_view(request):
         'totals': totals,
     }
     return render(request, "sales/sales.html", context=context)
+
+import json
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.db import transaction as db_transaction
+from django.db.models import F
+
+# Impor model sesuai struktur aplikasi kamu
+from .models import Sale, SaleDetail, Product, Customer
+
 @login_required(login_url="/accounts/login/")
 def sales_add_view(request):
     customers = [c.to_select2() for c in Customer.objects.filter(owner=request.user)]
@@ -92,141 +101,173 @@ def sales_add_view(request):
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
             data = json.loads(request.body)
-            print("--- LOG 1: Data AJAX Diterima ---") 
-            print(data) # Cetak semua data yang diterima
-            
-            # --- CUSTOMER HANDLING (tetap sama) ---
-            customer_obj = None
-            new_name = data.get('new_customer_name', '').strip()
-            new_address = data.get('new_customer_address', '').strip()
-            new_phone = data.get('new_customer_phone', '').strip()
-            if new_name:
-                print("--- LOG 2: Mencoba Membuat/Mendapatkan Customer Baru ---")
-                customer_obj, created = Customer.objects.get_or_create(
-                    first_name__iexact=new_name,
-                    defaults={
-                        'first_name': new_name,
-                        'address': new_address,
-                        'phone': new_phone,
-                        'owner': request.user
-                    }
-                )
-            else:
-                customer_id = data.get('customer')
-                if customer_id:
-                    customer_obj = Customer.objects.get(id=int(customer_id),owner=request.user)
+            print("--- LOG 1: Data AJAX Diterima ---")
+            print(data)
 
-            print("--- LOG 3: Customer Selesai Dikonfigurasi ---")
-            # --- TRANSAKSI UTAMA (tetap sama) ---
             sub_total = float(data.get('sub_total', 0.0))
             amount_payed = float(data.get('amount_payed', 0.0))
             amount_change = float(data.get('amount_change', 0.0))
+            dp_val = amount_payed if amount_payed < sub_total else 0.0
 
             if sub_total <= 0 or not data.get('products'):
-                 return JsonResponse({'success': False, 'message': 'Penjualan tidak valid (Total nol atau tanpa produk).'}, status=400)
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Penjualan tidak valid (Total nol atau tanpa produk).'
+                }, status=400)
 
-            new_sale = Sale.objects.create(
-                customer=customer_obj,
-                sub_total=sub_total,
-                amount_payed=amount_payed,
-                amount_change=amount_change,
-                owner=request.user
-            )
-            
-            print(f"--- LOG 4: Sale ID {new_sale.id} Dibuat ---")
+            # Gunakan transaction.atomic untuk keamanan konsistensi data database
+            with db_transaction.atomic():
+                # --- CUSTOMER HANDLING ---
+                customer_obj = None
+                new_name = data.get('new_customer_name', '').strip()
+                new_address = data.get('new_customer_address', '').strip()
+                new_phone = data.get('new_customer_phone', '').strip()
 
-            # --- SALE DETAIL & PRODUCT HANDLING ---
-            for product in data['products']:
-                product_obj = None
-                
-                # AMBIL NILAI HARGA DAN BERSIHKAN DAHULU
-                # Jika product.get('price') adalah None atau string kosong, gunakan 0.0
-                price_value = product.get('price')
-                if price_value in [None, '']:
-                    price_float = 0.0
+                if new_name:
+                    print("--- LOG 2: Mencoba Membuat/Mendapatkan Customer Baru ---")
+                    customer_obj, created = Customer.objects.get_or_create(
+                        first_name__iexact=new_name,
+                        owner=request.user,
+                        defaults={
+                            'first_name': new_name,
+                            'address': new_address,
+                            'phone': new_phone,
+                            'owner': request.user
+                        }
+                    )
                 else:
-                    price_float = float(price_value)
-                
-                for i, product in enumerate(data['products']):
-                    print(f"--- LOG 5: Memproses Produk ke-{i} ---")
+                    customer_id = data.get('customer')
+                    if customer_id:
+                        customer_obj = Customer.objects.get(id=int(customer_id), owner=request.user)
 
-                if not product.get('id'): # Produk Baru
-                    product_name = product.get('name', '').strip()
-                    if not product_name:
-                         raise ValueError("Nama produk baru tidak boleh kosong.")
-                    print(f"--- LOG 6: Mencoba Membuat Produk BARU: {product_name} ---")
-                    
-                    # Prevent duplicate product creation by checking if it already exists for this user
-                    existing_product = Product.objects.filter(name__iexact=product_name, owner=request.user).first()
-                    if existing_product:
-                        product_obj = existing_product
-                    else:
-                        try:
-                            default_category = Category.objects.get(name='Uncategorized', owner=request.user)
-                        except Category.DoesNotExist:
-                            default_category, created = Category.objects.get_or_create(
-                                name='Uncategorized', defaults={'owner': request.user}
-                            )
-                        new_product = Product.objects.create(
-                            name=product_name,
-                            price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
-                            owner=request.user,
-                            description='Deskripsi Produk Baru', # Wajib diisi
-                            status='ACTIVE',                      # Wajib diisi dari STATUS_CHOICES
-                            category=default_category
-                        )
-                        product_obj = new_product
-                else: # Produk Lama
-                    try:
-                        product_obj = Product.objects.get(
-                            id=int(product['id']), 
-                            owner=request.user
-                        )
-                    except Product.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': f'Produk dengan ID {product["id"]} tidak ditemukan atau tidak memiliki izin.'}, status=404)
-                
-                # Buat SaleDetail
-                SaleDetail.objects.create(
-                    sale=new_sale,
-                    product=product_obj,
-                    price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
-                    quantity=int(product['quantity']),
-                    total_detail=float(product['total_product'])
+                print("--- LOG 3: Customer Selesai Dikonfigurasi ---")
+
+                # --- TRANSAKSI UTAMA ---
+                new_sale = Sale.objects.create(
+                    customer=customer_obj,
+                    sub_total=sub_total,
+                    amount_payed=amount_payed,
+                    amount_change=amount_change,
+                    dp_amount=dp_val,
+                    owner=request.user
                 )
-            print("--- LOG 7: Semua Produk Diproses. Berhasil! ---")
-                
-            # 3. Respon Sukses
-            response_data = {
+                print(f"--- LOG 4: Sale ID {new_sale.id} Dibuat ---")
+
+                # --- SALE DETAIL & PRODUCT HANDLING (SINGLE LOOP) ---
+                for i, product in enumerate(data['products']):
+                    print(f"--- LOG 5: Memproses Produk ke-{i+1} ---")
+                    
+                    # 1. Cleaning & Validasi Harga
+                    price_value = product.get('price')
+                    if price_value in [None, '']:
+                        price_float = 0.0
+                    else:
+                        price_float = float(price_value)
+
+                    product_obj = None
+                    
+                    # 2. Ambil / Buat Produk
+                    if not product.get('id'):  # Produk Baru
+                        product_name = product.get('name', '').strip()
+                        if not product_name:
+                            raise ValueError("Nama produk baru tidak boleh kosong.")
+                        
+                        print(f"--- LOG 6: Mencoba Membuat/Mencari Produk BARU: {product_name} ---")
+                        
+                        existing_product = Product.objects.filter(
+                            name__iexact=product_name, 
+                            owner=request.user
+                        ).first()
+
+                        if existing_product:
+                            product_obj = existing_product
+                        else:
+                            try:
+                                default_category = Category.objects.get(name='Uncategorized', owner=request.user)
+                            except Category.DoesNotExist:
+                                default_category, _ = Category.objects.get_or_create(
+                                    name='Uncategorized', 
+                                    owner=request.user,
+                                    defaults={'owner': request.user}
+                                )
+                            
+                            product_obj = Product.objects.create(
+                                name=product_name,
+                                price=price_float,
+                                owner=request.user,
+                                description='Deskripsi Produk Baru',
+                                status='ACTIVE',
+                                category=default_category
+                            )
+                    else:  # Produk Eksisting
+                        try:
+                            product_obj = Product.objects.get(
+                                id=int(product['id']), 
+                                owner=request.user
+                            )
+                        except Product.DoesNotExist:
+                            raise ValueError(f'Produk dengan ID {product["id"]} tidak ditemukan.')
+
+                    qty = int(product.get('quantity', 1))
+                    total_prod = float(product.get('total_product', 0.0))
+
+                    # 3. Buat SaleDetail
+                    SaleDetail.objects.create(
+                        sale=new_sale,
+                        product=product_obj,
+                        price=price_float,
+                        quantity=qty,
+                        total_detail=total_prod
+                    )
+
+                    # 4. Update Stok
+                    stock_obj, _ = Stock.objects.get_or_create(
+                        product=product_obj,
+                        defaults={"quantity": 0}
+                    )
+                    stock_obj.quantity = F("quantity") + qty
+                    stock_obj.save()
+
+                print("--- LOG 7: Semua Produk Diproses. Berhasil! ---")
+
+            # Response sukses jika blok atomic selesai tanpa error
+            return JsonResponse({
                 'success': True,
                 'message': f'Transaksi #{new_sale.id} berhasil dibuat!',
                 'redirect_url': '/sales/' 
-            }
-            return JsonResponse(response_data)
+            })
 
         except Product.DoesNotExist:
-            response_data = {'success': False, 'message': 'Terjadi kesalahan: Salah satu produk tidak ditemukan.'}
-            return JsonResponse(response_data, status=404)
+            return JsonResponse({
+                'success': False, 
+                'message': 'Terjadi kesalahan: Salah satu produk tidak ditemukan.'
+            }, status=404)
             
         except Customer.DoesNotExist:
-            response_data = {'success': False, 'message': 'Terjadi kesalahan: Customer tidak ditemukan.'}
-            return JsonResponse(response_data, status=404)
+            return JsonResponse({
+                'success': False, 
+                'message': 'Terjadi kesalahan: Customer tidak ditemukan.'
+            }, status=404)
             
         except json.JSONDecodeError:
-            response_data = {'success': False, 'message': 'Format data JSON tidak valid.'}
-            return JsonResponse(response_data, status=400)
+            return JsonResponse({
+                'success': False, 
+                'message': 'Format data JSON tidak valid.'
+            }, status=400)
 
         except ValueError as e:
-            # Ini akan menangkap "could not convert string to float: ''"
-            response_data = {'success': False, 'message': f'Validasi Data Gagal: Pastikan semua nilai numerik terisi dengan benar. Detail: {str(e)}'}
-            return JsonResponse(response_data, status=400)
+            return JsonResponse({
+                'success': False, 
+                'message': f'Validasi Data Gagal: {str(e)}'
+            }, status=400)
 
         except Exception as e:
-            response_data = {
-                'success': False,
+            return JsonResponse({
+                'success': False, 
                 'message': f'Terjadi kesalahan server: {str(e)}'
-            }
-            return JsonResponse(response_data, status=500)
-    # Check if there is OCR data in session and pop it
+            }, status=500)
+
+    # --- HANDLING GET REQUEST ---
     ocr_data = request.session.pop("ocr_result", None)
     ocr_data_json = None
     if ocr_data:
@@ -243,6 +284,175 @@ def sales_add_view(request):
         "ocr_data_json": ocr_data_json,
     }
     return render(request, "sales/sales_add.html", context=context)
+# @login_required(login_url="/accounts/login/")
+# def sales_add_view(request):
+#     customers = [c.to_select2() for c in Customer.objects.filter(owner=request.user)]
+
+#     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#         try:
+#             data = json.loads(request.body)
+#             print("--- LOG 1: Data AJAX Diterima ---") 
+#             print(data) # Cetak semua data yang diterima
+            
+#             # --- CUSTOMER HANDLING (tetap sama) ---
+#             customer_obj = None
+#             new_name = data.get('new_customer_name', '').strip()
+#             new_address = data.get('new_customer_address', '').strip()
+#             new_phone = data.get('new_customer_phone', '').strip()
+#             if new_name:
+#                 print("--- LOG 2: Mencoba Membuat/Mendapatkan Customer Baru ---")
+#                 customer_obj, created = Customer.objects.get_or_create(
+#                     first_name__iexact=new_name,
+#                     defaults={
+#                         'first_name': new_name,
+#                         'address': new_address,
+#                         'phone': new_phone,
+#                         'owner': request.user
+#                     }
+#                 )
+#             else:
+#                 customer_id = data.get('customer')
+#                 if customer_id:
+#                     customer_obj = Customer.objects.get(id=int(customer_id),owner=request.user)
+
+#             print("--- LOG 3: Customer Selesai Dikonfigurasi ---")
+#             # --- TRANSAKSI UTAMA (tetap sama) ---
+#             sub_total = float(data.get('sub_total', 0.0))
+#             amount_payed = float(data.get('amount_payed', 0.0))
+#             amount_change = float(data.get('amount_change', 0.0))
+#             dp_val = amount_payed if amount_payed < sub_total else 0.0
+
+#             if sub_total <= 0 or not data.get('products'):
+#                  return JsonResponse({'success': False, 'message': 'Penjualan tidak valid (Total nol atau tanpa produk).'}, status=400)
+
+#             new_sale = Sale.objects.create(
+#                 customer=customer_obj,
+#                 sub_total=sub_total,
+#                 amount_payed=amount_payed,
+#                 amount_change=amount_change,
+#                 dp_amount=dp_val,
+#                 owner=request.user
+#             )
+            
+#             print(f"--- LOG 4: Sale ID {new_sale.id} Dibuat ---")
+
+#             # --- SALE DETAIL & PRODUCT HANDLING ---
+#             for product in data['products']:
+#                 product_obj = None
+                
+#                 # AMBIL NILAI HARGA DAN BERSIHKAN DAHULU
+#                 # Jika product.get('price') adalah None atau string kosong, gunakan 0.0
+#                 price_value = product.get('price')
+#                 if price_value in [None, '']:
+#                     price_float = 0.0
+#                 else:
+#                     price_float = float(price_value)
+                
+#                 for i, product in enumerate(data['products']):
+#                     print(f"--- LOG 5: Memproses Produk ke-{i} ---")
+
+#                 if not product.get('id'): # Produk Baru
+#                     product_name = product.get('name', '').strip()
+#                     if not product_name:
+#                          raise ValueError("Nama produk baru tidak boleh kosong.")
+#                     print(f"--- LOG 6: Mencoba Membuat Produk BARU: {product_name} ---")
+                    
+#                     # Prevent duplicate product creation by checking if it already exists for this user
+#                     existing_product = Product.objects.filter(name__iexact=product_name, owner=request.user).first()
+#                     if existing_product:
+#                         product_obj = existing_product
+#                     else:
+#                         try:
+#                             default_category = Category.objects.get(name='Uncategorized', owner=request.user)
+#                         except Category.DoesNotExist:
+#                             default_category, created = Category.objects.get_or_create(
+#                                 name='Uncategorized', defaults={'owner': request.user}
+#                             )
+#                         new_product = Product.objects.create(
+#                             name=product_name,
+#                             price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
+#                             owner=request.user,
+#                             description='Deskripsi Produk Baru', # Wajib diisi
+#                             status='ACTIVE',                      # Wajib diisi dari STATUS_CHOICES
+#                             category=default_category
+#                         )
+#                         product_obj = new_product
+#                 else: # Produk Lama
+#                     try:
+#                         product_obj = Product.objects.get(
+#                             id=int(product['id']), 
+#                             owner=request.user
+#                         )
+#                     except Product.DoesNotExist:
+#                         return JsonResponse({'success': False, 'message': f'Produk dengan ID {product["id"]} tidak ditemukan atau tidak memiliki izin.'}, status=404)
+                
+#                 qty = int(product['quantity'])
+#                 # Buat SaleDetail
+#                 SaleDetail.objects.create(
+#                     sale=new_sale,
+#                     product=product_obj,
+#                     price=price_float, # GUNAKAN NILAI YANG SUDAH DI-CHECK
+#                     quantity=qty,
+#                     total_detail=float(product['total_product'])
+#                 )
+                
+#                 # UPDATE STOK OTOMATIS: Barang Masuk (Beli) -> Stok BERTAMBAH
+#                 stock_obj, _ = Stock.objects.get_or_create(
+#                     product=product_obj,
+#                     defaults={"quantity": 0}
+#                 )
+#                 stock_obj.quantity = F("quantity") + qty
+#                 stock_obj.save()
+#             print("--- LOG 7: Semua Produk Diproses. Berhasil! ---")
+                
+#             # 3. Respon Sukses
+#             response_data = {
+#                 'success': True,
+#                 'message': f'Transaksi #{new_sale.id} berhasil dibuat!',
+#                 'redirect_url': '/sales/' 
+#             }
+#             return JsonResponse(response_data)
+
+#         except Product.DoesNotExist:
+#             response_data = {'success': False, 'message': 'Terjadi kesalahan: Salah satu produk tidak ditemukan.'}
+#             return JsonResponse(response_data, status=404)
+            
+#         except Customer.DoesNotExist:
+#             response_data = {'success': False, 'message': 'Terjadi kesalahan: Customer tidak ditemukan.'}
+#             return JsonResponse(response_data, status=404)
+            
+#         except json.JSONDecodeError:
+#             response_data = {'success': False, 'message': 'Format data JSON tidak valid.'}
+#             return JsonResponse(response_data, status=400)
+
+#         except ValueError as e:
+#             # Ini akan menangkap "could not convert string to float: ''"
+#             response_data = {'success': False, 'message': f'Validasi Data Gagal: Pastikan semua nilai numerik terisi dengan benar. Detail: {str(e)}'}
+#             return JsonResponse(response_data, status=400)
+
+#         except Exception as e:
+#             response_data = {
+#                 'success': False,
+#                 'message': f'Terjadi kesalahan server: {str(e)}'
+#             }
+#             return JsonResponse(response_data, status=500)
+#     # Check if there is OCR data in session and pop it
+#     ocr_data = request.session.pop("ocr_result", None)
+#     ocr_data_json = None
+#     if ocr_data:
+#         try:
+#             ocr_data_json = json.dumps(ocr_data)
+#         except Exception as e:
+#             print("Error dumping OCR data JSON:", e)
+
+#     context = {
+#         "breadcrumb": {"parent": "POS", "child": "Point Of Sale"},
+#         "active_icon": "sales",
+#         "customers": customers,
+#         "ocr_data": ocr_data,
+#         "ocr_data_json": ocr_data_json,
+#     }
+#     return render(request, "sales/sales_add.html", context=context)
 
 @login_required(login_url="/accounts/login/")
 def sales_details_view(request, sale_id):
@@ -272,11 +482,20 @@ def delete_sale(request, sale_id):
     sale = get_object_or_404(Sale, id=sale_id, owner=request.user)
 
     if request.method == "POST":
-        # Hapus semua detail transaksi
-        SaleDetail.objects.filter(sale=sale).delete()
+        # Kembalikan stok (dikurangi kembali)
+        details = SaleDetail.objects.filter(sale=sale)
+        for detail in details:
+            try:
+                stock_obj = Stock.objects.get(product=detail.product)
+                stock_obj.quantity = F("quantity") - detail.quantity
+                stock_obj.save()
+            except Stock.DoesNotExist:
+                pass
+
+        details.delete()
         sale.delete()
 
-        messages.success(request, "Transaksi berhasil dihapus!")
+        messages.success(request, "Transaksi penjualan berhasil dihapus dan stok penyesuaian telah dikembalikan!")
         return redirect('sales:sales_list')  # ganti sesuai nama URL list transaksi
 
     # Jika bukan POST, redirect saja
@@ -295,8 +514,6 @@ def render_to_pdf(template_src, context_dict={}):
 class ViewPDF(View):
     def get(self, request, sale_id, *args, **kwargs,):
         sale = Sale.objects.get(id=sale_id)
-
-        # Get the sale details
         details = SaleDetail.objects.filter(sale=sale)
 
         data = {

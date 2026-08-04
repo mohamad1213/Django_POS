@@ -1,0 +1,487 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
+<style>
+    .profit-card {
+        background: linear-gradient(135deg, #1a3a2a, #2b5940);
+        border-radius: 12px;
+        color: white;
+        padding: 20px;
+    }
+    .profit-card .pc-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.75;
+        margin-bottom: 2px;
+    }
+    .profit-card .pc-value {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    .profit-card .pc-divider {
+        border-top: 1px solid rgba(255,255,255,0.15);
+        margin: 10px 0;
+    }
+    .pc-profit-pos { font-size: 24px; font-weight: 800; color: #6ee89b; }
+    .pc-profit-neg { font-size: 24px; font-weight: 800; color: #ff8080; }
+    .badge-stock { font-size: 11px; padding: 4px 8px; }
+    .qty-over-stock { border-color: #dc3545 !important; background-color: #fff5f5 !important; }
+    .stock-warning { color: #dc3545; font-size: 11px; margin-top: 3px; display: none; }
+    .profit-cell { font-size: 12px; }
+    .profit-cell.pos { color: #198754; font-weight: 600; }
+    .profit-cell.neg { color: #dc3545; font-weight: 600; }
+    .profit-cell.zero { color: #6c757d; }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+
+    <div class="container-fluid">
+        <form id="purchaseForm" class="purchaseForm">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-12 col-lg-8">
+                    <!-- Cari / Tambah Barang Keluar -->
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-header bg-success text-white py-3">
+                            <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Pilih Barang Keluar (Jual / Kirim ke
+                                Pabrik)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group mb-3">
+                                <label for="searchbox_products" class="fw-bold mb-1">Cari Barang (Tampil Nama, Harga &
+                                    Stok):</label>
+                                <select class="form-control select2" id="searchbox_products">
+                                    <option value="" selected disabled hidden>Ketik nama barang rosok...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Item Barang Keluar -->
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-header bg-light py-3">
+                            <h5 class="mb-0 text-dark"><i class="fas fa-list me-2"></i>Daftar Barang Keluar (Jual)</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" id="table_products">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 36px;">#</th>
+                                            <th>Nama Barang &amp; Stok</th>
+                                            <th style="width: 160px;">Harga Jual/Satuan</th>
+                                            <th style="width: 120px;">Jumlah (kg/pcs)</th>
+                                            <th style="width: 140px;">Total</th>
+                                            <th style="width: 130px;">Profit Estimasi</th>
+                                            <th class="text-center" style="width: 56px;">Hapus</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr id="empty_row">
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
+                                                Belum ada barang yang dipilih. Gunakan pencarian di atas.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column Kanan: Tujuan Kirim & Grand Total -->
+                <div class="col-12 col-lg-4">
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-header bg-dark text-white py-3">
+                            <h5 class="mb-0"><i class="fas fa-industry me-2"></i>Informasi Pembeli / Pabrik</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="supplier_name" class="form-label fw-bold">Nama Pabrik / Pembeli / Tujuan
+                                    Kirim:</label>
+                                <input type="text" class="form-control" id="supplier_name" name="supplier_name"
+                                    placeholder="Contoh: PT. Plastic Indonesia / Pabrik Daur Ulang / Boss Agung">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="note" class="form-label fw-bold">Catatan Penjualan:</label>
+                                <textarea class="form-control" id="note" name="note" rows="2"
+                                    placeholder="Catatan opsional..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total -->
+                    <div class="card shadow-sm border-0 mb-3 bg-light">
+                        <div class="card-body">
+                            <h6 class="text-muted text-uppercase mb-1">Total Pemasukan (Kas Masuk)</h6>
+                            <h2 class="text-success fw-bold mb-0" id="display_grand_total">Rp 0</h2>
+                        </div>
+                    </div>
+
+                    <!-- Kartu Profit Estimasi -->
+                    <div class="profit-card mb-3">
+                        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:0.8;margin-bottom:14px;">
+                            <i class="fas fa-chart-line me-2"></i>Estimasi Profit Transaksi
+                        </div>
+                        <div class="pc-label">Total Pemasukan (Jual)</div>
+                        <div class="pc-value" id="pc_revenue">Rp 0</div>
+                        <div class="pc-label">Total Modal (Harga Beli Rata-rata)</div>
+                        <div class="pc-value" id="pc_cost">Rp 0</div>
+                        <div class="pc-divider"></div>
+                        <div class="pc-label">Estimasi Profit</div>
+                        <div class="pc-profit-pos" id="pc_profit">Rp 0</div>
+                        <div class="mt-2" style="font-size:11px;opacity:0.65;">
+                            * Dihitung dari harga beli rata-rata vs harga jual input.
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi -->
+                    <div class="d-grid gap-2">
+                        <button type="button" id="btn_save_purchase" class="btn btn-success btn-lg">
+                            <i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Kurangi Stok
+                        </button>
+                        <a href="{% url 'purchases:purchase_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i> Batal / Kembali
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% block scriptcontent %}
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        let products_selected = [];
+
+        // Helper Format Plaintext Rupiah
+        function formatRupiahText(val) {
+            let numStr = String(val).replace(/[^0-9]/g, '');
+            if (!numStr) return 'Rp 0';
+            return 'Rp ' + parseInt(numStr).toLocaleString('id-ID');
+        }
+
+        function parseRawNumber(val) {
+            let numStr = String(val).replace(/[^0-9]/g, '');
+            return parseFloat(numStr) || 0;
+        }
+
+        // ── Helper Format ──────────────────────────────────────────────
+        function formatRupiahText(val) {
+            let numStr = String(val).replace(/[^0-9]/g, '');
+            if (!numStr) return 'Rp 0';
+            return 'Rp ' + parseInt(numStr).toLocaleString('id-ID');
+        }
+        function parseRawNumber(val) {
+            return parseFloat(String(val).replace(/[^0-9]/g, '')) || 0;
+        }
+        function formatRp(num) {
+            return 'Rp ' + (parseFloat(num) || 0).toLocaleString('id-ID');
+        }
+
+        // ── Select2 AJAX ───────────────────────────────────────────────
+        $('#searchbox_products').select2({
+            theme: 'bootstrap4',
+            placeholder: 'Ketik nama barang rosok...',
+            tags: true,
+            ajax: {
+                url: "{% url 'products:get_products' %}",
+                type: 'GET',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { term: params.term || '' }; },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return {
+                                id: item.id,
+                                text: item.text,
+                                name: item.name,
+                                price: item.price,
+                                stock_qty: item.stock_qty || 0,
+                                total_bought: item.total_bought || 0,
+                                total_sold: item.total_sold || 0,
+                                diff_qty: item.diff_qty || 0,
+                                avg_buy_price: item.avg_buy_price || 0
+                            };
+                        })
+                    };
+                },
+                cache: true
+            }
+        });
+
+        // ── Event saat barang dipilih ──────────────────────────────────
+        $('#searchbox_products').on('select2:select', function (e) {
+            let sel = e.params.data;
+            let isNew = !sel.id || isNaN(sel.id);
+            let priceVal = isNew ? 0 : parseFloat(sel.price || 0);
+            let stockQty = isNew ? 999999 : parseFloat(sel.stock_qty || 0);
+
+            let productObj = {
+                id: isNew ? null : parseInt(sel.id),
+                name: isNew ? sel.text : sel.name,
+                price: priceVal,
+                quantity: Math.min(1, stockQty),
+                total_product: priceVal * Math.min(1, stockQty),
+                stock_qty: stockQty,
+                total_bought: sel.total_bought || 0,
+                total_sold: sel.total_sold || 0,
+                diff_qty: sel.diff_qty || 0,
+                avg_buy_price: parseFloat(sel.avg_buy_price || 0)
+            };
+
+            let existing = products_selected.find(p => p.id && p.id === productObj.id);
+            if (existing) {
+                let newQty = existing.quantity + 1;
+                if (newQty > existing.stock_qty) {
+                    alert('Stok "' + existing.name + '" hanya ' + existing.stock_qty + ' kg/pcs. Tidak bisa menambah lagi.');
+                } else {
+                    existing.quantity = newQty;
+                    existing.total_product = newQty * existing.price;
+                }
+            } else {
+                if (!isNew && stockQty <= 0) {
+                    alert('Stok "' + productObj.name + '" habis (' + stockQty + ' kg). Tidak dapat ditambahkan.');
+                    $('#searchbox_products').val(null).trigger('change');
+                    return;
+                }
+                products_selected.push(productObj);
+            }
+
+            renderTable();
+            $('#searchbox_products').val(null).trigger('change');
+        });
+
+        function renderTable() {
+            let tbody = $('#table_products tbody');
+            tbody.empty();
+
+            if (products_selected.length === 0) {
+                tbody.append(`
+                    <tr id="empty_row">
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
+                            Belum ada barang yang dipilih. Gunakan pencarian di atas.
+                        </td>
+                    </tr>
+                `);
+                updateTotal();
+                return;
+            }
+
+            products_selected.forEach((item, index) => {
+                let formattedPrice = formatRupiahText(item.price);
+                let stockBadgeClass = item.stock_qty > 0 ? 'bg-success' : 'bg-danger';
+
+                // Profit per baris
+                let profitPerUnit = item.price - item.avg_buy_price;
+                let profitTotal = profitPerUnit * item.quantity;
+                let profitClass = profitTotal > 0 ? 'pos' : (profitTotal < 0 ? 'neg' : 'zero');
+                let sign = profitTotal >= 0 ? '+' : '';
+                let profitInfo = item.avg_buy_price > 0
+                    ? sign + formatRp(profitTotal) + '<br><small style="opacity:0.75">' + sign + formatRp(profitPerUnit) + '/kg</small>'
+                    : '<span class="text-muted" style="font-size:11px">Belum ada data beli</span>';
+
+                let row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <strong>${item.name}</strong>
+                            ${item.id ? '' : ' <span class="badge bg-warning text-dark">Barang Baru</span>'}
+                            <div class="mt-1">
+                                <span class="badge ${stockBadgeClass} badge-stock">Stok: ${item.stock_qty} kg/pcs</span>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm input-price-plaintext"
+                                data-index="${index}" value="${formattedPrice}">
+                        </td>
+                        <td>
+                            <input type="number" step="any" min="0.01" max="${item.stock_qty}"
+                                class="form-control form-control-sm input-qty-plaintext"
+                                data-index="${index}" data-max-stock="${item.stock_qty}"
+                                value="${item.quantity}">
+                            <div class="stock-warning" id="warn_${index}">Max stok: ${item.stock_qty}</div>
+                        </td>
+                        <td class="fw-bold text-end">
+                            <span class="total-detail">${formatRp(item.total_product)}</span>
+                        </td>
+                        <td class="profit-cell ${profitClass}">${profitInfo}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-index="${index}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            updateTotal();
+        }
+
+        // ── Listener Harga ─────────────────────────────────────────────
+        $(document).on('input', '.input-price-plaintext', function () {
+            let idx = $(this).data('index');
+            let rawVal = parseRawNumber($(this).val());
+            products_selected[idx].price = rawVal;
+            products_selected[idx].total_product = rawVal * products_selected[idx].quantity;
+            $(this).val(formatRupiahText(rawVal));
+            updateTotal();
+            updateProfitCell(idx);
+        });
+
+        // ── Listener Kuantitas (validasi stok) ─────────────────────────
+        $(document).on('input', '.input-qty-plaintext', function () {
+            let idx = $(this).data('index');
+            let val = parseFloat($(this).val()) || 0;
+            let maxStock = parseFloat($(this).data('max-stock'));
+            let warnEl = $('#warn_' + idx);
+
+            if (!isNaN(maxStock) && val > maxStock) {
+                $(this).addClass('qty-over-stock');
+                warnEl.show();
+                val = maxStock;
+                $(this).val(maxStock);
+            } else {
+                $(this).removeClass('qty-over-stock');
+                warnEl.hide();
+            }
+            if (val < 0) val = 0;
+
+            products_selected[idx].quantity = val;
+            products_selected[idx].total_product = val * products_selected[idx].price;
+            updateTotal();
+            updateProfitCell(idx);
+        });
+
+        // Update profit cell satu baris
+        function updateProfitCell(idx) {
+            let item = products_selected[idx];
+            let profitPerUnit = item.price - item.avg_buy_price;
+            let profitTotal = profitPerUnit * item.quantity;
+            let cls = profitTotal > 0 ? 'pos' : (profitTotal < 0 ? 'neg' : 'zero');
+            let sign = profitTotal >= 0 ? '+' : '';
+            let info = item.avg_buy_price > 0
+                ? sign + formatRp(profitTotal) + '<br><small style="opacity:0.75">' + sign + formatRp(profitPerUnit) + '/kg</small>'
+                : '<span class="text-muted" style="font-size:11px">Belum ada data beli</span>';
+            $('#table_products tbody tr').eq(idx).find('.profit-cell')
+                .removeClass('pos neg zero').addClass(cls).html(info);
+        }
+
+        // ── Hapus item ─────────────────────────────────────────────────
+        $(document).on('click', '.btn-delete', function () {
+            products_selected.splice($(this).data('index'), 1);
+            renderTable();
+        });
+
+        function calculateSubTotal() {
+            return products_selected.reduce((sum, item) => sum + item.total_product, 0);
+        }
+        function calculateTotalCost() {
+            return products_selected.reduce((sum, item) => sum + (item.avg_buy_price * item.quantity), 0);
+        }
+
+        function updateTotal() {
+            let subTotal = calculateSubTotal();
+            let totalCost = calculateTotalCost();
+            let profit = subTotal - totalCost;
+
+            $('#display_grand_total').text(formatRp(subTotal));
+            $('#pc_revenue').text(formatRp(subTotal));
+            $('#pc_cost').text(formatRp(totalCost));
+
+            let profitEl = $('#pc_profit');
+            if (profit >= 0) {
+                profitEl.removeClass('pc-profit-neg').addClass('pc-profit-pos').text('+' + formatRp(profit));
+            } else {
+                profitEl.removeClass('pc-profit-pos').addClass('pc-profit-neg').text(formatRp(profit));
+            }
+
+            products_selected.forEach((item, index) => {
+                $('#table_products tbody tr').eq(index).find('.total-detail').text(formatRp(item.total_product));
+            });
+        }
+
+        // Submit Direct AJAX tanpa SweetAlert
+        $('#btn_save_purchase').on('click', function (e) {
+            e.preventDefault();
+
+            if (products_selected.length === 0) {
+                alert('Silakan pilih setidaknya satu barang!');
+                return;
+            }
+
+            // Validasi stok sebelum submit
+            let overStock = products_selected.find(p => p.stock_qty >= 0 && p.id && p.quantity > p.stock_qty);
+            if (overStock) {
+                alert('Jumlah "' + overStock.name + '" (' + overStock.quantity + ') melebihi stok (' + overStock.stock_qty + '). Harap perbaiki dulu.');
+                return;
+            }
+
+            let cleanProducts = products_selected.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: parseFloat(item.price) || 0,
+                quantity: parseFloat(item.quantity) || 0,
+                total_product: parseFloat(item.total_product) || 0
+            }));
+
+            let subTotal = calculateSubTotal();
+            let payload = {
+                supplier_name: $('#supplier_name').val() || 'Umum',
+                note: $('#note').val() || '',
+                sub_total: subTotal,
+                products: cleanProducts
+            };
+            const csrfToken = $('input[name="csrfmiddlewaretoken"]').val() || '{{ csrf_token }}';
+            let btn = $('#btn_save_purchase');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+
+            $.ajax({
+                url: "{% url 'purchases:purchase_add' %}",
+                type: "POST",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    if (res.success) {
+                        window.location.href = res.redirect_url || "/purchases/";
+                    } else {
+                        alert(res.message || 'Gagal menyimpan transaksi.');
+                        btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Kurangi Stok');
+                    }
+                },
+                error: function (xhr) {
+                    let msg = 'Terjadi kesalahan server.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                    alert(msg);
+                    btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Kurangi Stok');
+                }
+            });
+        });
+    });
+</script>
+{% endblock scriptcontent %}
+{% endblock content %}

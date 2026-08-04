@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Nota Pembelian {{ purchase.transaction_number }}</title>
+    <style>
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .info-table, .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 6px; }
+        .detail-table th { background-color: #f2f2f2; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .total { font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>NOTA PEMBELIAN (BARANG MASUK)</h2>
+        <p>No. Transaksi: {{ purchase.transaction_number }} | Tanggal: {{ purchase.date_added|date:"d-m-Y H:i" }}</p>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td><strong>Supplier:</strong> {{ purchase.supplier_name|default:"Umum" }}</td>
+            <td class="text-right"><strong>Penerima:</strong> {{ purchase.owner.username }}</td>
+        </tr>
+    </table>
+
+    <table class="detail-table">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Barang</th>
+                <th>Harga Beli / Satuan</th>
+                <th>Jumlah</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detail in details %}
+            <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>{{ detail.product.name }}</td>
+                <td class="text-right">Rp. {{ detail.cost_price|floatformat:"0g" }}</td>
+                <td class="text-center">{{ detail.quantity }}</td>
+                <td class="text-right">Rp. {{ detail.total_detail|floatformat:"0g" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="info-table">
+        <tr class="total">
+            <td class="text-right">Total Pengeluaran Beli: Rp. {{ purchase.sub_total|floatformat:"0g" }}</td>
+        </tr>
+    </table>
+</body>
+</html>

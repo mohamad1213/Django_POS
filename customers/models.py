@@ -13,6 +13,20 @@ class Customer(models.Model):
     def __str__(self) -> str:
         return self.first_name 
 
+    @property
+    def wa_link(self):
+        if not self.phone:
+            return None
+        import re
+        p = ''.join(re.findall(r'\d+', str(self.phone)))
+        if not p:
+            return None
+        if p.startswith('0'):
+            p = '62' + p[1:]
+        elif not p.startswith('62'):
+            p = '62' + p
+        return f"https://api.whatsapp.com/send?phone={p}"
+
     def to_select2(self):
         label = self.first_name
         if self.phone:

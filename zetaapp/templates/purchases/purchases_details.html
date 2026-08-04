@@ -1,0 +1,124 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+{% endblock css %}
+
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+
+    <div class="container-fluid">
+        <!-- Back Action -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{% url 'purchases:purchase_list' %}" class="btn btn-light btn-sm text-dark border">
+                <i class="fa fa-arrow-left me-2"></i>Kembali ke Daftar Pembelian
+            </a>
+            <div>
+                <a href="{% url 'purchases:purchase_receipt_pdf' purchase.id %}" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="fa fa-print me-2"></i>Cetak Struk Pembelian (PDF)
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Header -->
+                        <div class="row border-bottom pb-4 mb-4">
+                            <div class="col-md-6">
+                                <h3 class="font-weight-bold text-danger mb-1">Bukti Pembelian (Barang Masuk)</h3>
+                                <p class="text-muted mb-0">No. Nota Beli: <strong class="text-dark">{{ purchase.transaction_number }}</strong></p>
+                            </div>
+                            <div class="col-md-6 text-md-end text-start mt-3 mt-md-0">
+                                <span class="badge bg-danger p-2 fs-6">Pengeluaran Pembelian</span>
+                                <p class="text-muted mt-2 mb-0">Tanggal: <span class="text-dark">{{ purchase.date_added|date:"d M Y H:i" }}</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Details -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <h5 class="text-dark font-weight-bold border-bottom pb-2 mb-3">Informasi Supplier / Pengepul</h5>
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td style="width: 140px;" class="text-muted">Nama Supplier</td>
+                                        <td>: <strong>{{ purchase.supplier_name|default:"Umum" }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Catatan</td>
+                                        <td>: {{ purchase.note|default:"-" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-dark font-weight-bold border-bottom pb-2 mb-3">Detail Petugas</h5>
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td style="width: 140px;" class="text-muted">Penerima Barang</td>
+                                        <td>: {{ purchase.owner.username|default:"Admin" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <h5 class="text-dark font-weight-bold border-bottom pb-2 mb-3">Daftar Barang Masuk</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered table-striped align-middle">
+                                <thead class="table-light text-center">
+                                    <tr>
+                                        <th style="width: 50px;">No</th>
+                                        <th>Nama Barang</th>
+                                        <th style="width: 180px;">Harga Beli per Satuan</th>
+                                        <th style="width: 120px;">Jumlah</th>
+                                        <th style="width: 200px;">Total Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detail in details %}
+                                    <tr>
+                                        <td class="text-center">{{ forloop.counter }}</td>
+                                        <td><strong>{{ detail.product.name }}</strong></td>
+                                        <td class="text-end">Rp. {{ detail.cost_price|floatformat:"0g" }}</td>
+                                        <td class="text-center">{{ detail.quantity }}</td>
+                                        <td class="text-end font-weight-bold text-danger">Rp. {{ detail.total_detail|floatformat:"0g" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Tidak ada detail barang pada transaksi ini.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="row">
+                            <div class="col-md-6 offset-md-6">
+                                <div class="card bg-light border-0">
+                                    <div class="card-body p-4">
+                                        <table class="table table-borderless mb-0">
+                                            <tr class="fs-5">
+                                                <td class="text-muted font-weight-bold">Total Pengeluaran Beli</td>
+                                                <td class="text-end font-weight-bold text-danger text-nowrap">Rp. {{ purchase.sub_total|floatformat:"0g" }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scriptcontent %}
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+{% endblock scriptcontent %}

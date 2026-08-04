@@ -222,6 +222,15 @@
             <!-- Individual column searching (text inputs) Starts-->
             <div class="col-sm-12">
                 <div class="card">
+                    <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Riwayat Transaksi</h5>
+                        <!-- Filter Status -->
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="?status=ALL" class="btn btn-outline-secondary {% if status_filter == 'ALL' or not status_filter %}active{% endif %}">Semua</a>
+                            <a href="?status=BELUM_LUNAS" class="btn btn-outline-warning {% if status_filter == 'BELUM_LUNAS' %}active{% endif %}">Menunggu Pelunasan</a>
+                            <a href="?status=LUNAS" class="btn btn-outline-success {% if status_filter == 'LUNAS' %}active{% endif %}">LUNAS</a>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-bordered" id="dataTable" width="100%">
@@ -238,22 +247,44 @@
                                 </thead>
                                 <tbody>
                                     {% for u in data %}
-                                    <tr class="text-center">
+                                    <tr class="text-center align-middle">
                                         <td>{{ forloop.counter }}</td>
-                                        <td>{{ u.sale.transaction_number }}</td>
-                                        <!-- u.sale.kode_transaksi -> u.sale.transaction_number -->
+                                        <td><span class="badge bg-outline-primary text-primary font-weight-bold">{{ u.sale.transaction_number }}</span></td>
                                         <td>{{ u.sale.date_added|date:"d-m-Y" }}</td>
-                                        <!-- u.sale.tanggal -> u.sale.date_added -->
-                                        <td>{{ u.sale.customer.first_name|default:"Umum" }}</td>
-                                        <!-- u.sale.pembeli -> u.sale.customer.first_name -->
-                                        <td>Rp. {{ u.sale.sub_total|floatformat:"0g" }}</td>
-                                        <!-- u.sale.jumlah -> u.sale.sub_total -->
-                                        <td>Selesai</td>
+                                        <td>
+                                            {{ u.sale.customer.first_name|default:"Umum" }}
+                                            {% if u.sale.customer and u.sale.customer.wa_link %}
+                                                <a href="{{ u.sale.customer.wa_link }}" target="_blank" class="badge bg-success text-white text-decoration-none ms-1" title="Chat WA {{ u.sale.customer.phone }}">
+                                                    <i class="fab fa-whatsapp me-1"></i> WA
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                        <td class="font-weight-bold">Rp. {{ u.sale.sub_total|floatformat:"0g" }}</td>
+                                        <td>
+                                            {% if u.sale.is_afkiran %}
+                                                {% if u.sale.afkiran.status == 'LUNAS' %}
+                                                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> LUNAS (Afkir)</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> PENDING (Afkir)</span>
+                                                {% endif %}
+                                            {% elif u.sale.amount_payed >= u.sale.sub_total %}
+                                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> LUNAS</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> PENDING</span>
+                                            {% endif %}
+                                        </td>
                                         <td class="text-center">
-                                            <a href="{% url 'sales:sales_details' u.sale.id %}"
-                                                class="btn btn-primary btn-sm">
+                                            <a href="{% url 'sales:sales_details' u.sale.id %}" class="btn btn-primary btn-sm" title="Detail">
                                                 <i class="fa fa-eye"></i>
                                             </a>
+                                            <a href="{% url 'sales:sales_receipt_pdf' u.sale.id %}" target="_blank" class="btn btn-dark btn-sm" title="Cetak Nota">
+                                                <i class="fas fa-receipt"></i>
+                                            </a>
+                                            {% if u.sale.customer and u.sale.customer.wa_link %}
+                                            <a href="{{ u.sale.customer.wa_link }}" target="_blank" class="btn btn-success btn-sm" title="Chat WA ({{ u.sale.customer.phone }})">
+                                                <i class="fab fa-whatsapp"></i>
+                                            </a>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}

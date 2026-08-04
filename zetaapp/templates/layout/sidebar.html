@@ -1,465 +1,176 @@
-{% load static %} {% load sass_tags %}
+{% load static %}
 <style>
-  /* ===============================
-   Sidebar
-================================= */
-
   .sidebar-wrapper {
     width: 250px;
-    max-width: 250px;
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1000;
-    background: #fff;
-    box-shadow: 2px 0 18px rgba(0, 0, 0, .05);
+    background: #ffffff;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05);
     overflow-y: auto;
   }
 
-  /* Scrollbar */
-
-  .sidebar-wrapper::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .sidebar-wrapper::-webkit-scrollbar-thumb {
-    background: #d6d6d6;
-    border-radius: 10px;
-  }
-
-  .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #bcbcbc;
-  }
-
-  /* ===============================
-   Logo
-================================= */
-
   .logo-wrapper {
-    padding: 16px 15px;
+    padding: 18px 15px;
     text-align: center;
-    background: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid #f1f5f9;
   }
 
-  .logo-wrapper img,
-  .logo-icon-wrapper img {
-    max-width: 145px !important;
+  .logo-wrapper img {
+    max-width: 140px;
     height: auto;
   }
 
-  .logo-icon-wrapper {
-    padding: 12px 0;
-    text-align: center;
-  }
-
-  /* ===============================
-   Menu
-================================= */
-
-  .sidebar-menu {
-    padding-bottom: 20px;
-  }
-
-  .sidebar-menu .nav-item {
-    margin-bottom: 2px;
+  .sidebar-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 16px 20px 8px;
   }
 
   .sidebar-menu .nav-link {
-
-    color: #5b6e88;
-
-    font-size: .88rem;
-
+    color: #334155;
+    font-size: 0.9rem;
     font-weight: 500;
-
     padding: 10px 16px;
-
-    margin: 2px 10px;
-
+    margin: 2px 12px;
     border-radius: 8px;
-
-    transition: .25s;
-
+    transition: all 0.2s ease;
     display: flex;
-
     align-items: center;
   }
 
   .sidebar-menu .nav-link:hover,
   .sidebar-menu .nav-link.active {
-
-    background: #eef2ff;
-
-    color: #4f46e5;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-weight: 600;
   }
 
-  /* Icon */
-
   .sidebar-menu .nav-link i {
-
-    width: 18px;
-
-    height: 18px;
-
     margin-right: 10px;
   }
 
-  /* ===============================
-   Submenu
-================================= */
-
-  .sidebar-main .collapse .nav-link {
-
-    padding: 8px 16px 8px 42px !important;
-
-    font-size: .82rem;
-
-    font-weight: 400;
-
-    color: #697586;
-  }
-
-  .sidebar-main .collapse .nav-link:hover {
-
-    background: #f8f9ff;
-  }
-
-  /* ===============================
-   Chevron
-================================= */
-
   .sidebar-menu .fa-chevron-down {
-
     margin-left: auto;
-
     font-size: 10px;
-
-    transition: .3s;
+    transition: 0.3s;
   }
 
   .sidebar-menu .nav-link[aria-expanded="true"] .fa-chevron-down {
-
     transform: rotate(180deg);
   }
 
-  /* ===============================
-   Mobile
-================================= */
-
-  @media (max-width:991px) {
-
-    .sidebar-wrapper {
-
-      width: 240px;
-
-      max-width: 240px;
-    }
-
-    .logo-wrapper img {
-
-      max-width: 135px !important;
-    }
-
-  }
-
-  .sidebar-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 12px 20px 6px;
+  .sidebar-main .collapse .nav-link {
+    padding: 8px 16px 8px 40px !important;
+    font-size: 0.85rem;
+    color: #64748b;
   }
 </style>
+
 <div class="sidebar-wrapper">
-  <div>
-    <div class="logo-wrapper d-none d-lg-block">
-      <a href="{% url 'dashboard' %}">
-        <img class="img-fluid for-light" style="max-width: 200px; height: auto;"
-          src="{% static 'assets/images/Logo2.png' %}" alt="Logo Light" />
-        <img class="img-fluid for-dark" style="max-width: 200px; height: auto;"
-          src="{% static 'assets/images/Logo2.png' %}" alt="Logo Dark" />
-      </a>
-      <div class="back-btn"><i class="fa fa-angle-left"></i></div>
-    </div>
-
-    <div class="logo-icon-wrapper d-lg-none py-3 text-center ps-3">
-      <a href="{% url 'dashboard' %}">
-        <img class="img-fluid" style="max-width: 200px; height: auto;" src="{% static 'assets/images/Logo2.png' %}"
-          alt="Logo Icon" />
-      </a>
-    </div>
-
-    <nav class="sidebar-main">
-      <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
-      <div id="sidebar-menu">
-        <ul class="nav flex-column sidebar-menu">
-
-          <li class="sidebar-title mt-3">
-            MENU UTAMA
-          </li>
-          <!-- Dashboard -->
-          <li class="nav-item mb-2">
-            <a class="nav-link {% if url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
-              <i data-feather="home" class="me-2"></i>
-              Dashboard
-            </a>
-          </li>
-
-          <!-- ========================= -->
-          <!-- TRANSAKSI -->
-          <!-- ========================= -->
-
-          <li class="nav-item mb-2">
-            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#transaksiMenu">
-
-              <span>
-                <i data-feather="repeat" class="me-2"></i>
-                Transaksi
-              </span>
-
-              <i class="fa fa-chevron-down"></i>
-            </a>
-
-            <ul class="collapse list-unstyled ps-4 show" id="transaksiMenu">
-
-              <li>
-                <a class="nav-link" href="{% url 'sales:sales_list' %}">
-                  POS Kasir
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="{% url 'transaksi' %}">
-                  Input Manual
-                </a>
-              </li>
-
-              <!-- <li>
-                <a class="nav-link" href="#">
-                  Import Excel
-                </a>
-              </li> -->
-
-              <li>
-                <a class="nav-link" href="{% url 'transaksi_history' %}">
-                  Riwayat Transaksi
-                </a>
-              </li>
-
-            </ul>
-          </li>
-
-          <!-- ========================= -->
-          <!-- PERSEDIAAN -->
-          <!-- ========================= -->
-
-          <li class="nav-item mb-2">
-
-            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#stokMenu">
-
-              <span>
-                <i data-feather="archive" class="me-2"></i>
-                Persediaan
-              </span>
-
-              <i class="fa fa-chevron-down"></i>
-
-            </a>
-
-            <ul class="collapse list-unstyled ps-4" id="stokMenu">
-
-              <li>
-                <a class="nav-link" href="{% url 'products:products_list' %}">
-                  Data Barang
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="{% url 'products:categories_list' %}">
-                  Kategori
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="{% url 'stockin_list' %}">
-                  Stok
-                </a>
-              </li>
-
-            </ul>
-
-          </li>
-
-          <!-- ========================= -->
-          <!-- MASTER DATA -->
-          <!-- ========================= -->
-
-          <li class="nav-item mb-2">
-
-            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#masterMenu">
-
-              <span>
-                <i data-feather="database" class="me-2"></i>
-                Master Data
-              </span>
-
-              <i class="fa fa-chevron-down"></i>
-
-            </a>
-
-            <ul class="collapse list-unstyled ps-4" id="masterMenu">
-
-              <li>
-                <a class="nav-link" href="{% url 'customers:customers_list' %}">
-                  Pelanggan
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="#">
-                  Supplier
-                </a>
-              </li>
-
-            </ul>
-
-          </li>
-
-          <!-- ========================= -->
-          <!-- KEUANGAN -->
-          <!-- ========================= -->
-
-          <li class="nav-item mb-2">
-
-            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#keuanganMenu">
-
-              <span>
-                <i data-feather="dollar-sign" class="me-2"></i>
-                Keuangan
-              </span>
-
-              <i class="fa fa-chevron-down"></i>
-
-            </a>
-
-            <ul class="collapse list-unstyled ps-4" id="keuanganMenu">
-
-              <li>
-                <a class="nav-link" href="{% url 'hutang' %}">
-                  Hutang
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="{% url 'tabungan' %}">
-                  Tabungan
-                </a>
-              </li>
-
-            </ul>
-
-          </li>
-
-          <li class="sidebar-title mt-3">
-            ANALISIS
-          </li>
-
-          <!-- ========================= -->
-          <!-- ANALISIS -->
-          <!-- ========================= -->
-          <li class="nav-item mb-2">
-
-            <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-              href="#analisisMenu">
-
-              <span>
-                <i data-feather="bar-chart-2" class="me-2"></i>
-                Analisis
-              </span>
-
-              <i class="fa fa-chevron-down"></i>
-
-            </a>
-
-            <ul class="collapse list-unstyled ps-4" id="analisisMenu">
-
-              <li>
-                <a class="nav-link" href="#">
-                  Dashboard Keuangan
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="#">
-                  Profit & Rugi
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="#">
-                  Tahunan
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="#">
-                  Bulanan
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="#">
-                  Barang Terlaris
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="#">
-                  Supplier Terbaik
-                </a>
-              </li>
-
-              <li>
-                <a class="nav-link" href="#">
-                  Pelanggan Terbaik
-                </a>
-              </li>
-
-            </ul>
-
-          </li>
-
-          <!-- ========================= -->
-          <!-- LAPORAN -->
-          <!-- ========================= -->
-
-          <li class="nav-item mb-2">
-
-            <a class="nav-link {% if url_name == 'laporan' %}active{% endif %}" href="{% url 'laporan' %}">
-
-              <i data-feather="file-text" class="me-2"></i>
-
-              Laporan
-
-            </a>
-
-          </li>
-
-        </ul>
-      </div>
-      <div class="right-arrow" id="right-arrow">
-        <i data-feather="arrow-right"></i>
-      </div>
-    </nav>
+  <!-- Logo -->
+  <div class="logo-wrapper">
+    <a href="{% url 'dashboard' %}">
+      <img src="{% static 'assets/images/Logo2.png' %}" alt="Logo Usaha Rosok" />
+    </a>
   </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-main">
+    <ul class="nav flex-column sidebar-menu">
+
+      <!-- Utama -->
+      <li class="sidebar-title">Utama</li>
+      <li class="nav-item">
+        <a class="nav-link {% if url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+          <i data-feather="home"></i> Dashboard
+        </a>
+      </li>
+
+      <!-- Transaksi Rosok -->
+      <li class="sidebar-title">Operasional Harian</li>
+      <li class="nav-item">
+        <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+          href="#transaksiMenu">
+          <span><i data-feather="repeat"></i> Transaksi</span>
+          <i class="fa fa-chevron-down"></i>
+        </a>
+        <ul class="collapse list-unstyled show" id="transaksiMenu">
+          <li>
+            <a class="nav-link" href="{% url 'purchases:purchase_list' %}">
+              <i class="fa fa-arrow-down text-danger me-1"></i> Barang Keluar (Jual)
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="{% url 'sales:sales_list' %}">
+              <i class="fa fa-arrow-up text-success me-1"></i> Barang Masuk (Beli)
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="{% url 'afkiran:afkiran_list' %}">
+              <i class="fa fa-recycle text-warning me-1"></i> Sortir Afkiran (PS Kaca)
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="{% url 'transaksi_history' %}">
+              <i class="fa fa-history me-1"></i> Riwayat Transaksi
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Persediaan & Stok -->
+      <li class="nav-item">
+        <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+          href="#stokMenu">
+          <span><i data-feather="archive"></i> Stok & Harga</span>
+          <i class="fa fa-chevron-down"></i>
+        </a>
+        <ul class="collapse list-unstyled" id="stokMenu">
+          <li>
+            <a class="nav-link" href="{% url 'products:products_list' %}">Data Barang & Harga</a>
+          </li>
+          <li>
+            <a class="nav-link" href="{% url 'stockin_list' %}">Stok Gudang</a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Keuangan & Kas -->
+      <li class="sidebar-title">Keuangan & Analisis</li>
+      <li class="nav-item">
+        <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+          href="#keuanganMenu">
+          <span><i data-feather="dollar-sign"></i> Kas & Piutang</span>
+          <i class="fa fa-chevron-down"></i>
+        </a>
+        <ul class="collapse list-unstyled" id="keuanganMenu">
+          <li>
+            <a class="nav-link" href="{% url 'profit' %}">
+              <i class="fa fa-chart-line text-success me-1"></i> Analisis Profit & Laba
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="{% url 'hutang' %}">Hutang / Piutang</a>
+          </li>
+          <li>
+            <a class="nav-link" href="{% url 'tabungan' %}">Tabungan Customer</a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Laporan -->
+      <li class="nav-item mt-2">
+        <a class="nav-link {% if url_name == 'laporan' %}active{% endif %}" href="{% url 'laporan' %}">
+          <i data-feather="file-text"></i> Laporan Rekap
+        </a>
+      </li>
+
+    </ul>
+  </nav>
 </div>

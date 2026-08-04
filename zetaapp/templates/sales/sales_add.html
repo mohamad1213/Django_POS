@@ -142,6 +142,12 @@
                                             </div>
                                         </div>
                                         <div class="form-group">
+                                            <label>Catatan (Opsional)</label>
+                                            <div class="input-group">
+                                                <textarea name="catatan" id="catatan" class="form-control" rows="2" placeholder="Catatan transaksi..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
                                             <label>Sisa</label>
                                             <div class="input-group">
                                                 <input name="amount_change" id="amount_change" class="form-control"
@@ -209,8 +215,6 @@
 
     // Konversi format Rupiah (Rp X.XXX) menjadi float
     function parseCurrency(value) {
-        // Hilangkan "Rp ", titik (.), dan ganti koma (,) menjadi titik (.) jika ada, lalu konversi ke float.
-        // Di sini, kita hanya fokus menghilangkan "Rp " dan titik pemisah ribuan.
         if (typeof value !== 'string') return value;
         return parseFloat(value.replace(/[^0-9-]/g, ''));
     }
@@ -513,32 +517,27 @@
                     $(this).val(formattedValue === 'Rp 0' ? '' : formattedValue); // Jika hasilnya Rp 0, buat kosong
                 }).trigger('keyup');
             } else {
-                // Logika untuk Item Lama: Tampilkan Saran Harga (Tombol-Tombol)
-
-                // Pastikan data.price adalah float. Anggap data.price adalah harga modal/dasar.
+                // Logika untuk Item Lama: Tampilkan Saran Harga (Harga Terakhir, Harga Master, Custom Harga)
                 const basePrice = parseFloat(data.price) || 0;
+                const lastPrice = (data.last_price !== undefined && data.last_price !== null) ? parseFloat(data.last_price) : basePrice;
 
-                // --- LOGIKA SARAN HARGA (SESUAIKAN DENGAN KEBUTUHAN ANDA) ---
-                // Contoh: Harga Jual Standar, Harga + 10%, Harga + 20%
-                const suggestedPrice1 = roundTo(basePrice * 1.0, 0); // Harga Dasar
-                const suggestedPrice2 = roundTo(basePrice * 1.1, 0); // Harga +10%
-                const suggestedPrice3 = roundTo(basePrice * 1.2, 0); // Harga +20%
+                let buttonsHtml = '<p style="color: white; margin-bottom: 5px;">Pilih Harga Beli/Jual:</p>';
 
-                // Kumpulkan harga unik dan urutkan
-                let prices = [suggestedPrice1, suggestedPrice2, suggestedPrice3].filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+                // 1. Harga Terakhir
+                buttonsHtml += `<button type="button" class="btn btn-info btn-sm price-btn m-1" data-price="${lastPrice}">
+                    <i class="fa fa-history me-1"></i> Harga Terakhir: ${formatCurrency(lastPrice).replace('Rp ', '')}
+                </button>`;
 
-                let buttonsHtml = '<p style="color: white; margin-bottom: 5px;">Pilih Harga Jual:</p>';
-                prices.forEach(price => {
-                    // Beri warna berbeda untuk harga dasar/utama (misalnya: hijau)
-                    const btnClass = (price === basePrice) ? 'btn-success' : 'btn-secondary';
-                    buttonsHtml += `<button type="button" class="btn ${btnClass} btn-sm price-btn m-1" data-price="${price}">
-                        ${formatCurrency(price).replace('Rp ', '')}
+                // 2. Harga Master/Dasar (jika ada dan berbeda)
+                if (basePrice !== lastPrice && basePrice > 0) {
+                    buttonsHtml += `<button type="button" class="btn btn-success btn-sm price-btn m-1" data-price="${basePrice}">
+                        Harga Master: ${formatCurrency(basePrice).replace('Rp ', '')}
                     </button>`;
-                });
+                }
 
-                // Tombol Harga Kustom/Nol
-                buttonsHtml += `<button type="button" class="btn btn-outline-danger btn-sm price-btn m-1" data-price="custom">
-                    <i class="fa fa-pencil-alt"></i> Harga Kustom
+                // 3. Custom Harga
+                buttonsHtml += `<button type="button" class="btn btn-outline-warning btn-sm price-btn m-1" data-price="custom">
+                    <i class="fa fa-pencil-alt me-1"></i> Custom Harga
                 </button>`;
 
                 container.append(buttonsHtml);
@@ -549,59 +548,110 @@
         });
 
         // Handler untuk tombol harga kustom (Meminta input user)
+        // Handler untuk tombol harga kustom (Meminta input user)
         $(document).on('click', '.price-btn[data-price="custom"]', function () {
             const container = $('#price-suggestion-container');
             let data = container.data('productData');
 
+            if (!data) {
+                Swal.fire('Error', 'Data produk tidak ditemukan.', 'error');
+                return;
+            }
+
             Swal.fire({
-                title: `Masukkan Harga Jual Kustom untuk ${data.text}`,
+                title: `Masukkan Harga Jual Kustom untuk ${data.name || data.text}`,
                 input: 'text',
                 inputValue: '',
                 showCancelButton: true,
                 confirmButtonText: 'Tambah',
                 cancelButtonText: 'Batal',
                 inputPlaceholder: 'Rp...',
-                preConfirm: (value) => {
-                    if (!value.trim()) {
-                        return 'Harga tidak boleh kosong!';
-                    }
-                    const parsed = parseCurrency(value);
-                    if (isNaN(parsed) || parsed < 0) {
-                        return 'Harga harus angka positif atau nol!';
-                    }
-                    return parsed; // Kembalikan nilai yang sudah di-parse (float)
-                },
                 didOpen: (modal) => {
                     const input = Swal.getInput();
 
-                    // Fungsi untuk memformat input saat diketik
-                    const formatInput = (e) => {
-                        let currentValue = $(e.target).val().replace(/^Rp\s*/i, '');
+                    // Memformat input otomatis saat diketik
+                    $(input).on('keyup', function (e) {
+                        let currentValue = $(this).val().replace(/^Rp\s*/i, '');
                         let parsedValue = parseCurrency(currentValue);
                         let formattedValue = formatCurrency(parsedValue);
-                        $(e.target).val(formattedValue === 'Rp 0' ? '' : formattedValue);
-                    };
-
-                    $(input).on('keyup', formatInput);
+                        $(this).val(formattedValue === 'Rp 0' ? '' : formattedValue);
+                    });
                 },
                 inputValidator: (value) => {
-                    if (isNaN(parseFloat(value)) || parseFloat(value) < 0) {
-                        return 'Harga harus angka positif atau nol!';
+                    if (!value || !value.trim()) {
+                        return 'Harga tidak boleh kosong!';
                     }
+                    const parsed = parseCurrency(value);
+                    if (isNaN(parsed) || parsed <= 0) {
+                        return 'Harga harus berupa angka yang valid dan lebih dari 0!';
+                    }
+                },
+                preConfirm: (value) => {
+                    // Kembalikan nilai angka (float) setelah di-parse
+                    return parseCurrency(value);
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Tambahkan ke daftar dengan harga kustom
                     const customPrice = result.value;
                     addItemToSale(data, customPrice);
                     container.empty();
+                    container.removeData('productData');
                 }
             });
         });
+        // $(document).on('click', '.price-btn[data-price="custom"]', function () {
+        //     const container = $('#price-suggestion-container');
+        //     let data = container.data('productData');
+
+        //     Swal.fire({
+        //         title: `Masukkan Harga Jual Kustom untuk ${data.text}`,
+        //         input: 'text',
+        //         inputValue: '',
+        //         showCancelButton: true,
+        //         confirmButtonText: 'Tambah',
+        //         cancelButtonText: 'Batal',
+        //         inputPlaceholder: 'Rp...',
+        //         preConfirm: (value) => {
+        //             if (!value.trim()) {
+        //                 return 'Harga tidak boleh kosong!';
+        //             }
+        //             const parsed = parseCurrency(value);
+        //             if (isNaN(parsed)) {
+        //                 return 'Harga harus berupa angka!';
+        //             }
+        //             return parsed; // Kembalikan nilai yang sudah di-parse (float)
+        //         },
+        //         didOpen: (modal) => {
+        //             const input = Swal.getInput();
+
+        //             // Fungsi untuk memformat input saat diketik
+        //             const formatInput = (e) => {
+        //                 let currentValue = $(e.target).val().replace(/^Rp\s*/i, '');
+        //                 let parsedValue = parseCurrency(currentValue);
+        //                 let formattedValue = formatCurrency(parsedValue);
+        //                 $(e.target).val(formattedValue === 'Rp 0' ? '' : formattedValue);
+        //             };
+        //             $(input).on('keyup', formatInput);
+        //         },
+        //         inputValidator: (value) => {
+        //             if (isNaN(parseFloat(value))) {
+        //                 return 'Harga harus berupa angka';
+        //             }
+        //         }
+        //     }).then((result) => {
+        //         if (result.isConfirmed) {
+        //             // Tambahkan ke daftar dengan harga kustom
+        //             const customPrice = result.value;
+        //             addItemToSale(data, customPrice);
+        //             container.empty();
+        //         }
+        //     });
+        // });
 
         // Handler untuk tombol harga produk LAMA yang diklik (Harga selain kustom)
         $(document).on('click', '.price-btn:not([data-price="custom"])', function () {
-            const selectedPrice = parseFloat($(this).data('price'));
+            const rawPrice = $(this).attr('data-price');
+            const selectedPrice = parseFloat(rawPrice) || 0;
             const container = $('#price-suggestion-container');
             let data = container.data('productData');
 
@@ -634,13 +684,15 @@
 
         // Fungsi pembantu untuk menambahkan item ke sale.items.products
         function addItemToSale(data, price, productId = data.id) {
+            const safePrice = parseFloat(price) || 0;
+            const prodName = data.name || (data.text ? data.text.split(' — ')[0] : 'Produk');
             let item = {
                 id: productId, // ID Produk (null jika baru)
                 number: number,
-                name: data.text,
-                price: price, // Gunakan harga yang dipilih/diinput
+                name: prodName,
+                price: safePrice, // Gunakan harga yang dipilih/diinput
                 quantity: 1,
-                total_product: price
+                total_product: safePrice
             };
 
             number++;
@@ -723,14 +775,6 @@
             return false;
         }
 
-        if (parseCurrency($('[name="amount_payed"]').val()) < parseCurrency($('[name="sub_total"]').val())) {
-            Swal.fire({
-                title: 'Jumlah Bayar kurang dari Total',
-                icon: 'warning',
-            });
-            return false;
-        }
-
         // Prepare data to send
         sale.items.customer = $('select[name="customer"]').val();
 
@@ -748,6 +792,7 @@
         sale.items.sub_total = parseCurrency($('input[name="sub_total"]').val());
         sale.items.amount_payed = parseCurrency($('[name="amount_payed"]').val());
         sale.items.amount_change = roundTo(sale.items.amount_payed - sale.items.sub_total, 2);
+        sale.items.catatan = $('#catatan').val() || '';
         sale.items.products = sale.get_products_data_for_send(); // Ambil data produk terbaru
 
         // Send AJAX Request

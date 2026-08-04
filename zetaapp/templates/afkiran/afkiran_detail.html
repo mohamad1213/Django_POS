@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock css %}
+
+{% block content %}
+<div class="page-body">
+    {% include 'layout/breadcrumb.html' %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 text-white">
+                            <i class="fas fa-file-contract me-2"></i>Detail Sortir Afkiran — Nota: {{ afkiran.sale.transaction_number }}
+                        </h5>
+                        <div>
+                            {% if afkiran.status == 'LUNAS' %}
+                                <span class="badge bg-success fs-6"><i class="fas fa-check-circle me-1"></i> STATUS: LUNAS</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark fs-6"><i class="fas fa-clock me-1"></i> STATUS: PENDING</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p class="mb-1 text-muted">Penyetor / Pemulung:</p>
+                                <h6 class="fw-bold text-dark">{{ afkiran.sale.customer|default:"Pemulung / Umum" }}</h6>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1 text-muted">Tanggal Afkiran:</p>
+                                <h6 class="fw-bold text-dark">{{ afkiran.date_created|date:"d-m-Y H:i" }}</h6>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1 text-muted">Petugas Gudang:</p>
+                                <h6 class="fw-bold text-dark">{{ afkiran.owner.get_full_name|default:afkiran.owner.username }}</h6>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1 text-muted">Catatan:</p>
+                                <h6 class="fw-bold text-dark">{{ afkiran.catatan|default:"-" }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-0 text-center">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase fw-bold">Total Nota PS Kaca</small>
+                        <h4 class="text-secondary fw-bold mt-1">Rp. {{ afkiran.total_nota|floatformat:"0g" }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-0 text-center">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase fw-bold">Total Nilai Sortir</small>
+                        <h4 class="text-info fw-bold mt-1">Rp. {{ afkiran.total_sortir|floatformat:"0g" }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-0 text-center">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase fw-bold">DP (Uang Muka)</small>
+                        <h4 class="text-primary fw-bold mt-1">Rp. {{ afkiran.dp_amount|floatformat:"0g" }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-0 text-center">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase fw-bold">Sisa Bayar</small>
+                        <h4 class="fw-bold mt-1 {% if afkiran.sisa_bayar > 0 %}text-danger{% elif afkiran.sisa_bayar < 0 %}text-success{% else %}text-muted{% endif %}">
+                            Rp. {{ afkiran.sisa_bayar|floatformat:"0g" }}
+                        </h4>
+                        {% if afkiran.sisa_bayar > 0 %}
+                            <small class="text-danger font-weight-bold">(Hutang ke Penyetor)</small>
+                        {% elif afkiran.sisa_bayar < 0 %}
+                            <small class="text-success font-weight-bold">(Lebih Bayar)</small>
+                        {% else %}
+                            <small class="text-muted">(Pas)</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Table -->
+            <div class="col-12 mb-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-boxes me-2"></i>Rincian Hasil Sortir Barang</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped align-middle mb-0">
+                                <thead class="table-dark text-center">
+                                    <tr>
+                                        <th style="width: 50px;">NO</th>
+                                        <th>Jenis Barang</th>
+                                        <th>Jumlah (kg)</th>
+                                        <th>Harga / kg (Rp)</th>
+                                        <th class="text-end">Total Nilai (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for d in details %}
+                                    <tr>
+                                        <td class="text-center">{{ forloop.counter }}</td>
+                                        <td class="fw-bold">{{ d.get_nama_barang_display }}</td>
+                                        <td class="text-center">{{ d.quantity }} kg</td>
+                                        <td class="text-center">Rp. {{ d.harga|floatformat:"0g" }}</td>
+                                        <td class="text-end fw-bold text-primary">Rp. {{ d.total|floatformat:"0g" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3 text-muted">Belum ada detail barang.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="4" class="text-end fw-bold fs-6">TOTAL NILAI SORTIR:</th>
+                                        <th class="text-end fw-bold text-info fs-6">Rp. {{ afkiran.total_sortir|floatformat:"0g" }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <a href="{% url 'afkiran:afkiran_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Kembali ke Riwayat Afkiran
+                </a>
+                <div>
+                    {% if afkiran.status == 'PENDING' %}
+                    <form method="post" action="{% url 'afkiran:afkiran_settle' afkiran.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success font-weight-bold" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan dan mengubah status afkiran ini menjadi LUNAS?');">
+                            <i class="fas fa-check-circle me-1"></i> Selesaikan / Set LUNAS
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'sales:sales_receipt_pdf' afkiran.sale.id %}" target="_blank" class="btn btn-dark text-white me-1">
+                        <i class="fas fa-print me-1"></i> Cetak Nota
+                    </a>
+                    {% if afkiran.sale.customer and afkiran.sale.customer.wa_link %}
+                    <a href="{{ afkiran.sale.customer.wa_link }}" target="_blank" class="btn btn-success me-1">
+                        <i class="fab fa-whatsapp me-1"></i> Chat WA Penyetor
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'sales:sales_details' afkiran.sale.id %}" class="btn btn-info text-white me-1">
+                        <i class="fas fa-receipt me-1"></i> Lihat Nota Beli Awal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

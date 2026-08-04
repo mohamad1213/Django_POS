@@ -1,0 +1,13 @@
+├── 📊 Dashboard (Ringkasan Kas & Stok Saat Ini)
+├── ⚖️ Transaksi
+│    ├── 📥 Beli / Barang Masuk (Kas Keluar)
+│    ├── 📤 Jual / Kirim Pabrik (Kas Masuk)
+│    └── 📜 Riwayat Transaksi
+├── 📦 Stok & Harga
+│    ├── 🏷️ Data Barang & Harga Beli/Jual
+│    └── 📉 Cek Stok Gudang
+├── 💰 Arus Kas (Cash Flow)
+│    ├── 💵 Kas Harian / Buka-Tutup Kas
+│    └── 🤝 Hutang & Piutang / Tabungan
+└── 📄 Laporan Sederhana
+     └── Laporan Rekap Harian / Bulanan
