@@ -14,6 +14,7 @@ urlpatterns = [
     path('kontak/', views.Kontak,name='kontak'),
     path('dashboard/', views.indexPage,name='dashboard'),
     path('api/product-summary/', views.get_product_summary, name='product_summary'),
+    path('products/analysis/',views.product_analysis,name='product_analysis'),
 
 
     # POS
@@ -30,6 +31,7 @@ urlpatterns = [
     path('transaksi/', views.transaksi,name='transaksi'), 
     path('transaksi/<int:pk>/update/', views.UpdateTr,name='updatetr'),
     path('transaksi/<pk>/delete/', views.DeleteTr,name='deletetr'),
+    path('transaksi/delete-multiple/',views.delete_multiple_transaksi,name='transaksi_delete_multiple'),
     #Riwayat Transaski
     path('transaksi-history/', views.transaksi_history,name='transaksi_history'),
     # HutangPiutang

@@ -144,7 +144,8 @@
                                         <div class="form-group">
                                             <label>Catatan (Opsional)</label>
                                             <div class="input-group">
-                                                <textarea name="catatan" id="catatan" class="form-control" rows="2" placeholder="Catatan transaksi..."></textarea>
+                                                <textarea name="catatan" id="catatan" class="form-control" rows="2"
+                                                    placeholder="Catatan transaksi..."></textarea>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -327,6 +328,72 @@
             }));
         }
     };
+    // ==========================================
+    // QUANTITY INPUT HANDLER
+    // ==========================================
+
+    // Ketika quantity mendapatkan fokus
+    $(document).on('focus', '.quantity-input', function () {
+        // Kalau nilainya 1, langsung seleksi angka 1
+        if (this.value === '1') {
+            this.select();
+        }
+    });
+
+    // Ketika quantity diketik
+    $(document).on('input', '.quantity-input', function () {
+
+        // Hanya izinkan angka
+        this.value = this.value.replace(/\D/g, '');
+
+        // Ambil row DataTables
+        let row = $(this).closest('tr');
+        let data = tblProducts.row(row).data();
+
+        if (!data) return;
+
+        // Update quantity pada object sale
+        let quantity = parseInt(this.value);
+
+        if (!isNaN(quantity)) {
+            data.quantity = quantity;
+        } else {
+            data.quantity = 0;
+        }
+
+        // Hitung ulang transaksi
+        sale.calculate_sale();
+
+        // Update tampilan total tanpa redraw seluruh table
+        $(this).closest('tr').find('td').eq(4).text(
+            formatCurrency(data.total_product)
+        );
+    });
+
+    // Ketika keluar dari input
+    $(document).on('blur', '.quantity-input', function () {
+
+        // Kalau kosong, kembalikan ke 1
+        if (this.value.trim() === '') {
+
+            this.value = '1';
+
+            let row = $(this).closest('tr');
+            let data = tblProducts.row(row).data();
+
+            if (data) {
+                data.quantity = 1;
+            }
+
+            sale.calculate_sale();
+
+            $(this).closest('tr').find('td').eq(4).text(
+                formatCurrency(data.total_product)
+            );
+        }
+    });
+
+
 
     // --- FRONTEND LOGIC & EVENT HANDLERS ---
     $(document).ready(function () {
@@ -348,7 +415,7 @@
                     const price = parseFloat(item.price) || 0.00;
                     const qty = parseInt(item.qty) || 1;
                     const name = item.name || "Item OCR";
-                    
+
                     sale.add_product({
                         id: null,
                         number: number,
@@ -360,7 +427,7 @@
                     number++;
                 });
                 sale.list_product();
-                
+
                 // Show a friendly alert to user that OCR was loaded
                 Swal.fire({
                     title: 'Data OCR Dimasukkan!',
@@ -381,127 +448,127 @@
         }
         {% endif %}
 
-        // Select2 customers
-        $('#searchbox_customers').select2({
-            placeholder: "Pilih customer",
-            allowClear: true,
-            theme: "bootstrap4"
-        });
+    // Select2 customers
+    $('#searchbox_customers').select2({
+        placeholder: "Pilih customer",
+        allowClear: true,
+        theme: "bootstrap4"
+    });
 
-        // Datatable Events (Hapus dan Ubah Quantity)
-        $('#table_products tbody').on('click', 'a[rel="delete"]', function () {
-            var tr = tblProducts.cell($(this).closest('td, li')).index();
-            product_name = (tblProducts.row(tr.row).data().name)
+    // Datatable Events (Hapus dan Ubah Quantity)
+    $('#table_products tbody').on('click', 'a[rel="delete"]', function () {
+        var tr = tblProducts.cell($(this).closest('td, li')).index();
+        product_name = (tblProducts.row(tr.row).data().name)
 
-            Swal.fire({
-                customClass: {
-                    confirmButton: 'ml-3 btn btn-danger',
-                    cancelButton: 'btn btn-info'
-                },
-                buttonsStyling: false,
-                title: "Yakin ingin menghapus produk ini dari penjualan?",
-                text: product_name,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Hapus',
-                cancelButtonText: 'Batal',
-                reverseButtons: true,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    sale.items.products.splice(tr.row, 1);
-                    sale.list_product();
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Produk dihapus!', showConfirmButton: false, timer: 3000 })
-                };
-            })
-        }).on('change keyup', 'input[name="quantity"]', function () {
-            // 1. Ambil dan validasi kuantitas
-            var quantity = parseInt($(this).val());
+        Swal.fire({
+            customClass: {
+                confirmButton: 'ml-3 btn btn-danger',
+                cancelButton: 'btn btn-info'
+            },
+            buttonsStyling: false,
+            title: "Yakin ingin menghapus produk ini dari penjualan?",
+            text: product_name,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                sale.items.products.splice(tr.row, 1);
+                sale.list_product();
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Produk dihapus!', showConfirmButton: false, timer: 3000 })
+            };
+        })
+    }).on('change keyup', 'input[name="quantity"]', function () {
+        // 1. Ambil dan validasi kuantitas
+        var quantity = parseInt($(this).val());
 
-            // VALIDASI PENTING: Jika NaN atau <= 0, paksa menjadi 1.
-            if (isNaN(quantity) || quantity <= 0) {
-                quantity = 1;
-                $(this).val(quantity); // Opsional: Perbarui input di layar menjadi '1'
-            }
-
-            // 2. Tentukan baris
-            var tr = tblProducts.cell($(this).closest('td, li')).index();
-
-            // 3. Update objek sale dengan kuantitas yang aman
-            sale.items.products[tr.row].quantity = quantity;
-
-            // 4. Hitung ulang
-            sale.calculate_sale();
-
-            // 5. Update tampilan total produk di baris tersebut
-            $('td:eq(4)', tblProducts.row(tr.row).node()).html(formatCurrency(sale.items.products[tr.row].total_product));
-
-            // Catatan: sale.list_product(); TIDAK diperlukan di sini jika Anda hanya mengubah <td> total.
-        });
-
-
-        // --- LOGIKA UTAMA: SELECT2 PRODUCTS SEARCH & PRICE SUGGESTIONS ---
-
-        // Select2 products searchbox
-        var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
-
-        function csrfSafeMethod(method) {
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        // VALIDASI PENTING: Jika NaN atau <= 0, paksa menjadi 1.
+        if (isNaN(quantity) || quantity <= 0) {
+            quantity = 1;
+            $(this).val(quantity); // Opsional: Perbarui input di layar menjadi '1'
         }
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+
+        // 2. Tentukan baris
+        var tr = tblProducts.cell($(this).closest('td, li')).index();
+
+        // 3. Update objek sale dengan kuantitas yang aman
+        sale.items.products[tr.row].quantity = quantity;
+
+        // 4. Hitung ulang
+        sale.calculate_sale();
+
+        // 5. Update tampilan total produk di baris tersebut
+        $('td:eq(4)', tblProducts.row(tr.row).node()).html(formatCurrency(sale.items.products[tr.row].total_product));
+
+        // Catatan: sale.list_product(); TIDAK diperlukan di sini jika Anda hanya mengubah <td> total.
+    });
+
+
+    // --- LOGIKA UTAMA: SELECT2 PRODUCTS SEARCH & PRICE SUGGESTIONS ---
+
+    // Select2 products searchbox
+    var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+    function csrfSafeMethod(method) {
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+    $('#searchbox_products').select2({
+        delay: 250,
+        placeholder: 'Ketik nama barang...',
+        minimumInputLength: 1,
+        allowClear: true,
+        theme: "bootstrap4",
+        templateResult: template_product_searchbox,
+        ajax: {
+            // Asumsi Anda punya URL 'products:get_products' yang mengembalikan list produk
+            url: "{% url 'products:get_products' %}",
+            type: 'POST',
+            data: function (params) {
+                var queryParameters = {
+                    term: params.term,
                 }
-            }
-        });
+                return queryParameters;
+            },
+            processResults: function (data, params) {
+                params.page = params.page || 1;
 
-        $('#searchbox_products').select2({
-            delay: 250,
-            placeholder: 'Ketik nama barang...',
-            minimumInputLength: 1,
-            allowClear: true,
-            theme: "bootstrap4",
-            templateResult: template_product_searchbox,
-            ajax: {
-                // Asumsi Anda punya URL 'products:get_products' yang mengembalikan list produk
-                url: "{% url 'products:get_products' %}",
-                type: 'POST',
-                data: function (params) {
-                    var queryParameters = {
-                        term: params.term,
-                    }
-                    return queryParameters;
-                },
-                processResults: function (data, params) {
-                    params.page = params.page || 1;
+                // Tambahkan opsi "Buat Baru" jika tidak ada hasil
+                if (data.length === 0 && params.term && params.term.length > 0) {
+                    data.push({
+                        id: 'NEW_ITEM', // ID khusus untuk item baru
+                        text: params.term, // Nama barang yang dicari
+                        isNew: true,
+                        price: 0
+                    });
+                }
 
-                    // Tambahkan opsi "Buat Baru" jika tidak ada hasil
-                    if (data.length === 0 && params.term && params.term.length > 0) {
-                        data.push({
-                            id: 'NEW_ITEM', // ID khusus untuk item baru
-                            text: params.term, // Nama barang yang dicari
-                            isNew: true,
-                            price: 0
-                        });
-                    }
+                return {
+                    results: data
+                };
+            },
+        }
+    }).on('select2:select', function (e) {
+        // Ketika sebuah produk dipilih dari Select2
+        var data = e.params.data;
+        var container = $('#price-suggestion-container');
+        container.empty(); // Bersihkan saran harga sebelumnya
 
-                    return {
-                        results: data
-                    };
-                },
-            }
-        }).on('select2:select', function (e) {
-            // Ketika sebuah produk dipilih dari Select2
-            var data = e.params.data;
-            var container = $('#price-suggestion-container');
-            container.empty(); // Bersihkan saran harga sebelumnya
+        // Simpan data produk yang dipilih/dibuat di container untuk digunakan nanti
+        container.data('productData', data);
 
-            // Simpan data produk yang dipilih/dibuat di container untuk digunakan nanti
-            container.data('productData', data);
-
-            if (data.id === 'NEW_ITEM') {
-                // Logika untuk Item Baru (Input Harga Baru)
-                container.append(`
+        if (data.id === 'NEW_ITEM') {
+            // Logika untuk Item Baru (Input Harga Baru)
+            container.append(`
                     <div class="alert alert-warning p-2">
                         **${data.text}** akan ditambahkan sebagai barang baru.
                     </div>
@@ -510,203 +577,153 @@
                         <i class="fa fa-plus"></i> Tambah **${data.text}** ke Daftar
                     </button>
                 `);
-                $('#new_item_price_input').on('keyup', function () {
-                    let currentValue = $(this).val().replace(/^Rp\s*/i, '');
-                    let parsedValue = parseCurrency(currentValue);
-                    let formattedValue = formatCurrency(parsedValue);
-                    $(this).val(formattedValue === 'Rp 0' ? '' : formattedValue); // Jika hasilnya Rp 0, buat kosong
-                }).trigger('keyup');
-            } else {
-                // Logika untuk Item Lama: Tampilkan Saran Harga (Harga Terakhir, Harga Master, Custom Harga)
-                const basePrice = parseFloat(data.price) || 0;
-                const lastPrice = (data.last_price !== undefined && data.last_price !== null) ? parseFloat(data.last_price) : basePrice;
+            $('#new_item_price_input').on('keyup', function () {
+                let currentValue = $(this).val().replace(/^Rp\s*/i, '');
+                let parsedValue = parseCurrency(currentValue);
+                let formattedValue = formatCurrency(parsedValue);
+                $(this).val(formattedValue === 'Rp 0' ? '' : formattedValue); // Jika hasilnya Rp 0, buat kosong
+            }).trigger('keyup');
+        } else {
+            // Logika untuk Item Lama: Tampilkan Saran Harga (Harga Terakhir, Harga Master, Custom Harga)
+            const basePrice = parseFloat(data.price) || 0;
+            const lastPrice = (data.last_price !== undefined && data.last_price !== null) ? parseFloat(data.last_price) : basePrice;
 
-                let buttonsHtml = '<p style="color: white; margin-bottom: 5px;">Pilih Harga Beli/Jual:</p>';
+            let buttonsHtml = '<p style="color: white; margin-bottom: 5px;">Pilih Harga Beli/Jual:</p>';
 
-                // 1. Harga Terakhir
-                buttonsHtml += `<button type="button" class="btn btn-info btn-sm price-btn m-1" data-price="${lastPrice}">
+            // 1. Harga Terakhir
+            buttonsHtml += `<button type="button" class="btn btn-info btn-sm price-btn m-1" data-price="${lastPrice}">
                     <i class="fa fa-history me-1"></i> Harga Terakhir: ${formatCurrency(lastPrice).replace('Rp ', '')}
                 </button>`;
 
-                // 2. Harga Master/Dasar (jika ada dan berbeda)
-                if (basePrice !== lastPrice && basePrice > 0) {
-                    buttonsHtml += `<button type="button" class="btn btn-success btn-sm price-btn m-1" data-price="${basePrice}">
+            // 2. Harga Master/Dasar (jika ada dan berbeda)
+            if (basePrice !== lastPrice && basePrice > 0) {
+                buttonsHtml += `<button type="button" class="btn btn-success btn-sm price-btn m-1" data-price="${basePrice}">
                         Harga Master: ${formatCurrency(basePrice).replace('Rp ', '')}
                     </button>`;
-                }
+            }
 
-                // 3. Custom Harga
-                buttonsHtml += `<button type="button" class="btn btn-outline-warning btn-sm price-btn m-1" data-price="custom">
+            // 3. Custom Harga
+            buttonsHtml += `<button type="button" class="btn btn-outline-warning btn-sm price-btn m-1" data-price="custom">
                     <i class="fa fa-pencil-alt me-1"></i> Custom Harga
                 </button>`;
 
-                container.append(buttonsHtml);
-            }
-
-            // Bersihkan searchbox
-            $(this).val(null).trigger('change');
-        });
-
-        // Handler untuk tombol harga kustom (Meminta input user)
-        // Handler untuk tombol harga kustom (Meminta input user)
-        $(document).on('click', '.price-btn[data-price="custom"]', function () {
-            const container = $('#price-suggestion-container');
-            let data = container.data('productData');
-
-            if (!data) {
-                Swal.fire('Error', 'Data produk tidak ditemukan.', 'error');
-                return;
-            }
-
-            Swal.fire({
-                title: `Masukkan Harga Jual Kustom untuk ${data.name || data.text}`,
-                input: 'text',
-                inputValue: '',
-                showCancelButton: true,
-                confirmButtonText: 'Tambah',
-                cancelButtonText: 'Batal',
-                inputPlaceholder: 'Rp...',
-                didOpen: (modal) => {
-                    const input = Swal.getInput();
-
-                    // Memformat input otomatis saat diketik
-                    $(input).on('keyup', function (e) {
-                        let currentValue = $(this).val().replace(/^Rp\s*/i, '');
-                        let parsedValue = parseCurrency(currentValue);
-                        let formattedValue = formatCurrency(parsedValue);
-                        $(this).val(formattedValue === 'Rp 0' ? '' : formattedValue);
-                    });
-                },
-                inputValidator: (value) => {
-                    if (!value || !value.trim()) {
-                        return 'Harga tidak boleh kosong!';
-                    }
-                    const parsed = parseCurrency(value);
-                    if (isNaN(parsed) || parsed <= 0) {
-                        return 'Harga harus berupa angka yang valid dan lebih dari 0!';
-                    }
-                },
-                preConfirm: (value) => {
-                    // Kembalikan nilai angka (float) setelah di-parse
-                    return parseCurrency(value);
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const customPrice = result.value;
-                    addItemToSale(data, customPrice);
-                    container.empty();
-                    container.removeData('productData');
-                }
-            });
-        });
-        // $(document).on('click', '.price-btn[data-price="custom"]', function () {
-        //     const container = $('#price-suggestion-container');
-        //     let data = container.data('productData');
-
-        //     Swal.fire({
-        //         title: `Masukkan Harga Jual Kustom untuk ${data.text}`,
-        //         input: 'text',
-        //         inputValue: '',
-        //         showCancelButton: true,
-        //         confirmButtonText: 'Tambah',
-        //         cancelButtonText: 'Batal',
-        //         inputPlaceholder: 'Rp...',
-        //         preConfirm: (value) => {
-        //             if (!value.trim()) {
-        //                 return 'Harga tidak boleh kosong!';
-        //             }
-        //             const parsed = parseCurrency(value);
-        //             if (isNaN(parsed)) {
-        //                 return 'Harga harus berupa angka!';
-        //             }
-        //             return parsed; // Kembalikan nilai yang sudah di-parse (float)
-        //         },
-        //         didOpen: (modal) => {
-        //             const input = Swal.getInput();
-
-        //             // Fungsi untuk memformat input saat diketik
-        //             const formatInput = (e) => {
-        //                 let currentValue = $(e.target).val().replace(/^Rp\s*/i, '');
-        //                 let parsedValue = parseCurrency(currentValue);
-        //                 let formattedValue = formatCurrency(parsedValue);
-        //                 $(e.target).val(formattedValue === 'Rp 0' ? '' : formattedValue);
-        //             };
-        //             $(input).on('keyup', formatInput);
-        //         },
-        //         inputValidator: (value) => {
-        //             if (isNaN(parseFloat(value))) {
-        //                 return 'Harga harus berupa angka';
-        //             }
-        //         }
-        //     }).then((result) => {
-        //         if (result.isConfirmed) {
-        //             // Tambahkan ke daftar dengan harga kustom
-        //             const customPrice = result.value;
-        //             addItemToSale(data, customPrice);
-        //             container.empty();
-        //         }
-        //     });
-        // });
-
-        // Handler untuk tombol harga produk LAMA yang diklik (Harga selain kustom)
-        $(document).on('click', '.price-btn:not([data-price="custom"])', function () {
-            const rawPrice = $(this).attr('data-price');
-            const selectedPrice = parseFloat(rawPrice) || 0;
-            const container = $('#price-suggestion-container');
-            let data = container.data('productData');
-
-            addItemToSale(data, selectedPrice);
-            container.empty();
-        });
-
-
-        // Handler untuk tombol produk BARU (setelah memasukkan harga)
-        $(document).on('click', '#btn-add-item-new', function () {
-            const container = $('#price-suggestion-container');
-            let data = container.data('productData');
-
-            // Ambil dan parse nilai dari input teks yang sudah di-format (Rp. X.XXX)
-            const inputVal = $('#new_item_price_input').val();
-            const newPrice = parseCurrency(inputVal);
-
-            if (inputVal === '' || isNaN(newPrice) || newPrice < 0) {
-                Swal.fire('Peringatan', 'Harga jual harus diisi dengan angka non-negatif!', 'warning');
-                return;
-            }
-
-            // ID produk BARU adalah null
-            addItemToSale(data, newPrice, null);
-
-            // Bersihkan tampilan harga dan input
-            container.empty();
-            container.removeData('productData');
-        });
-
-        // Fungsi pembantu untuk menambahkan item ke sale.items.products
-        function addItemToSale(data, price, productId = data.id) {
-            const safePrice = parseFloat(price) || 0;
-            const prodName = data.name || (data.text ? data.text.split(' — ')[0] : 'Produk');
-            let item = {
-                id: productId, // ID Produk (null jika baru)
-                number: number,
-                name: prodName,
-                price: safePrice, // Gunakan harga yang dipilih/diinput
-                quantity: 1,
-                total_product: safePrice
-            };
-
-            number++;
-            sale.add_product(item);
-
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: `Produk ${item.name} ditambahkan!`,
-                showConfirmButton: false,
-                timer: 3000
-            });
+            container.append(buttonsHtml);
         }
+
+        // Bersihkan searchbox
+        $(this).val(null).trigger('change');
+    });
+
+    // Handler untuk tombol harga kustom (Meminta input user)
+    $(document).on('click', '.price-btn[data-price="custom"]', function () {
+        const container = $('#price-suggestion-container');
+        let data = container.data('productData');
+
+        if (!data) {
+            Swal.fire('Error', 'Data produk tidak ditemukan.', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: `Masukkan Harga Jual Kustom untuk ${data.name || data.text}`,
+            input: 'text',
+            inputValue: '',
+            showCancelButton: true,
+            confirmButtonText: 'Tambah',
+            cancelButtonText: 'Batal',
+            inputPlaceholder: 'Rp...',
+            didOpen: (modal) => {
+                const input = Swal.getInput();
+
+                // Memformat input otomatis saat diketik
+                $(input).on('keyup', function (e) {
+                    let currentValue = $(this).val().replace(/^Rp\s*/i, '');
+                    let parsedValue = parseCurrency(currentValue);
+                    let formattedValue = formatCurrency(parsedValue);
+                    $(this).val(formattedValue === 'Rp 0' ? '' : formattedValue);
+                });
+            },
+            inputValidator: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Harga tidak boleh kosong!';
+                }
+                const parsed = parseCurrency(value);
+                if (isNaN(parsed) || parsed <= 0) {
+                    return 'Harga harus berupa angka yang valid dan lebih dari 0!';
+                }
+            },
+            preConfirm: (value) => {
+                // Kembalikan nilai angka (float) setelah di-parse
+                return parseCurrency(value);
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const customPrice = result.value;
+                addItemToSale(data, customPrice);
+                container.empty();
+                container.removeData('productData');
+            }
+        });
+    });
+    // Handler untuk tombol harga produk LAMA yang diklik (Harga selain kustom)
+    $(document).on('click', '.price-btn:not([data-price="custom"])', function () {
+        const rawPrice = $(this).attr('data-price');
+        const selectedPrice = parseFloat(rawPrice) || 0;
+        const container = $('#price-suggestion-container');
+        let data = container.data('productData');
+
+        addItemToSale(data, selectedPrice);
+        container.empty();
+    });
+
+
+    // Handler untuk tombol produk BARU (setelah memasukkan harga)
+    $(document).on('click', '#btn-add-item-new', function () {
+        const container = $('#price-suggestion-container');
+        let data = container.data('productData');
+
+        // Ambil dan parse nilai dari input teks yang sudah di-format (Rp. X.XXX)
+        const inputVal = $('#new_item_price_input').val();
+        const newPrice = parseCurrency(inputVal);
+
+        if (inputVal === '' || isNaN(newPrice) || newPrice < 0) {
+            Swal.fire('Peringatan', 'Harga jual harus diisi dengan angka non-negatif!', 'warning');
+            return;
+        }
+
+        // ID produk BARU adalah null
+        addItemToSale(data, newPrice, null);
+
+        // Bersihkan tampilan harga dan input
+        container.empty();
+        container.removeData('productData');
+    });
+
+    // Fungsi pembantu untuk menambahkan item ke sale.items.products
+    function addItemToSale(data, price, productId = data.id) {
+        const safePrice = parseFloat(price) || 0;
+        const prodName = data.name || (data.text ? data.text.split(' — ')[0] : 'Produk');
+        let item = {
+            id: productId, // ID Produk (null jika baru)
+            number: number,
+            name: prodName,
+            price: safePrice, // Gunakan harga yang dipilih/diinput
+            quantity: 1,
+            total_product: safePrice
+        };
+
+        number++;
+        sale.add_product(item);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Produk ${item.name} ditambahkan!`,
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
 
     });
 

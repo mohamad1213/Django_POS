@@ -30,13 +30,14 @@
 
   <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 box-col-12">
     <div class="card user-status">
-      <div class="card-header pb-0">
-        <div class="media">
-          <h5>Jumlah Barang</h5>
-        </div>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Top 10 Barang Terjual</h4>
+        <a href="{% url 'product_analysis' %}" class="btn btn-sm btn-outline-primary">
+          Lihat Semua
+        </a>
       </div>
       <div class="card-body">
-        <div id="chartBar" style="max-width: 700px; margin: 35px auto;"></div>
+        <div id="chartBar" style="max-width: 700px; margin: 0;"></div>
       </div>
     </div>
   </div>
@@ -45,30 +46,71 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
   fetch("{% url 'product_summary' %}")
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-      const productNames = data.product_names;
-      const productTotals = data.product_totals;
 
       const options = {
-        chart: { type: 'bar', height: 200 },
-        plotOptions: {
-          bar: {
-            vertical: true,
-            distributed: true,
-            barHeight: '60%',
+        chart: {
+          type: 'bar',
+          height: 420,
+          toolbar: {
+            show: false
           }
         },
-        series: [{ name: 'Jumlah (kg)', data: productTotals }],
-        xaxis: { categories: productNames },
-        dataLabels: { enabled: true },
-        colors: ['#1E90FF', '#FF5733', '#28B463', '#9B59B6', '#F4D03F']
+
+        series: [{
+          name: 'Jumlah (kg)',
+          data: data.product_totals
+        }],
+
+        xaxis: {
+          categories: data.product_names,
+          labels: {
+            style: {
+              fontSize: '13px'
+            }
+          }
+        },
+
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            borderRadius: 6,
+            borderRadiusApplication: 'end',
+            dataLabels: {
+              position: 'right'
+            }
+          }
+        },
+
+        dataLabels: {
+          enabled: true,
+          formatter: function (val) {
+            return val + " kg";
+          }
+        },
+
+        colors: ['#3B82F6'],
+
+        grid: {
+          borderColor: '#f1f1f1'
+        },
+
+        tooltip: {
+          y: {
+            formatter: function (val) {
+              return val + " kg";
+            }
+          }
+        }
       };
 
-      const chart = new ApexCharts(document.querySelector("#chartBar"), options);
-      chart.render();
-    })
-    .catch(error => console.error('Error fetching data:', error));
+      new ApexCharts(
+        document.querySelector("#chartBar"),
+        options
+      ).render();
+
+    });
 </script>
 
 <script>

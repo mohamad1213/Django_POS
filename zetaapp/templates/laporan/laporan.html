@@ -1,304 +1,511 @@
 {% extends 'base.html' %}{% load static %}
 {% load sass_tags %}
+
 {% block css %}
-<!-- Plugins css start-->
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/date-picker.scss' %}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  /* ─── PERIOD FILTER BAR ────────────────────────────────── */
+  .filter-card {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
+    border-radius: 16px;
+    padding: 20px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(30,58,95,.25);
+  }
+  .filter-card label { color: #cbd8e8; font-size: 0.78rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; }
+  .filter-card .form-control,
+  .filter-card .form-select {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    border-radius: 8px;
+  }
+  .filter-card .form-control::placeholder { color: rgba(255,255,255,.5); }
+  .filter-card .form-control:focus,
+  .filter-card .form-select:focus {
+    background: rgba(255,255,255,.18);
+    border-color: rgba(255,255,255,.5);
+    box-shadow: none;
+    color: #fff;
+  }
+  .filter-card .form-select option { background: #1e3a5f; color: #fff; }
+  .periode-btn { border-radius: 8px !important; font-weight: 600; padding: 9px 20px; }
+  .btn-generate {
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+    color: #1a1a2e;
+    border: none;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 10px 24px;
+    transition: all .2s ease;
+  }
+  .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(247,151,30,.4); color: #1a1a2e; }
 
+  /* ─── KPI CARDS ─────────────────────────────────────────── */
+  .kpi-card {
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.18); }
+  .kpi-card .kpi-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin-bottom: 14px;
+  }
+  .kpi-card .kpi-value { font-size: 1.65rem; font-weight: 800; margin: 0; line-height: 1.1; }
+  .kpi-card .kpi-label { font-size: 0.78rem; opacity: .75; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+  .kpi-card .kpi-badge { position: absolute; top: 16px; right: 16px; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; font-weight: 700; }
 
-<!-- Plugins css Ends-->
+  .kpi-blue  { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; }
+  .kpi-green { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: #fff; }
+  .kpi-red   { background: linear-gradient(135deg, #7b1a1a 0%, #dc3545 100%); color: #fff; }
+  .kpi-amber { background: linear-gradient(135deg, #7d4e00 0%, #f59e0b 100%); color: #fff; }
+
+  /* ─── CHART SECTION ─────────────────────────────────────── */
+  .chart-card {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    padding: 24px;
+  }
+  .chart-card .chart-title { font-weight: 700; font-size: 1rem; color: #1e3a5f; margin-bottom: 16px; }
+
+  /* ─── TOP PRODUCTS ──────────────────────────────────────── */
+  .top-product-bar { height: 10px; border-radius: 6px; background: linear-gradient(90deg, #2d6a9f, #f59e0b); transition: width .8s ease; }
+  .top-product-item { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .top-product-rank {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #1e3a5f; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* ─── TRANSACTIONS TABLE ─────────────────────────────────── */
+  .table-card {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    overflow: hidden;
+  }
+  .table-card .card-header-custom {
+    padding: 18px 24px;
+    background: #fff;
+    border-bottom: 2px solid #f0f4f8;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-card .card-header-custom h6 { font-weight: 700; margin: 0; color: #1e3a5f; font-size: 1rem; }
+  .badge-pemasukan { background: #d1fae5; color: #065f46; font-size: 0.7rem; font-weight: 700; padding: 4px 9px; border-radius: 6px; }
+  .badge-pengeluaran { background: #fee2e2; color: #991b1b; font-size: 0.7rem; font-weight: 700; padding: 4px 9px; border-radius: 6px; }
+
+  /* ─── PERIOD SELECTOR PILLS ─────────────────────────────── */
+  .period-pill { display: inline-flex; background: rgba(255,255,255,.1); border-radius: 10px; padding: 4px; gap: 4px; }
+  .period-pill .pill-btn {
+    border: none; background: transparent; color: rgba(255,255,255,.65);
+    border-radius: 7px; padding: 6px 16px; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    text-decoration: none;
+  }
+  .period-pill .pill-btn.active,
+  .period-pill .pill-btn:hover {
+    background: rgba(255,255,255,.22); color: #fff;
+  }
+
+  /* ─── DATE RANGE ROW ─────────────────────────────────────── */
+  #customRangeRow { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  /* print hide filter */
+  @media print { .filter-card, .btn-print { display: none !important; } }
+</style>
 {% endblock css %}
+
 {% block content %}
 <div class="page-body">
-    {% include 'layout/breadcrumb.html' %}
+  {% include 'layout/breadcrumb.html' %}
 
-    <!-- Container-fluid starts-->
-    <div class="container-fluid list-products">
-        <div class="row">
-            <!-- Individual column searching (text inputs) Starts-->
-            <div class="col-sm-12">
-                <div class="card">
-                    <div class="card-header pb-0">
-                        <form id="dateForm" action="{% url 'laporan' %}" method="GET">
-                            <div class="row mb-3">
-                                <!-- Pilihan Periode -->
-                                <div class="col-sm-3">
-                                    <label for="periode">Pilih Periode:</label>
-                                    <select id="periode" name="periode" class="form-control">
-                                        <option value="harian">Harian</option>
-                                        <option value="mingguan">Mingguan</option>
-                                        <option value="bulanan">Bulanan</option>
-                                        <option value="custom">Custom</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4" id="custom-range" style="display: none;">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <input class="datepicker-here form-control digits" type="text"
-                                                id="start_date" name="start_date" data-language="en"
-                                                data-date-format="yyyy-mm-dd" autocomplete="off">
-                                        </div>
-                                        <br>
-                                        <div class="col-md-6">
-                                            <input class="datepicker-here form-control digits" type="text" id="end_date"
-                                                name="end_date" data-language="en" data-date-format="yyyy-mm-dd"
-                                                autocomplete="off">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="transaksi_choice">Jenis Transaksi:</label>
-                                    <select class="form-control" id="transaksi_choice" name="transaksi_choice">
-                                        <option value="">Semua</option>
-                                        <option value="P">Pemasukan</option>
-                                        <option value="L">Pengeluaran</option>
-                                    </select>
-                                </div>
+  <div class="container-fluid">
 
-                                <!-- Tombol Submit -->
-                                <div class="col-sm-2 d-flex align-items-end">
-                                    <button class="btn btn-primary" type="submit">Generate Report</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    {% if transactions %}
-                    <!-- Ringkasan Keuangan -->
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="card bg-success text-white">
-                                <div class="card-body">
-                                    <h5>Total Pemasukan</h5>
-                                    <h3>Rp {{ pemasukan }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-danger text-white">
-                                <div class="card-body">
-                                    <h5>Total Pengeluaran</h5>
-                                    <h3>Rp {{ pengeluaran }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-primary text-white">
-                                <div class="card-body">
-                                    <h5>Saldo Akhir</h5>
-                                    <h3>Rp {{ saldo }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- ══════════════ FILTER BAR ══════════════ -->
+    <div class="filter-card">
+      <form id="filterForm" action="{% url 'laporan' %}" method="GET">
+        <div class="row g-3 align-items-end">
 
-                    <!-- Grafik Keuangan -->
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <div id="chart-line" style="height: 320px;"></div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- <div class="table-responsive"> -->
-                        <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
-                            <thead>
-                                <tr>
-                                    <th rowspan="2">NO</th>
-                                    <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
-                                    <th rowspan="2" scope="col" class="text-center">KATEGORI</th>
-                                    <th rowspan="2" scope="col" class="text-center">KETERANGAN</th>
-                                    <th colspan="2" scope="col" class="text-center">JENIS</th>
-                                </tr>
-                                <tr>
-                                    <th scope="col" class="text-center">PEMASUKAN</th>
-                                    <th scope="col" class="text-center">PENGELUARAN</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for u in transactions %}
-                                <tr class="text-center">
-                                    <td>{{forloop.counter}}</td>
-                                    <td>{{u.tanggal|date:"d-m-Y"}}</td>
-                                    <td>{{u.kategori}}</td>
-                                    <td>{{u.keterangan}}</td>
-                                    <td class="text-center">
-                                        {% if u.transaksi_choice == "P" %}
-                                        Rp. {{u.jumlah|floatformat:"0g" }}
-                                        {% else %}
-                                        -
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center">
-                                        {% if u.transaksi_choice == "L" %}
-                                        Rp. {{u.jumlah|floatformat:"0g" }}
-                                        {% else %}
-                                        -
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-4">
-                        <a href="#" class="btn btn-danger">🖨 Cetak PDF</a>
-                        <a href="#" class="btn btn-success">📥 Download Excel</a>
-                        <button onclick="window.print()" class="btn btn-primary">🖥 Print</button>
-                    </div>
-                    {% endif %}
-                </div>
+          <!-- Period Pills -->
+          <div class="col-12 col-md-auto">
+            <label>Periode Laporan</label>
+            <div class="d-block">
+              <div class="period-pill">
+                <a href="?periode=harian" class="pill-btn {% if periode == 'harian' %}active{% endif %}">
+                  <i class="fas fa-sun me-1"></i>Hari Ini
+                </a>
+                <a href="?periode=mingguan" class="pill-btn {% if periode == 'mingguan' %}active{% endif %}">
+                  <i class="fas fa-calendar-week me-1"></i>7 Hari
+                </a>
+                <button type="button" onclick="toggleCustom()"
+                  class="pill-btn {% if periode == 'custom' %}active{% endif %}" id="pillCustom">
+                  <i class="fas fa-sliders-h me-1"></i>Custom
+                </button>
+              </div>
             </div>
+            <input type="hidden" name="periode" id="periodeInput" value="{{ periode }}">
+          </div>
+
+          <!-- Custom Date Range -->
+          <div class="col-12" id="customRangeRow" {% if periode != 'custom' %}style="display:none"{% endif %}>
+            <div class="row g-2 align-items-end">
+              <div class="col-auto">
+                <label>Dari Tanggal</label>
+                <input type="date" class="form-control" name="start_date" id="startDate"
+                  value="{{ start_date_str }}" max="{{ end_date_str }}">
+              </div>
+              <div class="col-auto">
+                <label>Sampai Tanggal</label>
+                <input type="date" class="form-control" name="end_date" id="endDate"
+                  value="{{ end_date_str }}">
+              </div>
+              <div class="col-auto">
+                <button type="submit" class="btn btn-generate">
+                  <i class="fas fa-search me-2"></i>Tampilkan
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction Type Filter + Print -->
+          <div class="col-md-auto ms-auto d-flex align-items-end gap-2">
+            <div>
+              <label>Jenis Transaksi</label>
+              <select class="form-select" name="transaksi_choice" onchange="this.form.submit()">
+                <option value="">Semua</option>
+                <option value="P" {% if request.GET.transaksi_choice == 'P' %}selected{% endif %}>Pemasukan</option>
+                <option value="L" {% if request.GET.transaksi_choice == 'L' %}selected{% endif %}>Pengeluaran</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-generate btn-print" onclick="window.print()">
+              <i class="fas fa-print me-2"></i>Print
+            </button>
+          </div>
         </div>
+
+        <!-- Hidden period for select2 submit -->
+        <div id="customPeriodeTag" style="display:none;">
+          <input type="hidden" name="periode" value="custom">
+        </div>
+      </form>
+
+      <!-- Period subtitle -->
+      <div class="mt-3" style="color:rgba(255,255,255,.65); font-size:.82rem;">
+        <i class="fas fa-calendar-alt me-1"></i>
+        Periode: <strong style="color:#fff;">
+          {% if periode == 'harian' %}Hari ini, {{ start_date|date:"d F Y" }}
+          {% elif periode == 'mingguan' %}{{ start_date|date:"d F Y" }} – {{ end_date|date:"d F Y" }}
+          {% else %}{{ start_date|date:"d F Y" }} – {{ end_date|date:"d F Y" }}
+          {% endif %}
+        </strong>
+      </div>
     </div>
-</div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const periodeSelect = document.getElementById("periode");
-        const customRangeDiv = document.getElementById("custom-range");
-
-        periodeSelect.addEventListener("change", function () {
-            if (periodeSelect.value === "custom") {
-                customRangeDiv.style.display = "block";
-            } else {
-                customRangeDiv.style.display = "none";
-            }
-        });
-    });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.0.0-beta/dist/js/datepicker.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/air-datepicker@3.0.0-beta/dist/css/datepicker.min.css">
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Inisialisasi Datepicker
-    new AirDatepicker('#start_date', { dateFormat: 'yyyy-MM-dd' });
-    new AirDatepicker('#end_date', { dateFormat: 'yyyy-MM-dd' });
-
-    let periodeSelect = document.getElementById('periode');
-    let customRange = document.getElementById('custom-range');
-    let form = document.getElementById('dateForm');
-
-    // Tampilkan input tanggal jika 'Custom' dipilih
-    periodeSelect.addEventListener('change', function () {
-        if (this.value === 'custom') {
-            customRange.style.display = 'block';
-        } else {
-            customRange.style.display = 'none';
-        }
-    });
-
-    // Validasi Form Sebelum Submit
-    form.addEventListener('submit', function (event) {
-        let periode = periodeSelect.value;
-        let startDate = document.getElementById('start_date').value;
-        let endDate = document.getElementById('end_date').value;
-
-        if (periode === 'custom' && (!startDate || !endDate)) {
-            alert("Please provide both start date and end date.");
-            event.preventDefault();  // Mencegah form terkirim jika input kosong
-        }
-    });
-});
-</script>
+    <!-- ══════════════ END FILTER BAR ══════════════ -->
 
 
-<script>
-    // Dengan Rupiah
-    var denganRupiah = document.getElementById('{{ form.jumlah.id }}');
-    denganRupiah.addEventListener('keyup', function (e) {
-        denganRupiah.value = formatRupiah(this.value, 'Rp. ');
-    });
+    <!-- ══════════════ KPI CARDS ══════════════ -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card kpi-blue">
+          <div class="kpi-icon" style="background:rgba(255,255,255,.15);">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <p class="kpi-value">{{ total_sales_count }}</p>
+          <p class="kpi-label">Total Transaksi Beli</p>
+          <span class="kpi-badge" style="background:rgba(255,255,255,.15);">Beli Rosok</span>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card kpi-amber">
+          <div class="kpi-icon" style="background:rgba(255,255,255,.15);">
+            <i class="fas fa-coins"></i>
+          </div>
+          <p class="kpi-value">Rp {{ total_sales_revenue|floatformat:"0g" }}</p>
+          <p class="kpi-label">Total Nilai Pembelian</p>
+          <span class="kpi-badge" style="background:rgba(255,255,255,.15);">Bayar Rosok</span>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card kpi-green">
+          <div class="kpi-icon" style="background:rgba(255,255,255,.15);">
+            <i class="fas fa-arrow-trend-up"></i>
+          </div>
+          <p class="kpi-value">Rp {{ pemasukan|floatformat:"0g" }}</p>
+          <p class="kpi-label">Total Pemasukan</p>
+          <span class="kpi-badge" style="background:rgba(255,255,255,.15);">Kas Masuk</span>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card kpi-red">
+          <div class="kpi-icon" style="background:rgba(255,255,255,.15);">
+            <i class="fas fa-arrow-trend-down"></i>
+          </div>
+          <p class="kpi-value">Rp {{ pengeluaran|floatformat:"0g" }}</p>
+          <p class="kpi-label">Total Pengeluaran</p>
+          <span class="kpi-badge" style="background:rgba(255,255,255,.15);">Kas Keluar</span>
+        </div>
+      </div>
+    </div>
+    <!-- ══════════════ END KPI CARDS ══════════════ -->
 
-    // Fungsi
-    function formatRupiah(angka, prefix) {
-        var number_string = angka.replace(/[^,\d]/g, '').toString(),
-            split = number_string.split(','),
-            sisa = split[0].length % 3,
-            rupiah = split[0].substr(0, sisa),
-            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-        if (ribuan) {
-            separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
+    <!-- ══════════════ CHARTS ROW ══════════════ -->
+    <div class="row g-3 mb-4">
+      <!-- Area Chart – Tren Keuangan -->
+      <div class="col-xl-8">
+        <div class="card chart-card h-100">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <p class="chart-title mb-0"><i class="fas fa-chart-area me-2 text-primary"></i>Tren Keuangan Harian</p>
+            <div class="d-flex gap-2" style="font-size:.78rem;">
+              <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#198754;"></span> Pemasukan</span>
+              <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#dc3545;"></span> Pengeluaran</span>
+              <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2d6a9f;"></span> Penjualan</span>
+            </div>
+          </div>
+          <div id="areaChart" style="min-height:280px;"></div>
+        </div>
+      </div>
 
-        if (split[1] != undefined) {
-            // Handle decimal part
-            rupiah += ',' + split[1];
-        }
+      <!-- Top Products -->
+      <div class="col-xl-4">
+        <div class="card chart-card h-100">
+          <p class="chart-title"><i class="fas fa-trophy me-2" style="color:#f59e0b;"></i>Top 5 Produk Terlaris</p>
+          {% if top_products %}
+            {% for prod in top_products %}
+            {% with max_qty=top_products.0.total_qty %}
+            <div class="top-product-item">
+              <div class="top-product-rank">{{ forloop.counter }}</div>
+              <div style="flex:1; min-width:0;">
+                <div class="d-flex justify-content-between mb-1">
+                  <small class="fw-600 text-truncate" style="max-width:140px; font-weight:600;">{{ prod.product__name }}</small>
+                  <small class="text-muted ms-1">{{ prod.total_qty|floatformat:"0g" }} kg</small>
+                </div>
+                <div style="background:#f0f4f8; border-radius:6px; height:10px; overflow:hidden;">
+                  <div class="top-product-bar"
+                    style="width: calc({{ prod.total_qty }} / {{ max_qty }} * 100%);">
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-4 text-muted">
+              <i class="fas fa-box-open fa-2x mb-2 opacity-50"></i>
+              <p class="mb-0" style="font-size:.85rem;">Belum ada data penjualan pada periode ini.</p>
+            </div>
+          {% endif %}
 
-        // Add additional handling for millions
-        if (rupiah.length > 7) {
-            var jutaan = Math.floor(rupiah.length / 3);
-            for (var i = 1; i <= jutaan; i++) {
-                rupiah = rupiah.slice(0, -(i * 3 + (i - 1))) + '.' + rupiah.slice(-(i * 3 + (i - 1)));
-            }
-        }
+          <!-- Saldo Ringkasan -->
+          <div class="mt-auto pt-3" style="border-top: 2px solid #f0f4f8;">
+            <div class="d-flex justify-content-between align-items-center">
+              <span style="font-size:.82rem; color:#6b7280; font-weight:600;">SALDO BERSIH</span>
+              <span class="fw-800" style="font-size:1.1rem; color: {% if saldo >= 0 %}#065f46{% else %}#991b1b{% endif %}; font-weight:800;">
+                Rp {{ saldo|floatformat:"0g" }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ══════════════ END CHARTS ══════════════ -->
 
-        return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
-    }
-</script>
 
+    <!-- ══════════════ TRANSACTIONS TABLE ══════════════ -->
+    <div class="card table-card">
+      <div class="card-header-custom">
+        <h6><i class="fas fa-list-alt me-2"></i>Detail Transaksi Keuangan</h6>
+        <div class="d-flex gap-2">
+          <span class="badge-pemasukan">
+            <i class="fas fa-arrow-up me-1"></i>P: Rp {{ pemasukan|floatformat:"0g" }}
+          </span>
+          <span class="badge-pengeluaran">
+            <i class="fas fa-arrow-down me-1"></i>L: Rp {{ pengeluaran|floatformat:"0g" }}
+          </span>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% if transactions %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="transTable">
+            <thead style="background:#f8fafc; border-bottom: 2px solid #e2e8f0;">
+              <tr>
+                <th class="text-center ps-4" style="width:50px;">No</th>
+                <th>Tanggal</th>
+                <th>Kategori</th>
+                <th>Keterangan</th>
+                <th class="text-end">Pemasukan</th>
+                <th class="text-end pe-4">Pengeluaran</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in transactions %}
+              <tr>
+                <td class="text-center ps-4 text-muted">{{ forloop.counter }}</td>
+                <td>
+                  <span style="font-size:.82rem; color:#6b7280;">{{ u.tanggal|date:"d M Y" }}</span>
+                </td>
+                <td>
+                  {% if u.kategori %}
+                  <span style="background:#eff6ff; color:#1d4ed8; font-size:.75rem; font-weight:600; padding:3px 8px; border-radius:5px;">
+                    {{ u.kategori }}
+                  </span>
+                  {% else %}
+                  <span class="text-muted" style="font-size:.82rem;">—</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:.88rem;">{{ u.keterangan|default:"—" }}</td>
+                <td class="text-end">
+                  {% if u.transaksi_choice == "P" %}
+                  <span class="badge-pemasukan">Rp {{ u.jumlah|floatformat:"0g" }}</span>
+                  {% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+                <td class="text-end pe-4">
+                  {% if u.transaksi_choice == "L" %}
+                  <span class="badge-pengeluaran">Rp {{ u.jumlah|floatformat:"0g" }}</span>
+                  {% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot style="background:#f8fafc; border-top: 2px solid #e2e8f0;">
+              <tr>
+                <td colspan="4" class="text-end fw-bold ps-4" style="font-size:.88rem; color:#374151;">TOTAL</td>
+                <td class="text-end" style="font-weight:700; color:#065f46;">Rp {{ pemasukan|floatformat:"0g" }}</td>
+                <td class="text-end pe-4" style="font-weight:700; color:#991b1b;">Rp {{ pengeluaran|floatformat:"0g" }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+          <p class="mb-0">Tidak ada data transaksi pada periode ini.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <!-- ══════════════ END TABLE ══════════════ -->
+
+  </div><!-- /container-fluid -->
+</div><!-- /page-body -->
+
+<!-- ──────────────── SCRIPTS ──────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        function fetchDataAndRenderChart(periode) {
-            fetch(`/chart-report/?periode=${periode}`)
-                .then(response => response.json())
-                .then(data => {
-                    var options = {
-                        chart: {
-                            height: 320,
-                            type: "area",
-                            zoom: { enabled: false },
-                        },
-                        stroke: { curve: "smooth" },
-                        series: [
-                            { name: "Pemasukan", data: data.income_values, color: '#28a745' },
-                            { name: "Pengeluaran", data: data.expense_values, color: '#dc3545' }
-                        ],
-                        xaxis: { categories: data.labels },
-                        yaxis: {
-                            labels: {
-                                formatter: function (value) {
-                                    return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                                }
-                            },
-                        }
-                    };
+// ── Custom Period Toggle ────────────────────────────────────
+function toggleCustom() {
+  const row = document.getElementById('customRangeRow');
+  const input = document.getElementById('periodeInput');
+  const pill = document.getElementById('pillCustom');
+  const isHidden = row.style.display === 'none';
 
-                    document.querySelector("#chart-line").innerHTML = "";  // Reset canvas
-                    var chart = new ApexCharts(document.querySelector("#chart-line"), options);
-                    chart.render();
-                });
-        }
+  row.style.display = isHidden ? '' : 'none';
+  if (isHidden) {
+    input.value = 'custom';
+    pill.classList.add('active');
+  } else {
+    input.value = 'harian';
+    pill.classList.remove('active');
+    window.location.href = '?periode=harian';
+  }
+}
 
-        // Fetch default data (harian)
-        fetchDataAndRenderChart("harian");
+// Keep custom row visible on load if period=custom
+document.addEventListener('DOMContentLoaded', function () {
+  const periode = "{{ periode }}";
+  if (periode === 'custom') {
+    document.getElementById('customRangeRow').style.display = '';
+    document.getElementById('periodeInput').value = 'custom';
+  }
+});
 
-        // Update chart on period change
-        document.getElementById('periode').addEventListener('change', function () {
-            fetchDataAndRenderChart(this.value);
-        });
-    });
+// ── Area Chart ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+  const labels   = {{ chart_labels_json|safe }};
+  const sales    = {{ chart_sales_json|safe }};
+  const income   = {{ chart_income_json|safe }};
+  const expense  = {{ chart_expense_json|safe }};
+
+  const rupiahFmt = v => 'Rp ' + new Intl.NumberFormat('id-ID').format(v);
+
+  const options = {
+    chart: {
+      type: 'area',
+      height: 280,
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      fontFamily: 'Rubik, sans-serif',
+    },
+    series: [
+      { name: 'Pemasukan',   data: income  },
+      { name: 'Pengeluaran', data: expense },
+      { name: 'Penjualan',   data: sales   },
+    ],
+    colors: ['#198754', '#dc3545', '#2d6a9f'],
+    fill: {
+      type: 'gradient',
+      gradient: { opacityFrom: 0.3, opacityTo: 0.02 }
+    },
+    stroke: { curve: 'smooth', width: 2.5 },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: labels,
+      labels: { style: { fontSize: '11px', colors: '#94a3b8' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: {
+      labels: {
+        formatter: v => v >= 1000000
+          ? 'Rp ' + (v / 1000000).toFixed(1) + 'jt'
+          : 'Rp ' + new Intl.NumberFormat('id-ID').format(v),
+        style: { fontSize: '11px', colors: '#94a3b8' },
+      }
+    },
+    tooltip: {
+      y: { formatter: rupiahFmt },
+      theme: 'light',
+    },
+    grid: { borderColor: '#f0f4f8', strokeDashArray: 4 },
+    legend: { show: false },
+  };
+
+  new ApexCharts(document.querySelector('#areaChart'), options).render();
+});
 </script>
-
-</div>
 {% endblock content %}
+
 {% block scriptcontent %}
-<!-- Plugins JS start-->
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
-<script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
-<script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
-<script src="{% static 'assets/js/ecommerce.js' %}"></script>
-<script src="{% static 'assets/js/product-list-custom.js' %}"></script>
-<script src="{% static 'assets/js/datepicker/date-picker/datepicker.js' %}"></script>
-<script src="{% static 'assets/js/datepicker/date-picker/datepicker.en.js' %}"></script>
-<script src="{% static 'assets/js/datepicker/date-picker/datepicker.custom.js' %}"></script>
-<!-- Plugins JS Ends-->
+<script>
+$(document).ready(function() {
+  $('#transTable').DataTable({
+    pageLength: 15,
+    language: {
+      emptyTable: "Tidak ada transaksi pada periode ini.",
+      search: "Cari:",
+      lengthMenu: "Tampilkan _MENU_ baris",
+      info: "Menampilkan _START_–_END_ dari _TOTAL_ transaksi",
+      paginate: { previous: "‹", next: "›" }
+    },
+    order: [[1, 'desc']],
+    dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+  });
+});
+</script>
 {% endblock scriptcontent %}

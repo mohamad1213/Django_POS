@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from products.models import Product
-from zetaapp.models import Transaksi, Stock
+from zetaapp.models import Transaksi, Stock, HutangPiutang
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import F
@@ -16,7 +16,19 @@ class Purchase(models.Model):
     transaction_number = models.CharField(max_length=50, unique=True)
     sub_total = models.FloatField(default=0)
     grand_total = models.FloatField(default=0)
+    amount_payed = models.FloatField(default=0, verbose_name="Nominal Bayar")
+    amount_change = models.FloatField(default=0, verbose_name="Kembalian")
     note = models.TextField(blank=True, null=True)
+
+    # Operational costs & Profit calculations
+    ongkos_muat = models.FloatField(default=0)
+    gaji_pegawai = models.FloatField(default=0)
+    biaya_lain = models.FloatField(default=0)
+    susutan_persen = models.FloatField(default=0)
+    tabungan_persen = models.FloatField(default=30)
+    profit_kotor = models.FloatField(default=0)
+    net_profit = models.FloatField(default=0)
+    tabungan_amount = models.FloatField(default=0)
 
     class Meta:
         db_table = 'Purchases'
@@ -65,15 +77,29 @@ class Purchase(models.Model):
                     owner_user = User.objects.filter(pk=owner_user).first()
 
                 if owner_user:
-                    Transaksi.objects.create(
-                        owner=owner_user,
-                        jumlah=self.sub_total,
-                        tanggal=self.date_added.date() if hasattr(self, 'date_added') and self.date_added else timezone.now().date(),
-                        keterangan=f"Barang Keluar (Jual) {self.transaction_number} (Tujuan: {self.supplier_name or 'Pabrik'})",
-                        transaksi_choice=Transaksi.PEMASUKAN,
-                    )
+                    # 1. Catat Pemasukan Kas HANYA sebesar nominal yang benar-benar DIBAYAR (amount_payed)
+                    actual_paid = float(self.amount_payed or 0)
+                    if actual_paid > 0:
+                        Transaksi.objects.create(
+                            owner=owner_user,
+                            jumlah=actual_paid,
+                            tanggal=self.date_added.date() if hasattr(self, 'date_added') and self.date_added else timezone.now().date(),
+                            keterangan=f"Barang Keluar (Jual) {self.transaction_number} (Tujuan: {self.supplier_name or 'Pabrik'})",
+                            transaksi_choice=Transaksi.PEMASUKAN,
+                        )
+
+                    # 2. Jika Bayar < Subtotal, selisih menjadi PIUTANG (Belum dibayar oleh Pembeli/Pabrik)
+                    unpaid_balance = float(self.sub_total or 0) - actual_paid
+                    if unpaid_balance > 0:
+                        HutangPiutang.objects.create(
+                            owner=owner_user,
+                            jumlah=unpaid_balance,
+                            tanggal=self.date_added.date() if hasattr(self, 'date_added') and self.date_added else timezone.now().date(),
+                            hutang_choice=HutangPiutang.PIUTANG,
+                            keterangan=f"Piutang Penjualan Barang Keluar {self.transaction_number} ({self.supplier_name or 'Pabrik'})",
+                        )
             except Exception as e:
-                print(f"Error saat membuat Kas Transaksi: {e}")
+                print(f"Error saat membuat Kas Transaksi / Piutang: {e}")
 
 
 class PurchaseDetail(models.Model):

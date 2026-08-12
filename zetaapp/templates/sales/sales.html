@@ -32,8 +32,8 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
                             <h6 class="card-subtitle mb-2 text-muted"><i
-                                    class="fas fa-file-invoice text-danger me-2"></i>Total Transaksi Beli Rosok</h6>
-                            <h3 class="card-title text-danger mb-0">{{ totals.total_transactions|default:0 }}</h3>
+                                    class="fas fa-file-invoice text-primary me-2"></i>Total Transaksi Beli Rosok</h6>
+                            <h3 class="card-title text-primary mb-0">{{ totals.total_transactions|default:0 }}</h3>
                             <small class="text-muted">Semua setoran rosok masuk</small>
                         </div>
                     </div>
@@ -84,7 +84,7 @@
                             </form>
                             <div>
                                 <!-- Tombol Tambah Barang Masuk -->
-                                <a href="{% url 'sales:sales_add' %}" class="btn btn-danger font-weight-bold">
+                                <a href="{% url 'sales:sales_add' %}" class="btn btn-primary font-weight-bold">
                                     <i class="fas fa-plus mr-2"></i> Tambah Beli Rosok
                                 </a>
                             </div>
@@ -193,7 +193,57 @@
                                 </table>
                             </div>
                         </div>
-                    </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.paginator.num_pages > 1 %}
+                        <div class="d-flex justify-content-between align-items-center px-3 pb-3">
+                            <small class="text-muted">
+                                Menampilkan {{ page_obj.start_index }}–{{ page_obj.end_index }}
+                                dari {{ page_obj.paginator.count }} transaksi
+                            </small>
+                            <nav aria-label="Pagination">
+                                <ul class="pagination pagination-sm mb-0">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1" title="Pertama">«</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled"><span class="page-link">«</span></li>
+                                    <li class="page-item disabled"><span class="page-link">‹</span></li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" title="Terakhir">»</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled"><span class="page-link">›</span></li>
+                                    <li class="page-item disabled"><span class="page-link">»</span></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                        <!-- End Pagination -->
+
                 </div>
             </div>
         </div>

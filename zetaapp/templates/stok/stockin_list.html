@@ -1,199 +1,168 @@
 {% extends 'base.html' %}{% load static %}
 {% load sass_tags %}
 {% block css %}
-<!-- Plugins css start-->
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  .kpi-stok {
+    border-radius: 16px; padding: 22px 24px; border: none;
+    position: relative; overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .kpi-stok:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.18); }
+  .kpi-stok .kpi-ic {
+    width: 50px; height: 50px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 12px; background: rgba(255,255,255,.15);
+  }
+  .kpi-stok .kpi-v { font-size: 1.5rem; font-weight: 800; margin: 0; line-height: 1.1; }
+  .kpi-stok .kpi-l { font-size: 0.75rem; opacity: .75; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+  .bg-blue  { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; }
+  .bg-green { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: #fff; }
+  .bg-amber { background: linear-gradient(135deg, #7d4e00 0%, #f59e0b 100%); color: #fff; }
 
-<!-- Plugins css Ends-->
+  .stok-card {
+    border-radius: 16px; border: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08); overflow: hidden;
+  }
+  .stok-card .card-hdr {
+    padding: 18px 24px; background: #fff;
+    border-bottom: 2px solid #f0f4f8;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .stok-card .card-hdr h6 { font-weight: 700; margin: 0; color: #1e3a5f; font-size: 1rem; }
+  .stok-bar {
+    height: 8px; border-radius: 4px;
+    background: linear-gradient(90deg, #198754, #2d6a9f);
+    transition: width .6s ease;
+  }
+</style>
 {% endblock css %}
+
 {% block content %}
 <div class="page-body">
   {% include 'layout/breadcrumb.html' %}
   {% include 'messages.html' %}
-  <!-- Container-fluid starts-->
-  <div class="container-fluid list-products">
-    <div class="row">
-      <!-- Individual column searching (text inputs) Starts-->
-      <div class="col-sm-12">
-        <div class="card">
-          <div class="card-header pb-0">
-            <div class="order-place" style="text-align: right;">
-              <a href="{% url 'stockin_create' %}" class="btn btn-primary">
-                Tambah Profit
-              </a>
-            </div>
-          </div>
-          <div class="card-body">
-            <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
-              <thead>
-                <tr>
-                  <th>NO</th>
-                  <th class="text-center">TANGGAL</th>
-                  <th class="text-center">PRODUK</th>
-                  <th class="text-center">JUMLAH</th>
-                  <th class="text-center">REFERENCE</th>
-                  <th class="text-center">DITERIMA OLEH</th>
-                  <th class="text-center">OPSI</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for u in stockins %}
-                <tr class="text-center">
-                  <td>{{ forloop.counter }}</td>
-                  <td class="text-center">{{ u.received_at|date:"d-m-Y H:i" }}</td>
-                  <td class="text-center">{{ u.product.name }}</td>
-                  <td class="text-center">{{ u.quantity }}</td>
-                  <td class="text-center">{{ u.reference }}</td>
-                  <td class="text-center">{{ u.received_by }}</td>
-                  <td>
-                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                      data-bs-target="#edit_tr">
-                      <i class="fa fa-cog"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                      data-bs-target="#hapus_pr{{ u.id }}">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                      data-bs-target="#lihat_tr">
-                      <i class="fa fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-                <div class="modal fade" id="hapus_pr{{ u.id }}" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <form method="post" action="{% url 'stockin_delete' u.id %}">
-                      {% csrf_token %}
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title">Delete Stock In</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          Apakah Kamu yakin menghapus item ini:
-                          <h4 class="bold">{{ u.product.name }} ditanggal {{ u.received_at|date:"d-m-Y" }}</h4>
-                        </div>
-                        <div class="card-footer border-0 pt-0 text-end">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                          <button type="submit" class="btn btn-danger">Hapus</button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-                <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="edit_tr">Edit Profit</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <form class="form theme-form" action="{% url 'stockin_update' u.id %}" method="POST"
-                          enctype="multipart/form-data">
-                          {% load crispy_forms_tags %}
-                          {% csrf_token %}
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Tanggal</label>
-                            {{form.date}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Nama Suplayer</label>
-                            {{form.nama_suplayer}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Harga Jual</label>
-                            {{form.harga_jual}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Harga Beli</label>
-                            {{form.harga_beli}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Kg</label>
-                            {{form.jumlah_brg}}
-                          </div>
-                          <div class="mb-3">
-                            <label class="col-form-label pt-0">Keterangan</label>
-                            {{form.description}}
-                          </div>
-                          {% if form.errors %}
-                          <div class="alert alert-danger" id="msg">
-                            {{ form.errors }}
-                          </div>
-                          {% endif %}
-                          <div class="card-footer border-0 pt-0" style="text-align: right;">
-                            <button class="btn btn-warning" type="reset">Cancel</button>
-                            <button class="btn btn-primary" type="submit">Submit</button>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+
+  <div class="container-fluid">
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-4">
+        <div class="card kpi-stok bg-blue">
+          <div class="kpi-ic"><i class="fas fa-boxes-stacked"></i></div>
+          <p class="kpi-v">{{ total_jenis }}</p>
+          <p class="kpi-l">Jenis Produk Tersedia</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-4">
+        <div class="card kpi-stok bg-green">
+          <div class="kpi-ic"><i class="fas fa-weight-hanging"></i></div>
+          <p class="kpi-v">{{ total_stok_kg|floatformat:"0g" }} kg</p>
+          <p class="kpi-l">Total Stok Gudang</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-4">
+        <div class="card kpi-stok bg-amber">
+          <div class="kpi-ic"><i class="fas fa-coins"></i></div>
+          <p class="kpi-v">Rp {{ total_nilai|floatformat:"0g" }}</p>
+          <p class="kpi-l">Estimasi Profit Kotor (Stok × Harga Jual)</p>
         </div>
       </div>
     </div>
+
+    <!-- TABLE -->
+    <div class="card stok-card">
+      <div class="card-hdr">
+        <h6><i class="fas fa-warehouse me-2"></i>Stok Gudang Real-Time</h6>
+        <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Stok = Barang Masuk (Beli) − Barang Keluar (Jual)</small>
+      </div>
+      <div class="card-body p-0">
+        {% if stock_data %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="stokTable">
+            <thead style="background:#f8fafc; border-bottom: 2px solid #e2e8f0;">
+              <tr>
+                <th class="text-center ps-4" style="width:50px;">No</th>
+                <th>Produk</th>
+                <th class="text-end">Masuk (Beli)</th>
+                <th class="text-end">Keluar (Jual)</th>
+                <th class="text-end">Stok Saat Ini</th>
+                <th style="width:180px;">Stok Bar</th>
+                <th class="text-end pe-4">Estimasi Profit Kotor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in stock_data %}
+              <tr>
+                <td class="text-center ps-4 text-muted">{{ forloop.counter }}</td>
+                <td style="font-weight:600;">
+                  {{ s.product.name }}
+                  <small class="d-block text-muted" style="font-size:0.75rem;">@ Rp {{ s.selling_price|floatformat:"0g" }} / kg</small>
+                </td>
+                <td class="text-end">
+                  <span style="background:#d1fae5; color:#065f46; font-size:.75rem; font-weight:600; padding:3px 8px; border-radius:5px;">
+                    {{ s.total_masuk|floatformat:"0g" }} kg
+                  </span>
+                </td>
+                <td class="text-end">
+                  <span style="background:#fee2e2; color:#991b1b; font-size:.75rem; font-weight:600; padding:3px 8px; border-radius:5px;">
+                    {{ s.total_keluar|floatformat:"0g" }} kg
+                  </span>
+                </td>
+                <td class="text-end" style="font-weight:700; color:#1e3a5f;">
+                  {{ s.stok|floatformat:"0g" }} kg
+                </td>
+                <td>
+                  <div style="background:#f0f4f8; border-radius:4px; height:8px; overflow:hidden;">
+                    <div class="stok-bar" style="width: {% widthratio s.stok total_stok_kg 100 %}%;"></div>
+                  </div>
+                </td>
+                <td class="text-end pe-4" style="font-weight:600; color:#7d4e00;">
+                  Rp {{ s.nilai_estimasi|floatformat:"0g" }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot style="background:#f8fafc; border-top: 2px solid #e2e8f0;">
+              <tr>
+                <td colspan="4" class="text-end fw-bold ps-4" style="font-size:.88rem; color:#374151;">TOTAL</td>
+                <td class="text-end" style="font-weight:700; color:#1e3a5f;">{{ total_stok_kg|floatformat:"0g" }} kg</td>
+                <td></td>
+                <td class="text-end pe-4" style="font-weight:700; color:#7d4e00;">Rp {{ total_nilai|floatformat:"0g" }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fas fa-warehouse fa-3x mb-3 opacity-25"></i>
+          <p class="mb-0">Tidak ada produk dengan stok tersedia saat ini.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock content %}
+
 {% block scriptcontent %}
-<script>
-  function parseRupiah(value) {
-    return parseInt(value.replace(/[^0-9]/g, '')) || 0;
-  }
-  function formatRupiah(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  }
-  function hitungProfit() {
-    let harga_beli = parseRupiah(document.getElementById('id_harga_beli').value);
-    let harga_jual = parseRupiah(document.getElementById('id_harga_jual').value);
-
-    let biayaElems = document.querySelectorAll('#id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin');
-    let total_biaya_operasional = 0;
-    biayaElems.forEach(el => {
-      total_biaya_operasional += parseRupiah(el.value);
-    });
-
-    let hpp = harga_beli + total_biaya_operasional;
-    let profit = harga_jual - hpp;
-    let profit_margin = harga_jual ? (profit / harga_jual * 100).toFixed(2) : 0;
-
-    document.getElementById('id_hpp').value = 'Rp ' + formatRupiah(hpp);
-    document.getElementById('id_profit').value = 'Rp ' + formatRupiah(profit);
-    document.getElementById('id_profit_margin').value = profit_margin + ' %';
-  }
-
-  // Live calculation saat input biaya/harga
-  document.querySelectorAll('#id_harga_beli, #id_harga_jual, #id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin').forEach(el => {
-    el.addEventListener('input', hitungProfit);
-  });
-  window.addEventListener('DOMContentLoaded', hitungProfit);
-</script>
-<script>
-  $(document).ready(function () {
-    $('#example').DataTable({
-      scrollX: true,
-    });
-  });
-</script>
-<!-- Plugins JS start-->
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-<script src="{% static 'assets/js/datatable/datatables/dataTables.custom.js' %}"></script>
-<script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
-<script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
-<script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
-<script src="{% static 'assets/js/ecommerce.js' %}"></script>
-<script src="{% static 'assets/js/product-list-custom.js' %}"></script>
-<!-- Plugins JS Ends-->
+<script>
+$(document).ready(function () {
+  $('#stokTable').DataTable({
+    pageLength: 25,
+    language: {
+      search: "Cari:", lengthMenu: "Tampilkan _MENU_ baris",
+      info: "Menampilkan _START_–_END_ dari _TOTAL_ produk",
+      emptyTable: "Tidak ada stok tersedia.",
+      paginate: { previous: "‹", next: "›" }
+    },
+    order: [[4, 'desc']],
+  });
+});
+</script>
 {% endblock scriptcontent %}

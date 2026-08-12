@@ -1,4 +1,5 @@
-{% extends 'base.html' %}{% load static %}
+{% extends 'base.html' %}
+{% load static %}
 {% load sass_tags %}
 {% load humanize %}
 
@@ -10,85 +11,137 @@
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
 <!-- Plugins css Ends-->
 {% endblock css %}
+
 {% block content %}
 <div class="page-body">
     {% include 'layout/breadcrumb.html' %}
 
     <!-- Container-fluid starts-->
     <div class="container-fluid list-products">
-        <div class="row ml-0 mb-3">
-            <a href="{% url 'products:products_list' %}">
-                <button type="button" class="btn btn-info font-weight-bold">
-                    <i class="fas fa-long-arrow-alt-left mr-2"></i>
-                    Go back
-                </button>
-            </a>
+
+        <!-- Header Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{% url 'products:products_list' %}" class="btn btn-outline-secondary btn-pill">
+                    <i class="fas fa-arrow-left mr-2"></i> Kembali ke Daftar
+                </a>
+            </div>
         </div>
 
-        <div class="row">
-            <div class="card col-md-8">
-                <div class="card-body">
-                    <form action="{% url 'products:products_update' product.id %}" method="post">
-                        {% csrf_token %}
-                        <div class="form-row">
-                            <div class="form-group col-md-8">
-                                <label for="inputDescription">Name</label>
-                                <input type="text" class="form-control" name="name" value="{{product.name}}" required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="state">State</label>
-                                <select name="state" class="form-control" required>
-                                    {% for status in product_status %}
-                                    {% if status.0 == product.status %}
-                                    <option value="{{status.0}}" selected>{{status.1}}</option>
-                                    {% else %}
-                                    <option value="{{status.0}}">{{status.1}}</option>
-                                    {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
+        <!-- Form Card Container -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <div class="card shadow-sm border-0 rounded-lg">
+                    <div
+                        class="card-header bg-primary text-white d-flex align-items-center justify-content-between py-3">
+                        <h5 class="card-title mb-0 text-white font-weight-bold">
+                            <i class="fas fa-edit mr-2"></i> Edit Informasi Produk
+                        </h5>
+                        <span class="badge badge-light text-primary font-weight-normal">ID: #{{ product.id }}</span>
+                    </div>
 
-                        <div class="form-row">
-                            <div class="form-group col-md-8">
-                                <label for="inputDescription">Description</label>
-                                <input type="text" name="description" class="form-control"
-                                    value="{{product.description}}" required>
+                    <div class="card-body p-4">
+                        <form action="{% url 'products:products_update' product.id %}" method="post">
+                            {% csrf_token %}
+
+                            <!-- Section: General Info -->
+                            <h6 class="text-muted font-weight-bold mb-3 text-uppercase small">Informasi Umum</h6>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-8">
+                                    <label class="font-weight-bold text-dark" for="inputName">
+                                        Nama Produk <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" id="inputName" class="form-control" name="name"
+                                        value="{{ product.name }}" placeholder="Masukkan nama produk" required>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label class="font-weight-bold text-dark" for="state">
+                                        Status Produk <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="state" name="state" class="form-control custom-select" required>
+                                        {% for status in product_status %}
+                                        <option value="{{ status.0 }}" {% if status.0 == product.status %}selected{% endif%}>
+                                            {{ status.1 }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="category">Category</label>
-                                <select name="category" class="form-control" required>
-                                    <option value="" selected disabled hidden>Select the category</option>
-                                    {% for category in categories %}
-                                    {% if product.category.id == category.id%}
-                                    <option value="{{category.id}}" selected>{{category.name}}</option>
-                                    {% else %}
-                                    <option value="{{category.id}}">{{category.name}}</option>
-                                    {% endif %}
-                                    {% endfor %}
-                                </select>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-8">
+                                    <label class="font-weight-bold text-dark" for="inputDescription">Deskripsi</label>
+                                    <input type="text" id="inputDescription" name="description" class="form-control"
+                                        value="{{ product.description }}"
+                                        placeholder="Penjelasan singkat mengenai produk" required>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label class="font-weight-bold text-dark" for="category">
+                                        Kategori <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="category" name="category" class="form-control custom-select" required>
+                                        <option value="" disabled hidden>Pilih Kategori</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if product.category.id == category.id%}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="form-row">
-                            <div class="form-group col-md-8">
-                                <label for="inputPrice">Price</label>
-                                <input type="text" name="price" step="any" class="form-control"
-                                    value="{{product.price|floatformat:0|intcomma }}" required>
+                            <hr class="my-4">
+
+                            <!-- Section: Pricing -->
+                            <h6 class="text-muted font-weight-bold mb-3 text-uppercase small">Informasi Harga</h6>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label class="font-weight-bold text-dark" for="inputPrice">
+                                        Harga Beli (Modal) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text font-weight-bold">Rp</span>
+                                        </div>
+                                        <input type="number" id="inputPrice" name="price" step="any"
+                                            class="form-control" value="{{ product.price}}"
+                                            placeholder="0" required>
+                                    </div>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="font-weight-bold text-dark" for="inputSellingPrice">
+                                        Harga Jual <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text font-weight-bold">Rp</span>
+                                        </div>
+                                        <input type="number" id="inputSellingPrice" name="selling_price" step="any"
+                                            class="form-control" value="{{ product.selling_price}}"
+                                            placeholder="0" required>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
+                            <!-- Submit Buttons -->
+                            <div class="d-flex justify-content-end align-items-center mt-4 pt-2 border-top">
+                                <a href="{% url 'products:products_list' %}" class="btn btn-light mr-2">Batal</a>
+                                <button type="submit" class="btn btn-success px-4 font-weight-bold">
+                                    <i class="fas fa-save mr-1"></i> Simpan Perubahan
+                                </button>
+                            </div>
 
-                        <button type="submit" class="btn btn-success font-weight-bold">Update product</button>
-
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Specific Page JS goes HERE  -->
 {% endblock content %}
+
 {% block scriptcontent %}
 <!-- Plugins JS start-->
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>

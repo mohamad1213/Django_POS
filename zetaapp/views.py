@@ -1,76 +1,43 @@
-from django.shortcuts import render,redirect, get_object_or_404
+from babel import localedata
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http.response import HttpResponseRedirect
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 import openpyxl
-from datetime import datetime, date
+from datetime import datetime, date, time, timedelta
 from django.db import transaction
 import re
-from datetime import datetime, time
-from django.http import HttpResponse
 from decimal import Decimal, InvalidOperation
 from .helpers import *
-from django.shortcuts import render
 from collections import defaultdict
 from .models import *
 from .forms import *
 from django.contrib import messages
 import locale
-from datetime import datetime, timedelta
 from babel.numbers import format_currency
-# Set the locale to Indonesian (ID) format
-# locale.setlocale(locale.LC_ALL, 'id_ID')
-from django.db.models import Q 
+from django.db.models import Q, Sum, F, Value, DecimalField, ExpressionWrapper
 from django.template.loader import get_template
-from django.shortcuts import render
-from .forms import ExcelUploadForm
 from io import BytesIO
-# dashboard pages
-from django.db.models import Sum
-from django.utils import timezone
-import pandas as pd
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.template.loader import get_template
-from .models import *
-from io import BytesIO
+from django.views.decorators.http import require_POST, require_GET
 from xhtml2pdf import pisa
 from django.views import View
-from django.db.models.functions import ExtractMonth, ExtractYear
-from django.db.models.functions import TruncDate
-#Dashboard
-from django.db.models import Sum
+from django.db.models.functions import ExtractMonth, ExtractYear, TruncDate, TruncMonth, Coalesce
 from django.utils import timezone
-from django.db.models.functions import TruncDate
-from django.utils import timezone
-from sales.models import SaleDetail
-## BERANDA PAGE
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+import pandas as pd
+import calendar, json, logging
 from django.forms import modelformset_factory, formset_factory
-from .models import StockIn
-from .forms import StockInForm
-from django.http import JsonResponse
-from .models import Product
-from django.views.decorators.http import require_GET
-from django.db.models import Q
-from django.shortcuts import render
-from django.db.models import Sum, Value
-from django.db.models.functions import TruncMonth, Coalesce
-from django.utils import timezone
-import calendar, json
+from .models import StockIn, Product
+from .forms import ExcelUploadForm, StockInForm
 from sales.models import Sale, SaleDetail
-
+from .models import Transaksi
 @login_required(login_url="/accounts/login/")
 def transaksi_history(request):
     status_filter = request.GET.get('status', 'ALL').upper()
-    data = SaleDetail.objects.filter(sale__owner=request.user).order_by('-id')
+    data = Sale.objects.filter(owner=request.user).order_by('-id')
 
     if status_filter == 'LUNAS':
-        data = data.filter(models.Q(sale__amount_payed__gte=models.F('sale__sub_total')) | models.Q(sale__afkiran__status='LUNAS'))
+        data = data.filter(Q(amount_payed__gte=F('sub_total')) | Q(afkiran__status='LUNAS'))
     elif status_filter == 'BELUM_LUNAS':
-        data = data.filter(models.Q(sale__amount_payed__lt=models.F('sale__sub_total')) | models.Q(sale__afkiran__status='PENDING'))
+        data = data.filter(Q(amount_payed__lt=F('sub_total')) | Q(afkiran__status='PENDING'))
 
     # Menghitung ringkasan statistik untuk Hari Ini
     today = timezone.localtime(timezone.now()).date()
@@ -139,9 +106,49 @@ def stockin_create(request):
 
 @login_required
 def stockin_list(request):
-    stockins = StockIn.objects.select_related("product", "received_by").order_by("-received_at")
-    
-    return render(request, "stok/stockin_list.html", {"stockins": stockins,"breadcrumb": {"parent": "Stok Barang", "child": "Stok Barang"},})
+    from purchases.models import PurchaseDetail
+
+    user_products = Product.objects.filter(owner=request.user, status='ACTIVE')
+
+    stock_data = []
+    for product in user_products:
+        total_masuk = SaleDetail.objects.filter(
+            product=product, sale__owner=request.user
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        total_keluar = PurchaseDetail.objects.filter(
+            product=product, purchase__owner=request.user
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        stok = float(total_masuk) - float(total_keluar)
+        if stok > 0:
+            sell_price = float(product.selling_price) if product.selling_price else float(product.price)
+            stock_data.append({
+                'product': product,
+                'total_masuk': float(total_masuk),
+                'total_keluar': float(total_keluar),
+                'stok': stok,
+                'selling_price': sell_price,
+                'nilai_estimasi': stok * sell_price,
+            })
+
+    # Sort by stok descending
+    stock_data.sort(key=lambda x: x['stok'], reverse=True)
+
+    # KPI
+    total_jenis = len(stock_data)
+    total_stok_kg = sum(s['stok'] for s in stock_data)
+    total_nilai = sum(s['nilai_estimasi'] for s in stock_data)
+
+    context = {
+        'stock_data': stock_data,
+        'total_jenis': total_jenis,
+        'total_stok_kg': total_stok_kg,
+        'total_nilai': total_nilai,
+        'breadcrumb': {'parent': 'Stok Barang', 'child': 'Stok Gudang'},
+    }
+    return render(request, "stok/stockin_list.html", context)
+
 @login_required
 def stockin_delete(request, pk):
     si = get_object_or_404(StockIn, pk=pk)
@@ -163,23 +170,75 @@ def stockin_update(request, pk):
     return redirect("stockin_list")
 
 
-
+@login_required
 def get_product_summary(request):
     data = (
         SaleDetail.objects
+        .filter(sale__owner=request.user)
         .values('product__name')
         .annotate(total_qty=Sum('quantity'))
-        .order_by('product__name')
+        .order_by('-total_qty')[:10]
     )
+    top = list(data[:10])
+    others = data[10:]
 
+    others_total = sum(item['total_qty'] for item in others)
+
+    if others_total > 0:
+        top.append({
+            'product__name': 'Lainnya',
+            'total_qty': others_total
+        })
     product_names = [d['product__name'] for d in data]
-    product_totals = [d['total_qty'] for d in data]
+    product_totals = [float(d['total_qty']) for d in data]
 
     return JsonResponse({
         'product_names': product_names,
         'product_totals': product_totals
     })
-    
+
+@login_required
+def product_analysis(request):
+
+    products = (
+        SaleDetail.objects
+        .filter(sale__owner=request.user)
+        .values('product__id', 'product__name')
+        .annotate(
+            total_qty=Sum('quantity'),
+            omzet=Sum(
+                ExpressionWrapper(
+                    F('quantity') * F('price'),
+                    output_field=DecimalField()
+                )
+            )
+        )
+        .order_by('-total_qty')
+    )
+
+    # KPI aggregations
+    total_products = products.count()
+    total_sold = sum(float(p['total_qty'] or 0) for p in products)
+    total_omzet = sum(float(p['omzet'] or 0) for p in products)
+
+    # Top 10 for chart
+    top10 = list(products[:10])
+    chart_names = json.dumps([p['product__name'] for p in top10])
+    chart_qty = json.dumps([float(p['total_qty'] or 0) for p in top10])
+    chart_omzet = json.dumps([float(p['omzet'] or 0) for p in top10])
+
+    context = {
+        'products': products,
+        'total_products': total_products,
+        'total_sold': total_sold,
+        'total_omzet': total_omzet,
+        'chart_names': chart_names,
+        'chart_qty': chart_qty,
+        'chart_omzet': chart_omzet,
+        'breadcrumb': {'parent': 'Dashboard', 'child': 'Analisis Produk'},
+    }
+    return render(request, 'general/dashboard/default/components/product_analysis.html', context)
+
 def LandingPage(request):
     return render(request, 'landingpage/index.html')
 def Tentang(request):
@@ -195,111 +254,67 @@ def Kontak(request):
     
 @login_required(login_url="/accounts/login/")
 def indexPage(request):
+    user = request.user
     today = timezone.localtime(timezone.now()).date()
-
-    # Ambil data terbaru (5)
-    data = Transaksi.objects.filter(owner=request.user).order_by('-tanggal')[:5]
-
-    # Hitung jumlah total rows (untuk debug)
-    count = Transaksi.objects.count()
-    print("Total transaksi:", count)
-
-    try:
-        totals_per_product = (
-            SaleDetail.objects
-            .values('product__name')  # nama produk
-            .annotate(total_qty=Sum('quantity'))  # jumlah total
-            .order_by('-total_qty')
-        )
-        # Buat list untuk chart
-        product_names = [p['product__name'] for p in totals_per_product]
-        product_totals = [p['total_qty'] for p in totals_per_product]
-        total_pemasukan_harian = (
-            Transaksi.objects
-            .filter(tanggal__date=today, transaksi_choice='P', owner=request.user)
-            .aggregate(total=Sum('jumlah'))['total'] or 0
-        )
-
-        total_pengeluaran_harian = (
-            Transaksi.objects
-            .filter(tanggal__date=today, transaksi_choice='L', owner=request.user)
-            .aggregate(total=Sum('jumlah'))['total'] or 0
-        )
-
-    except Exception as e:
-        # Bila terjadi error (mis. DB tidak support __date), jatuhkan ke opsi B
-        print("Opsi A gagal:", e)
-
-        # =========================
-        # Opsi B: rentang waktu (paling aman)
-        # =========================
-        tz = timezone.get_current_timezone()
-        start_dt = datetime.combine(today, time.min).replace(tzinfo=tz)
-        end_dt = datetime.combine(today, time.max).replace(tzinfo=tz)
-
-        total_pemasukan_harian = (
-            Transaksi.objects
-            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='P', owner=request.user)
-            .aggregate(total=Sum('jumlah'))['total'] or 0
-        )
-
-        total_pengeluaran_harian = (
-            Transaksi.objects
-            .filter(tanggal__gte=start_dt, tanggal__lte=end_dt, transaksi_choice='L', owner=request.user)
-            .aggregate(total=Sum('jumlah'))['total'] or 0
-        )
-
-    # =========================
-    # Bulanan & Tahunan (gunakan lookup month/year)
-    # =========================
-    total_pemasukan_bulanan = (
-        Transaksi.objects
-        .filter(tanggal__month=today.month, transaksi_choice='P', owner=request.user)
-        .aggregate(total=Sum('jumlah'))['total'] or 0
+    user_transaksi = Transaksi.objects.filter(owner=user)
+    data = user_transaksi.order_by('-tanggal')[:5]
+    count = user_transaksi.count()
+    stats_transaksi = user_transaksi.aggregate(
+        pemasukan_harian=Sum('jumlah', filter=Q(tanggal=today, transaksi_choice='P')),
+        pengeluaran_harian=Sum('jumlah', filter=Q(tanggal=today, transaksi_choice='L')),
+        pemasukan_bulanan=Sum('jumlah', filter=Q(tanggal__year=today.year, tanggal__month=today.month, transaksi_choice='P')),
+        pengeluaran_bulanan=Sum('jumlah', filter=Q(tanggal__year=today.year, tanggal__month=today.month, transaksi_choice='L')),
+        pemasukan_tahunan=Sum('jumlah', filter=Q(tanggal__year=today.year, transaksi_choice='P')),
+        pengeluaran_tahunan=Sum('jumlah', filter=Q(tanggal__year=today.year, transaksi_choice='L')),
     )
 
-    total_pengeluaran_bulanan = (
-        Transaksi.objects
-        .filter(tanggal__month=today.month, transaksi_choice='L', owner=request.user)
-        .aggregate(total=Sum('jumlah'))['total'] or 0
+    # Ambil nilai agregasi dengan fallback 0 jika None
+    total_pemasukan_harian = stats_transaksi['pemasukan_harian'] or 0
+    total_pengeluaran_harian = stats_transaksi['pengeluaran_harian'] or 0
+
+    total_pemasukan_bulanan = stats_transaksi['pemasukan_bulanan'] or 0
+    total_pengeluaran_bulanan = stats_transaksi['pengeluaran_bulanan'] or 0
+
+    total_pemasukan_tahunan = stats_transaksi['pemasukan_tahunan'] or 0
+    total_pengeluaran_tahunan = stats_transaksi['pengeluaran_tahunan'] or 0
+
+    # 3. Agregasi Hutang & Piutang (Tahunan)
+    stats_hp = HutangPiutang.objects.filter(
+        owner=user, 
+        tanggal__year=today.year
+    ).aggregate(
+        total_hutang=Sum('jumlah', filter=Q(hutang_choice='H')),
+        total_piutang=Sum('jumlah', filter=Q(hutang_choice='P'))
     )
 
-    total_pemasukan_tahunan = (
-        Transaksi.objects
-        .filter(tanggal__year=today.year, transaksi_choice='P', owner=request.user)
-        .aggregate(total=Sum('jumlah'))['total'] or 0
-    )
+    total_hutang = stats_hp['total_hutang'] or 0
+    total_piutang = stats_hp['total_piutang'] or 0
+    sisa_hutang = total_piutang - total_hutang
 
-    total_pengeluaran_tahunan = (
-        Transaksi.objects
-        .filter(tanggal__year=today.year, transaksi_choice='L', owner=request.user)
-        .aggregate(total=Sum('jumlah'))['total'] or 0
+    # 4. Penjualan Produk Per Item (Terfilter User via relasi transaksi/sale)
+    totals_per_product = (
+        SaleDetail.objects
+        .filter(sale__owner=user)  # Sesuaikan 'sale__owner' sesuai nama field relation di model Anda
+        .values('product__name')
+        .annotate(total_qty=Sum('quantity'))
+        .order_by('-total_qty')
     )
+    product_names = [p['product__name'] for p in totals_per_product]
+    product_totals = [p['total_qty'] for p in totals_per_product]
 
-    # Sisa / cashflow
-    sisa_saldo = total_pemasukan_tahunan - total_pengeluaran_tahunan
+    # 5. Kalkulasi Cashflow
+    total_pemasukan2 = (Transaksi.objects.filter(owner=request.user,transaksi_choice=Transaksi.PEMASUKAN).aggregate(total=Sum('jumlah'))['total'] or 0)
+    total_pengeluaran2 = (Transaksi.objects.filter(owner=request.user,transaksi_choice=Transaksi.PENGELUARAN).aggregate(total=Sum('jumlah'))['total'] or 0)
+    saldo = total_pemasukan2 - total_pengeluaran2
     sisa_cashflow_harian = total_pemasukan_harian - total_pengeluaran_harian
     sisa_cashflow_bulanan = total_pemasukan_bulanan - total_pengeluaran_bulanan
     sisa_cashflow_tahunan = total_pemasukan_tahunan - total_pengeluaran_tahunan
 
-    # Hutang/piutang
-    total_hutang = (
-        HutangPiutang.objects
-        .filter(tanggal__year=today.year, hutang_choice='H',owner=request.user)
-        .aggregate(total=Sum('jumlah'))['total'] or 0
-    )
-
-    total_piutang = (
-        HutangPiutang.objects
-        .filter(tanggal__year=today.year, hutang_choice='P',owner=request.user)
-        .aggregate(total=Sum('jumlah'))['total'] or 0
-    )
-    
-    sisa_hutang = total_piutang - total_hutang
-
     context = {
         "breadcrumb": {"parent": "Dashboard", "child": "Dashboard"},
         'total_pemasukan_harian': total_pemasukan_harian,
+        'total_pemasukan2':total_pemasukan2,
+        'total_pengeluaran2':total_pengeluaran2,
         'total_pemasukan_bulanan': total_pemasukan_bulanan,
         'total_pemasukan_tahunan': total_pemasukan_tahunan,
         'total_pengeluaran_harian': total_pengeluaran_harian,
@@ -311,15 +326,14 @@ def indexPage(request):
         'total_hutang': total_hutang,
         'total_piutang': total_piutang,
         'sisa_hutang': sisa_hutang,
-        'sisa_saldo': sisa_saldo,
+        'saldo': saldo,
         'data': data,
         'count': count,
-        # 'product_names': product_names,
-        # 'product_totals': product_totals,
+        'product_names': product_names,
+        'product_totals': product_totals,
     }
 
     return render(request, 'general/dashboard/default/index.html', context)
-
 #PROFIT
 # @login_required(login_url="/accounts/login/")
 # def profit_create(request):
@@ -388,18 +402,93 @@ def profit_create(request): # Nama view baru
     return render(request, 'profit/tambah_profit.html', context)
 @login_required(login_url="/accounts/login/")
 def profit(request):
-    data = Profito2.objects.all()
+    from purchases.models import PurchaseDetail, Purchase
+    from decimal import Decimal
+    data = Profito2.objects.all().order_by('-tanggal')
     profit_today = profit_today_value()
     formatted = format_currency(profit_today, 'IDR', locale='id_ID')
     datenow = timezone.now().strftime("%d-%m-%Y")
-    
+
+    # KPI Aggregate dari Profito2
+    agg = data.aggregate(
+        total_profit_kotor=Sum('total_revenue'),
+        total_hpp=Sum('total_hpp'),
+        total_profit_bersih=Sum('profit'),
+        total_tabungan=Sum('tabungan_total'),
+    )
+    total_revenue_all = float(agg.get('total_profit_kotor') or 0)
+    total_hpp_all = float(agg.get('total_hpp') or 0)
+    total_profit_kotor = total_revenue_all - total_hpp_all
+    total_net_profit = float(agg.get('total_profit_bersih') or 0)
+    total_tabungan = float(agg.get('total_tabungan') or 0)
+    total_biaya_op = total_profit_kotor - total_net_profit  # selisih gross vs net
+
+    # KPI dari Purchases untuk biaya operasional yang dicatat di Purchase
+    purch_agg = Purchase.objects.filter(owner=request.user).aggregate(
+        sum_ongkos_muat=Sum('ongkos_muat'),
+        sum_gaji_pegawai=Sum('gaji_pegawai'),
+        sum_biaya_lain=Sum('biaya_lain'),
+        sum_net_profit=Sum('net_profit'),
+        sum_tabungan=Sum('tabungan_amount'),
+    )
+    purch_ongkos_muat = float(purch_agg.get('sum_ongkos_muat') or 0)
+    purch_gaji_pegawai = float(purch_agg.get('sum_gaji_pegawai') or 0)
+    purch_biaya_lain = float(purch_agg.get('sum_biaya_lain') or 0)
+    purch_net_profit = float(purch_agg.get('sum_net_profit') or 0)
+    purch_tabungan = float(purch_agg.get('sum_tabungan') or 0)
+
+    # Hitung Estimasi Profit Margin Stok POS
+    user_products = Product.objects.filter(owner=request.user, status='ACTIVE')
+    pos_estimated_stock_profit = 0.0
+    for product in user_products:
+        total_masuk = SaleDetail.objects.filter(
+            product=product, sale__owner=request.user
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        total_keluar = PurchaseDetail.objects.filter(
+            product=product, purchase__owner=request.user
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        stok = float(total_masuk) - float(total_keluar)
+        if stok > 0:
+            sell_price = float(product.selling_price) if product.selling_price else float(product.price)
+            buy_price = float(product.price)
+            margin = max(0.0, sell_price - buy_price)
+            pos_estimated_stock_profit += stok * margin
+
+    # Hitung Realized POS Sales Profit Hari Ini
+    today = timezone.localtime(timezone.now()).date()
+    sales_today_details = SaleDetail.objects.filter(
+        sale__owner=request.user,
+        sale__date_added__date=today
+    )
+    pos_profit_today = 0.0
+    for detail in sales_today_details:
+        buy_p = float(detail.product.price) if detail.product else 0.0
+        sell_p = float(detail.price)
+        pos_profit_today += (sell_p - buy_p) * float(detail.quantity)
+
     context = {
-        'data':data,
-        'datenow':datenow,
-        'profit_today':formatted[:-3],
-        "breadcrumb":{"parent":"Profit","child":"Profit"},
+        'data': data,
+        'datenow': datenow,
+        'profit_today': formatted[:-3],
+        'pos_estimated_stock_profit': pos_estimated_stock_profit,
+        'pos_profit_today': pos_profit_today,
+        # KPI Profito2
+        'total_net_profit': total_net_profit,
+        'total_tabungan': total_tabungan,
+        'total_profit_kotor': total_profit_kotor,
+        'total_biaya_op': total_biaya_op,
+        # KPI Purchases
+        'purch_ongkos_muat': purch_ongkos_muat,
+        'purch_gaji_pegawai': purch_gaji_pegawai,
+        'purch_biaya_lain': purch_biaya_lain,
+        'purch_net_profit': purch_net_profit,
+        'purch_tabungan': purch_tabungan,
+        "breadcrumb": {"parent": "Profit", "child": "Analisis Profit"},
     }
     return render(request, 'profit/profit.html', context)
+
 def UpdatePr(request, pk):
     data = get_object_or_404(Profito2, pk=pk)
 
@@ -662,8 +751,12 @@ def DeleteHutangPeg(request, pk):
 #TRANSAKSI
 @login_required(login_url="/accounts/login/")
 def transaksi(request):
-    data = Transaksi.objects.filter(owner=request.user).order_by('-id')
-        
+    data = Transaksi.objects.filter(owner=request.user).order_by('-tanggal')
+    total_pemasukan = (Transaksi.objects.filter(owner=request.user,transaksi_choice=Transaksi.PEMASUKAN).aggregate(total=Sum('jumlah'))['total'] or 0)
+    total_pengeluaran = (Transaksi.objects.filter(owner=request.user,transaksi_choice=Transaksi.PENGELUARAN).aggregate(total=Sum('jumlah'))['total'] or 0)
+    saldo = total_pemasukan - total_pengeluaran
+    jumlah_transaksi = data.count()
+
     if request.POST :
         excel = ExcelUploadForm(request.POST, request.FILES)
         if excel.is_valid():
@@ -733,10 +826,26 @@ def transaksi(request):
         'excel': excel,
         'forms_list': forms_list,
         'data':data,
+        'total_pemasukan':total_pemasukan,
+        'total_pengeluaran':total_pengeluaran,
+        'saldo':saldo,
+        'jumlah_transaksi':jumlah_transaksi,
         "breadcrumb":{"parent":"Transaksi","child":"Transaksi"},
     }
     return render(request, 'transaksi/index.html', context)
+@require_POST
+@login_required
+def delete_multiple_transaksi(request):
+    ids = request.POST.getlist('ids')
 
+    Transaksi.objects.filter(
+        id__in=ids,
+        owner=request.user
+    ).delete()
+
+    return JsonResponse({
+        'status':'ok'
+    })
 @login_required(login_url='/accounts/')
 def DeleteTr(request, pk):
     Transaksi.objects.get(id=pk).delete()
@@ -798,38 +907,105 @@ def tabungan_update_view(request, id):
 
     return render(request, "customers/customers_update.html", context=context)
 #laporan
+@login_required(login_url="/accounts/login/")
 def laporan(request):
-    data = Transaksi.objects.all().order_by('-tanggal','-id')
-    pemasukan = pengeluaran = saldo = 0
-    if request.method == 'GET':
-        start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
-        transaksi_choice = request.GET.get('transaksi_choice')
+    from django.utils import timezone
+    from datetime import timedelta, date as date_type
+    from sales.models import Sale, SaleDetail
+    from products.models import Product
+    from django.db.models import Count
 
-        # Check if both start date and end date are provided
-        if start_date and end_date:
-            transactions = Transaksi.objects.filter(
-                tanggal__gte=start_date,
-                tanggal__lte=end_date
-            )
-            if transaksi_choice:  # Filter by transaksi_choice if provided
-                transactions = transactions.filter(transaksi_choice=transaksi_choice)
+    today = timezone.localtime(timezone.now()).date()
+    periode = request.GET.get('periode', 'harian')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
 
-            transactions = transactions.order_by('-tanggal', '-id')
-            pemasukan = transactions.filter(transaksi_choice='P').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-            pengeluaran = transactions.filter(transaksi_choice='L').aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-            saldo = pemasukan - pengeluaran
-            return render(request, 'laporan/laporan.html', {
-                'transactions': transactions,
-                'pemasukan': pemasukan,
-                'pengeluaran': pengeluaran,
-                'saldo': saldo
-            })
+    # Tentukan rentang tanggal berdasarkan periode
+    if periode == 'harian':
+        start_date = today
+        end_date = today
+    elif periode == 'mingguan':
+        start_date = today - timedelta(days=6)
+        end_date = today
+    elif periode == 'custom' and start_date_str and end_date_str:
+        try:
+            from datetime import datetime
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = today
+            end_date = today
+    else:
+        start_date = today
+        end_date = today
+
+    # ------ Transaksi keuangan (Pemasukan / Pengeluaran) ------
+    transactions = Transaksi.objects.filter(
+        owner=request.user,
+        tanggal__gte=start_date,
+        tanggal__lte=end_date,
+    ).order_by('-tanggal', '-id')
+
+    transaksi_choice = request.GET.get('transaksi_choice')
+    if transaksi_choice:
+        transactions = transactions.filter(transaksi_choice=transaksi_choice)
+
+    pemasukan = transactions.filter(transaksi_choice='P').aggregate(total=Sum('jumlah'))['total'] or 0
+    pengeluaran = transactions.filter(transaksi_choice='L').aggregate(total=Sum('jumlah'))['total'] or 0
+    saldo = pemasukan - pengeluaran
+
+    # ------ Data Penjualan (Sales) ------
+    sales_qs = Sale.objects.filter(
+        owner=request.user,
+        date_added__date__gte=start_date,
+        date_added__date__lte=end_date,
+    )
+    total_sales_count = sales_qs.count()
+    total_sales_revenue = sales_qs.aggregate(total=Sum('sub_total'))['total'] or 0
+
+    # Top 5 produk terlaris dalam periode
+    top_products = (
+        SaleDetail.objects.filter(sale__in=sales_qs)
+        .values('product__name')
+        .annotate(total_qty=Sum('quantity'), total_revenue=Sum('total_detail'))
+        .order_by('-total_qty')[:5]
+    )
+
+    # Data harian untuk grafik (selalu 7 hari ke belakang dari end_date)
+    chart_labels = []
+    chart_sales = []
+    chart_income = []
+    chart_expense = []
+    num_days = min((end_date - start_date).days + 1, 30)
+    for i in range(num_days - 1, -1, -1):
+        day = end_date - timedelta(days=i)
+        chart_labels.append(day.strftime('%d/%m'))
+        daily_sale = Sale.objects.filter(owner=request.user, date_added__date=day).aggregate(total=Sum('sub_total'))['total'] or 0
+        daily_income = Transaksi.objects.filter(owner=request.user, tanggal=day, transaksi_choice='P').aggregate(total=Sum('jumlah'))['total'] or 0
+        daily_expense = Transaksi.objects.filter(owner=request.user, tanggal=day, transaksi_choice='L').aggregate(total=Sum('jumlah'))['total'] or 0
+        chart_sales.append(float(daily_sale))
+        chart_income.append(float(daily_income))
+        chart_expense.append(float(daily_expense))
+
+    import json as _json
     context = {
-        'data': data,
+        'breadcrumb': {'parent': 'Laporan', 'child': 'Laporan Keuangan'},
+        'transactions': transactions,
         'pemasukan': pemasukan,
         'pengeluaran': pengeluaran,
-        'saldo': saldo
+        'saldo': saldo,
+        'periode': periode,
+        'start_date': start_date,
+        'end_date': end_date,
+        'total_sales_count': total_sales_count,
+        'total_sales_revenue': total_sales_revenue,
+        'top_products': list(top_products),
+        'chart_labels_json': _json.dumps(chart_labels),
+        'chart_sales_json': _json.dumps(chart_sales),
+        'chart_income_json': _json.dumps(chart_income),
+        'chart_expense_json': _json.dumps(chart_expense),
+        'start_date_str': start_date.strftime('%Y-%m-%d'),
+        'end_date_str': end_date.strftime('%Y-%m-%d'),
     }
     return render(request, 'laporan/laporan.html', context)
 def ChartReport(request):
@@ -993,7 +1169,6 @@ from django.contrib.auth.decorators import login_required
 def AnalasisChart(request):
     # Ambil semua kategori dari model
     categories = Kategori.objects.all()
-    print(categories)
     data = []
 
     # Hitung total per kategori yang ada
@@ -1015,21 +1190,11 @@ def AnalasisChart(request):
     # Siapkan data untuk chart donut
     labels_don = [item['kategori'] for item in data]
     values_don = [float(item['jumlah']) for item in data]
-    print(labels_don, values_don)
     return JsonResponse({
         'labels_don': labels_don,
         'values_don': values_don,
     })
 
-
-from django.http import JsonResponse
-from django.db.models import Sum, Value
-from django.db.models.functions import TruncDate, TruncMonth, Coalesce
-from django.utils import timezone
-from collections import defaultdict
-import calendar, logging
-
-from .models import Transaksi
 
 logger = logging.getLogger(__name__)
 

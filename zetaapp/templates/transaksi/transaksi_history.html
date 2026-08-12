@@ -249,39 +249,39 @@
                                     {% for u in data %}
                                     <tr class="text-center align-middle">
                                         <td>{{ forloop.counter }}</td>
-                                        <td><span class="badge bg-outline-primary text-primary font-weight-bold">{{ u.sale.transaction_number }}</span></td>
-                                        <td>{{ u.sale.date_added|date:"d-m-Y" }}</td>
+                                        <td><span class="badge bg-outline-primary text-primary font-weight-bold">{{ u.transaction_number }}</span></td>
+                                        <td>{{ u.date_added|date:"d-m-Y" }}</td>
                                         <td>
-                                            {{ u.sale.customer.first_name|default:"Umum" }}
-                                            {% if u.sale.customer and u.sale.customer.wa_link %}
-                                                <a href="{{ u.sale.customer.wa_link }}" target="_blank" class="badge bg-success text-white text-decoration-none ms-1" title="Chat WA {{ u.sale.customer.phone }}">
+                                            {{ u.customer.first_name|default:"Umum" }}
+                                            {% if u.customer and u.customer.wa_link %}
+                                                <a href="{{ u.customer.wa_link }}" target="_blank" class="badge bg-success text-white text-decoration-none ms-1" title="Chat WA {{ u.customer.phone }}">
                                                     <i class="fab fa-whatsapp me-1"></i> WA
                                                 </a>
                                             {% endif %}
                                         </td>
-                                        <td class="font-weight-bold">Rp. {{ u.sale.sub_total|floatformat:"0g" }}</td>
+                                        <td class="font-weight-bold">Rp. {{ u.sub_total|floatformat:"0g" }}</td>
                                         <td>
-                                            {% if u.sale.is_afkiran %}
-                                                {% if u.sale.afkiran.status == 'LUNAS' %}
+                                            {% if u.is_afkiran %}
+                                                {% if u.afkiran.status == 'LUNAS' %}
                                                     <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> LUNAS (Afkir)</span>
                                                 {% else %}
                                                     <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> PENDING (Afkir)</span>
                                                 {% endif %}
-                                            {% elif u.sale.amount_payed >= u.sale.sub_total %}
+                                            {% elif u.amount_payed >= u.sub_total %}
                                                 <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> LUNAS</span>
                                             {% else %}
                                                 <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> PENDING</span>
                                             {% endif %}
                                         </td>
                                         <td class="text-center">
-                                            <a href="{% url 'sales:sales_details' u.sale.id %}" class="btn btn-primary btn-sm" title="Detail">
+                                            <a href="{% url 'sales:sales_details' u.id %}" class="btn btn-primary btn-sm" title="Detail">
                                                 <i class="fa fa-eye"></i>
                                             </a>
-                                            <a href="{% url 'sales:sales_receipt_pdf' u.sale.id %}" target="_blank" class="btn btn-dark btn-sm" title="Cetak Nota">
+                                            <a href="{% url 'sales:sales_receipt_pdf' u.id %}" target="_blank" class="btn btn-dark btn-sm" title="Cetak Nota">
                                                 <i class="fas fa-receipt"></i>
                                             </a>
-                                            {% if u.sale.customer and u.sale.customer.wa_link %}
-                                            <a href="{{ u.sale.customer.wa_link }}" target="_blank" class="btn btn-success btn-sm" title="Chat WA ({{ u.sale.customer.phone }})">
+                                            {% if u.customer and u.customer.wa_link %}
+                                            <a href="{{ u.customer.wa_link }}" target="_blank" class="btn btn-success btn-sm" title="Chat WA ({{ u.customer.phone }})">
                                                 <i class="fab fa-whatsapp"></i>
                                             </a>
                                             {% endif %}

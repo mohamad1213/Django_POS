@@ -1,336 +1,346 @@
 {% extends 'base.html' %}{% load static %}
 {% load sass_tags %}
 {% block css %}
-<!-- Plugins css start-->
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
 <link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/owlcarousel.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/rating.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/sweetalert2.scss' %}">
-
-<!-- Plugins css Ends-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  .kpi-card { border-radius: 14px; transition: transform 0.2s; }
+  .kpi-card:hover { transform: translateY(-3px); }
+  .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .breakdown-panel { background: linear-gradient(135deg, #1e2a38 0%, #263344 100%); border-radius: 14px; color: #e2e8f0; padding: 20px; }
+  .breakdown-panel .bp-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 14px; }
+  .breakdown-panel .bp-row:last-child { border-bottom: none; }
+  .bp-total { font-size: 18px; font-weight: 800; color: #6ee89b; }
+  .bp-red { color: #f87171; }
+  .badge-purchase { background: linear-gradient(90deg, #1d4ed8, #6366f1); color: white; border-radius: 6px; font-size: 10px; padding: 2px 6px; }
+  .profit-pos { color: #16a34a; font-weight: 700; }
+  .profit-neg { color: #dc2626; font-weight: 700; }
+</style>
 {% endblock css %}
+
 {% block content %}
 <div class="page-body">
   {% include 'layout/breadcrumb.html' %}
   {% include 'messages.html' %}
-  <!-- Container-fluid starts-->
-  <div class="container-fluid list-products">
-    <div class="card text-white bg-primary mb-3" style="max-width: 100%;">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <div style="color: black;">
-          <small>Profit</small>
-          <strong>Hari Ini</strong>
-        </div>
-        <div>
-          <i class="bi bi-cash-stack" style="font-size:1.6rem;"></i>
-        </div>
-      </div>
-      <div class="card-body">
-        <h5 class="card-title">
-          {{ profit_today }}
-        </h5>
-        <p class="card-text small">Total profit per {{ datenow }}</p>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-12">
-        <div class="card">
-          <div class="card-header pb-0">
-            <div class="order-place d-grid gap-2 d-md-block text-md-end mb-3">
-              <a href="{% url 'profit_create' %}" class="btn btn-primary w-md-auto">
-                Tambah Profit
-              </a>
+  <div class="container-fluid">
+
+    <!-- ROW 1: Top KPI Cards -->
+    <div class="row g-3 mb-4">
+
+      <!-- Net Profit Total -->
+      <div class="col-md-3 col-sm-6">
+        <div class="card kpi-card shadow border-0 h-100" style="background:linear-gradient(135deg,#15803d,#166534);">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="kpi-icon bg-white bg-opacity-25"><i class="fas fa-coins text-white"></i></div>
+            <div>
+              <div class="small text-white-50 fw-semibold text-uppercase">Total Untung Bersih</div>
+              <div class="fs-5 fw-bold text-white">Rp {{ total_net_profit|floatformat:"0g" }}</div>
+              <div class="small text-white-50">Semua transaksi profit</div>
             </div>
           </div>
-          <div class="card-body">
+        </div>
+      </div>
+
+      <!-- Total Tabungan -->
+      <div class="col-md-3 col-sm-6">
+        <div class="card kpi-card shadow border-0 h-100" style="background:linear-gradient(135deg,#1d4ed8,#1e40af);">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="kpi-icon bg-white bg-opacity-25"><i class="fas fa-piggy-bank text-white"></i></div>
+            <div>
+              <div class="small text-white-50 fw-semibold text-uppercase">Total Tabungan</div>
+              <div class="fs-5 fw-bold text-white">Rp {{ total_tabungan|floatformat:"0g" }}</div>
+              <div class="small text-white-50">Akumulasi dana ditabung</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Biaya Ops -->
+      <div class="col-md-3 col-sm-6">
+        <div class="card kpi-card shadow border-0 h-100" style="background:linear-gradient(135deg,#b45309,#92400e);">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="kpi-icon bg-white bg-opacity-25"><i class="fas fa-receipt text-white"></i></div>
+            <div>
+              <div class="small text-white-50 fw-semibold text-uppercase">Total Biaya Operasional</div>
+              <div class="fs-5 fw-bold text-white">Rp {{ total_biaya_op|floatformat:"0g" }}</div>
+              <div class="small text-white-50">Gross minus Net (semua HPP)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POS Profit Today -->
+      <div class="col-md-3 col-sm-6">
+        <div class="card kpi-card shadow border-0 h-100" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="kpi-icon bg-white bg-opacity-25"><i class="fas fa-chart-line text-white"></i></div>
+            <div>
+              <div class="small text-white-50 fw-semibold text-uppercase">POS Profit Hari Ini</div>
+              <div class="fs-5 fw-bold text-white">Rp {{ pos_profit_today|floatformat:"0g" }}</div>
+              <div class="small text-white-50">Margin penjualan per {{ datenow }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Breakdown panel + Tabungan hari ini -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-7">
+        <div class="breakdown-panel h-100">
+          <div class="fw-bold mb-3" style="font-size:13px;letter-spacing:1px;text-transform:uppercase;">
+            <i class="fas fa-truck me-2 text-warning"></i>Rincian Biaya Operasional — Dari Transaksi Barang Keluar
+          </div>
+          <div class="bp-row">
+            <span><i class="fas fa-dolly me-2 text-warning"></i> Ongkos Muat</span>
+            <span class="bp-red">- Rp {{ purch_ongkos_muat|floatformat:"0g" }}</span>
+          </div>
+          <div class="bp-row">
+            <span><i class="fas fa-users me-2 text-warning"></i> Gaji Pegawai</span>
+            <span class="bp-red">- Rp {{ purch_gaji_pegawai|floatformat:"0g" }}</span>
+          </div>
+          <div class="bp-row">
+            <span><i class="fas fa-gas-pump me-2 text-warning"></i> Biaya Lain (Solar, Karung, dll)</span>
+            <span class="bp-red">- Rp {{ purch_biaya_lain|floatformat:"0g" }}</span>
+          </div>
+          <div class="bp-row mt-2 pt-2" style="border-top: 2px solid rgba(255,255,255,0.2) !important;">
+            <span class="fw-bold">Untung Bersih (dari Purchases)</span>
+            <span class="bp-total">Rp {{ purch_net_profit|floatformat:"0g" }}</span>
+          </div>
+          <div class="bp-row">
+            <span class="fw-bold">Nominal Ditabung</span>
+            <span style="color:#60a5fa;font-weight:700;">Rp {{ purch_tabungan|floatformat:"0g" }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card border-0 shadow h-100" style="background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;">
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <div class="fw-bold mb-1" style="text-transform:uppercase;font-size:11px;letter-spacing:1px;opacity:.7;"><i class="fas fa-wallet me-2"></i>Tabungan Hari Ini (Profito2)</div>
+              <div class="fs-2 fw-bold mt-2" style="color:#6ee89b;">{{ profit_today }}</div>
+              <div class="small opacity-60 mt-1">Total ditabung per {{ datenow }}</div>
+            </div>
+            <div class="mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.1);">
+              <div class="fw-bold mb-1" style="font-size:11px;opacity:.7;text-transform:uppercase;">Estimasi Margin Stok Gudang</div>
+              <div class="fs-5 fw-bold" style="color:#fbbf24;">Rp {{ pos_estimated_stock_profit|floatformat:"0g" }}</div>
+              <div class="small opacity-60">Stok &times; (Harga Jual - Harga Beli)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Table -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow border-0">
+          <div class="card-header d-flex align-items-center justify-content-between py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-table me-2 text-primary"></i>Daftar Transaksi Profit</h5>
+            <a href="{% url 'profit_create' %}" class="btn btn-primary btn-sm">
+              <i class="fas fa-plus me-1"></i> Tambah Profit Manual
+            </a>
+          </div>
+          <div class="card-body p-0">
             <div class="table-responsive">
-              <table class="table table-sm table-bordered table-striped table-hover" id="basic-1">
-                <thead class="table-light text-center">
+              <table class="table table-sm table-hover align-middle mb-0" id="basic-1">
+                <thead class="table-dark text-center" style="font-size:12px;">
                   <tr>
-                    <th>No</th>
+                    <th>#</th>
                     <th>Tanggal</th>
                     <th>Nama Barang</th>
-                    <th>Berat(kg)</th>
+                    <th>Berat (kg)</th>
                     <th>HPP Total</th>
                     <th>Revenue</th>
-                    <th>Profit</th>
-                    <th>Profit Margin (%)</th>
+                    <th>Untung Bersih</th>
+                    <th>Margin (%)</th>
                     <th>Tabungan</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Sumber</th>
+                    <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for t in data %}
                   <tr>
-                    <td>{{ forloop.counter }}</td>
+                    <td class="text-center">{{ forloop.counter }}</td>
                     <td>{{ t.tanggal }}</td>
-                    <td>{{ t.nama_barang }}</td>
-                    <td>{{ t.berat_output}} Kg</td>
-                    <td>Rp. {{ t.total_hpp }}</td>
-                    <td>Rp. {{ t.total_revenue }}</td>
-                    <td>Rp. {{ t.profit }}</td>
-                    <td>Rp. {{ t.profit_margin|floatformat:2 }}</td>
-                    <td>Rp. {{ t.tabungan_total}}</td>
                     <td>
+                      <strong>{{ t.nama_barang }}</strong>
+                      {% if t.keterangan %}
+                      <div class="small text-muted text-truncate" style="max-width:180px;" title="{{ t.keterangan }}">{{ t.keterangan }}</div>
+                      {% endif %}
+                    </td>
+                    <td class="text-center">{{ t.berat_output|floatformat:2 }} kg</td>
+                    <td class="text-end small">Rp {{ t.total_hpp|floatformat:"0g" }}</td>
+                    <td class="text-end small">Rp {{ t.total_revenue|floatformat:"0g" }}</td>
+                    <td class="text-end">
+                      {% if t.profit %}
+                        {% if t.profit >= 0 %}
+                        <span class="profit-pos">+ Rp {{ t.profit|floatformat:"0g" }}</span>
+                        {% else %}
+                        <span class="profit-neg">Rp {{ t.profit|floatformat:"0g" }}</span>
+                        {% endif %}
+                      {% else %}
+                      <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center small">{{ t.profit_margin|floatformat:2 }}%</td>
+                    <td class="text-end small" style="color:#2563eb;font-weight:600;">Rp {{ t.tabungan_total|floatformat:"0g" }}</td>
+                    <td class="text-center">
                       {% if not t.profit_saved %}
                       <span class="badge bg-warning text-dark">Belum Ditabung</span>
                       {% else %}
                       <span class="badge bg-success">Sudah Ditabung</span>
                       {% endif %}
                     </td>
-                    <td>
-                      <a href="{% url 'updatepr' t.id %}" class="btn btn-warning btn-sm">
-                        <i class="fa fa-edit"></i>
-                      </a>
-                      <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#hapus_pr">
-                        <i class="fa fa-trash"></i>
-                      </button>
-                      <a href="{% url 'viewprof' t.id %}" class="btn btn-primary btn-sm">
-                        <i class="fa fa-eye"></i>
-                      </a>
-                      {% if not t.profit_saved %}
-                      <a href="{% url 'profit_mark_tabung' t.id %}" class="btn btn-success btn-sm">✓</a>
+                    <td class="text-center">
+                      {% if t.purchase %}
+                      <span class="badge badge-purchase" title="Dari Transaksi Barang Keluar {{ t.purchase.transaction_number }}">POS</span>
                       {% else %}
+                      <span class="badge bg-secondary" style="font-size:10px;">Manual</span>
                       {% endif %}
                     </td>
+                    <td class="text-center">
+                      <div class="d-flex gap-1 justify-content-center flex-wrap">
+                        <button type="button" class="btn btn-info btn-sm"
+                          data-bs-toggle="modal" data-bs-target="#detail_modal_{{ t.id }}"
+                          title="Rincian Perhitungan">
+                          <i class="fas fa-calculator"></i>
+                        </button>
+                        <a href="{% url 'viewprof' t.id %}" class="btn btn-primary btn-sm" title="View">
+                          <i class="fa fa-eye"></i>
+                        </a>
+                        <a href="{% url 'updatepr' t.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fa fa-edit"></i>
+                        </a>
+                        {% if not t.profit_saved %}
+                        <a href="{% url 'profit_mark_tabung' t.id %}" class="btn btn-success btn-sm" title="Tandai Ditabung">
+                          <i class="fas fa-piggy-bank"></i>
+                        </a>
+                        {% endif %}
+                        <button type="button" class="btn btn-danger btn-sm"
+                          data-bs-toggle="modal" data-bs-target="#hapus_modal_{{ t.id }}" title="Hapus">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                  <div class="modal fade" id="hapus_pr" tabindex="-1" aria-labelledby="exampleModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="hapus_pr">
-                            Delete customer</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                          </button>
-                        </div>
-                        <div class="modal-body">
-                          Apakah Kamu yakin menghapus Profit ini:
-                          <h4 class="bold">
-                            nama {{u.nama_suplayer}} ditanggal {{u.date|date:"d-m-Y"}}
-                          </h4>
-                        </div>
-                        <div class="card-footer border-0 pt-0" style="text-align: right;">
-                          <button class="btn btn-warning" type="reset">Batal</button>
-                          <a href="{% url 'deletepr' t.id %}" class="text-decoration-none">
-                            <button type="button" class="btn btn-danger">Hapus</button>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="modal fade" id="edit_tr" tabindex="-1" aria-labelledby="edit_tr" aria-hidden="true">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h1 class="modal-title fs-5" id="edit_tr">Edit Profit</h1>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          <form class="form theme-form" action="{% url 'updatepr' t.id %}" method="POST"
-                            enctype="multipart/form-data">
-                            {% load crispy_forms_tags %}
-                            {% csrf_token %}
-                            <div class="mb-3">
-                              <label class="col-form-label pt-0">Tanggal</label>
-                              {{form.date}}
-                            </div>
-                            <div class="mb-3">
-                              <label class="col-form-label pt-0">Nama Suplayer</label>
-                              {{form.nama_suplayer}}
-                            </div>
-                            <div class="mb-3">
-                              <label class="col-form-label pt-0">Harga Jual</label>
-                              {{form.harga_jual}}
-                            </div>
-                            <div class="mb-3">
-                              <label class="col-form-label pt-0">Harga Beli</label>
-                              {{form.harga_beli}}
-                            </div>
-                            <div class="mb-3">
-                              <label class="col-form-label pt-0">Kg</label>
-                              {{form.jumlah_brg}}
-                            </div>
-                            <div class="mb-3">
-                              <label class="col-form-label pt-0">Keterangan</label>
-                              {{form.description}}
-                            </div>
-                            {% if form.errors %}
-                            <div class="alert alert-danger" id="msg">
-                              {{ form.errors }}
-                            </div>
-                            {% endif %}
-                            <div class="card-footer border-0 pt-0" style="text-align: right;">
-                              <button class="btn btn-warning" type="reset">Cancel</button>
-                              <button class="btn btn-primary" type="submit">Submit</button>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                   {% endfor %}
                 </tbody>
               </table>
-            </div>
-            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-              aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Transaksi</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <form class="form theme-form" method="POST" enctype="multipart/form-data">
-                      {% csrf_token %}
-                      {% load crispy_forms_tags %}
-
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Tanggal</label>
-                        {{ form.tanggal }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Nama Barang</label>
-                        {{ form.nama_barang }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Harga Beli</label>
-                        {{ form.harga_beli }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Harga Jual</label>
-                        {{ form.harga_jual }}
-                      </div>
-
-                      <!-- Biaya Operasional -->
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Solar</label>
-                        {{ form.solar }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Karung</label>
-                        {{ form.karung }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Kirim</label>
-                        {{ form.ongkos_kirim }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Muat</label>
-                        {{ form.ongkos_muat }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Lain</label>
-                        {{ form.ongkos_lain }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Sortir</label>
-                        {{ form.ongkos_sortir }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Ongkos Giling</label>
-                        {{ form.ongkos_giling }}
-                      </div>
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Biaya Darurat Mesin</label>
-                        {{ form.biaya_darurat_mesin }}
-                      </div>
-
-                      <!-- Keterangan -->
-                      <div class="mb-3">
-                        <label class="col-form-label pt-0">Keterangan</label>
-                        {{ form.keterangan }}
-                      </div>
-
-                      <!-- HPP / Profit live -->
-                      <div class="mb-3">
-                        <label>HPP</label>
-                        <input type="text" id="id_hpp" class="form-control" readonly>
-                      </div>
-                      <div class="mb-3">
-                        <label>Profit</label>
-                        <input type="text" id="id_profit" class="form-control" readonly>
-                      </div>
-                      <div class="mb-3">
-                        <label>Profit Margin (%)</label>
-                        <input type="text" id="id_profit_margin" class="form-control" readonly>
-                      </div>
-
-                      {% if form.errors %}
-                      <div class="alert alert-danger" id="msg">
-                        {{ form.errors }}
-                      </div>
-                      {% endif %}
-
-                      <div class="card-footer border-0 pt-0" style="text-align: right;">
-                        <button class="btn btn-warning" type="reset">Cancel</button>
-                        <button class="btn btn-primary" type="submit">Submit</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 </div>
+
+<!-- MODALS (outside table loop for valid HTML) -->
+{% for t in data %}
+
+<!-- Detail Kalkulasi Modal -->
+<div class="modal fade" id="detail_modal_{{ t.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="background:#1e2a38;color:#e2e8f0;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fas fa-calculator me-2 text-warning"></i>Rincian Optimasi Profit</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 pb-2" style="border-bottom:1px solid rgba(255,255,255,.15);">
+          <span class="small text-white-50">Barang:</span> <strong>{{ t.nama_barang }}</strong> &mdash;
+          <span class="small text-white-50">Tanggal:</span> {{ t.tanggal }}
+        </div>
+        <table class="table table-sm mb-0" style="background:transparent;color:#e2e8f0;">
+          <tbody>
+            <tr><td class="text-white-50 border-0">Berat Input</td><td class="text-end border-0">{{ t.berat_input|floatformat:2 }} kg</td></tr>
+            <tr><td class="text-white-50 border-0">Susutan ({{ t.susutan_persen }}%)</td><td class="text-end border-0">&#8594; {{ t.berat_output|floatformat:2 }} kg output</td></tr>
+            <tr><td class="text-white-50 border-0">Harga Beli/kg</td><td class="text-end border-0">Rp {{ t.harga_beli_per_kg|floatformat:"0g" }}</td></tr>
+            <tr><td class="text-white-50 border-0">Harga Jual/kg</td><td class="text-end border-0">Rp {{ t.harga_jual_per_kg|floatformat:"0g" }}</td></tr>
+            <tr style="border-top:1px solid rgba(255,255,255,.2)">
+              <td class="border-0">Revenue (output &times; jual)</td>
+              <td class="text-end fw-bold border-0" style="color:#fbbf24;">Rp {{ t.total_revenue|floatformat:"0g" }}</td>
+            </tr>
+            <tr>
+              <td class="border-0 text-white-50">HPP Total (input &times; HPP/kg)</td>
+              <td class="text-end border-0" style="color:#f87171;">- Rp {{ t.total_hpp|floatformat:"0g" }}</td>
+            </tr>
+            {% if t.gaji_pegawai %}
+            <tr>
+              <td class="border-0 text-white-50">Gaji Pegawai (per kg)</td>
+              <td class="text-end border-0" style="color:#f87171;">- Rp {{ t.gaji_pegawai|floatformat:"0g" }}</td>
+            </tr>
+            {% endif %}
+            <tr style="border-top:1px solid rgba(255,255,255,.2)">
+              <td class="fw-bold border-0">&#9658; Untung Bersih</td>
+              <td class="text-end fw-bold border-0 {% if t.profit >= 0 %}profit-pos{% else %}profit-neg{% endif %}">
+                Rp {{ t.profit|floatformat:"0g" }}
+              </td>
+            </tr>
+            <tr>
+              <td class="border-0 text-white-50">Profit Margin</td>
+              <td class="text-end border-0">{{ t.profit_margin|floatformat:2 }}%</td>
+            </tr>
+            <tr style="border-top:1px solid rgba(255,255,255,.2)">
+              <td class="fw-bold border-0">&#9658; Yang Ditabung ({{ t.tabungan_persen }}%)</td>
+              <td class="text-end fw-bold border-0" style="color:#60a5fa;">Rp {{ t.tabungan_total|floatformat:"0g" }}</td>
+            </tr>
+          </tbody>
+        </table>
+        {% if t.purchase %}
+        <div class="mt-3 p-2 rounded small" style="background:rgba(99,102,241,.25);">
+          <i class="fas fa-link me-1"></i>
+          Sumber: Transaksi <strong>{{ t.purchase.transaction_number }}</strong> &mdash; Pabrik: {{ t.purchase.supplier_name }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hapus Modal -->
+<div class="modal fade" id="hapus_modal_{{ t.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Hapus Profit</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body small">
+        Hapus data profit <strong>{{ t.nama_barang }}</strong> tanggal <strong>{{ t.tanggal }}</strong>?
+        Data tidak bisa dikembalikan.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <a href="{% url 'deletepr' t.id %}" class="btn btn-danger btn-sm">Hapus</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+
 {% endblock content %}
 {% block scriptcontent %}
-<script>
-  function parseRupiah(value) {
-    return parseInt(value.replace(/[^0-9]/g, '')) || 0;
-  }
-  function formatRupiah(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  }
-  function hitungProfit() {
-    let harga_beli = parseRupiah(document.getElementById('id_harga_beli').value);
-    let harga_jual = parseRupiah(document.getElementById('id_harga_jual').value);
-
-    let biayaElems = document.querySelectorAll('#id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin');
-    let total_biaya_operasional = 0;
-    biayaElems.forEach(el => {
-      total_biaya_operasional += parseRupiah(el.value);
-    });
-
-    let hpp = harga_beli + total_biaya_operasional;
-    let profit = harga_jual - hpp;
-    let profit_margin = harga_jual ? (profit / harga_jual * 100).toFixed(2) : 0;
-
-    document.getElementById('id_hpp').value = 'Rp ' + formatRupiah(hpp);
-    document.getElementById('id_profit').value = 'Rp ' + formatRupiah(profit);
-    document.getElementById('id_profit_margin').value = profit_margin + ' %';
-  }
-
-  // Live calculation saat input biaya/harga
-  document.querySelectorAll('#id_harga_beli, #id_harga_jual, #id_solar, #id_karung, #id_ongkos_kirim, #id_ongkos_muat, #id_ongkos_lain, #id_ongkos_sortir, #id_ongkos_giling, #id_biaya_darurat_mesin').forEach(el => {
-    el.addEventListener('input', hitungProfit);
-  });
-  window.addEventListener('DOMContentLoaded', hitungProfit);
-</script>
-<script>
-  $(document).ready(function () {
-    $('#example').DataTable({
-      scrollX: true,
-    });
-  });
-</script>
-<!-- Plugins JS start-->
 <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="{% static 'assets/js/datatable/datatables/dataTables.custom.js' %}"></script>
-<script src="{% static 'assets/js/rating/jquery.barrating.js' %}"></script>
-<script src="{% static 'assets/js/rating/rating-script.js' %}"></script>
-<script src="{% static 'assets/js/owlcarousel/owl.carousel.js' %}"></script>
-<script src="{% static 'assets/js/ecommerce.js' %}"></script>
-<script src="{% static 'assets/js/product-list-custom.js' %}"></script>
-<!-- Plugins JS Ends-->
+<script>
+  $(document).ready(function () {
+    $('#basic-1').DataTable({
+      scrollX: true,
+      order: [[1, 'desc']],
+      language: {
+        search: "Cari:",
+        lengthMenu: "Tampilkan _MENU_ baris",
+        info: "Menampilkan _START_-_END_ dari _TOTAL_ data",
+        paginate: { previous: "&#8249;", next: "&#8250;" }
+      }
+    });
+  });
+</script>
 {% endblock scriptcontent %}

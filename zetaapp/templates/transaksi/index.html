@@ -141,6 +141,51 @@
   <!-- Container-fluid starts-->
   <div class="container-fluid list-products">
     <div class="row">
+      <div class="col-md-3">
+          <div class="card border-success">
+            <div class="card-body text-center">
+              <h6>Total Pemasukan</h6>
+              <h4 class="text-success">
+                Rp {{ total_pemasukan|floatformat:0 }}
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-danger">
+            <div class="card-body text-center">
+              <h6>Total Pengeluaran</h6>
+              <h4 class="text-danger">
+                Rp {{ total_pengeluaran|floatformat:0 }}
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-primary">
+            <div class="card-body text-center">
+              <h6>Saldo</h6>
+              <h4 class="text-primary">
+                Rp {{ saldo|floatformat:0 }}
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-warning">
+            <div class="card-body text-center">
+              <h6>Total Transaksi</h6>
+              <h4>
+                {{ jumlah_transaksi }}
+              </h4>
+            </div>
+          </div>
+        </div>
+
+      </div>
       <!-- Individual column searching (text inputs) Starts-->
       <div class="col-sm-12">
         <div class="card">
@@ -159,6 +204,9 @@
               <table class="table table-bordered display table-striped dataTable no-footer" id="basic-1">
                 <thead>
                   <tr>
+                    <!-- <th width="30">
+                      <input type="checkbox" id="check-all">
+                    </th> -->
                     <th rowspan="2">NO</th>
                     <th rowspan="2" scope="col" class="text-center">TANGGAL</th>
                     <!-- <th rowspan="2" scope="col" class="text-center">KATEGORI</th> -->
@@ -174,6 +222,9 @@
                 <tbody>
                   {% for u, form in forms_list %}
                   <tr class="text-center">
+                    <!-- <td>
+                      <input type="checkbox" class="check-item" value="{{ u.id }}">
+                    </td> -->
                     <td>{{forloop.counter}}</td>
                     <td>{{u.tanggal|date:"d-m-Y"}}</td>
                     <!-- <td>{{u.kategori}}</td> -->
@@ -193,25 +244,29 @@
                       {% endif %}
                     </td>
                     <td>
+                      <!-- <button class="btn btn-danger" id="btn-delete-selected" style="display:none">
+                        Hapus Terpilih
+                      </button> -->
                       <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                         data-bs-target="#edit_tr-{{u.pk}}">
                         <i class="fa fa-cog"></i>
                       </button>
                       <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#hapus_tr">
+                        data-bs-target="#hapus_tr-{{u.id}}">
                         <i class="fa fa-trash"></i>
                       </button>
                       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#lihat_tr">
+                        data-bs-target="#lihat_tr-{{u.id}}">
                         <i class="fa fa-eye"></i>
                       </button>
                     </td>
                   </tr>
-                  <div class="modal fade" id="hapus_tr" tabindex="-1" aria-labelledby="hapus_tr" aria-hidden="true">
+                  <div class="modal fade" id="hapus_tr-{{u.id}}" tabindex="-1" aria-labelledby="hapus_tr-{{u.id}}"
+                    aria-hidden="true">
                     <div class="modal-dialog">
                       <div class="modal-content">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="hapus_tr">
+                          <h5 class="modal-title" id="hapus_tr-{{u.id}}">
                             Hapus Transaksi</h5>
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </button>
@@ -373,6 +428,68 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="{% static 'assets/js/product-list-custom.js' %}"></script>
 
+<script>
+  $('#check-all').on('change', function () {
+    $('.check-item').prop('checked', this.checked);
+    toggleDeleteButton();
+  });
+
+  $(document).on('change', '.check-item', function () {
+    toggleDeleteButton();
+  });
+
+  function toggleDeleteButton() {
+
+    let total = $('.check-item:checked').length;
+
+    if (total > 0) {
+      $('#btn-delete-selected')
+        .show()
+        .text('Hapus (' + total + ')');
+    } else {
+      $('#btn-delete-selected').hide();
+    }
+    $('#btn-delete-selected').click(function () {
+
+      let ids = [];
+
+      $('.check-item:checked').each(function () {
+        ids.push($(this).val());
+      });
+
+      Swal.fire({
+        title: 'Hapus?',
+        text: 'Yakin ingin menghapus ' + ids.length + ' transaksi?',
+        icon: 'warning',
+        showCancelButton: true
+      }).then((result) => {
+
+        if (result.isConfirmed) {
+
+          $.ajax({
+            url: "{% url 'transaksi_delete_multiple' %}",
+            type: "POST",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}"
+            },
+            data: {
+              ids: ids
+            },
+            traditional: true,
+
+            success: function () {
+              location.reload();
+            }
+
+          });
+
+        }
+
+      });
+
+    });
+  }
+</script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
 

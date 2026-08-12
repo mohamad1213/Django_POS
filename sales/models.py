@@ -9,8 +9,7 @@ from django.db import models
 from django.utils import timezone
 from zetaapp.models import Transaksi
 from django.contrib.auth.models import User
-class CustomerCategory(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+
 class Sale(models.Model):
     date_added = models.DateTimeField(default=django.utils.timezone.now)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)

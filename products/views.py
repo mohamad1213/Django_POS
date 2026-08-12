@@ -146,7 +146,8 @@ def products_add_view(request):
             "status": data['state'],
             "description": data['description'],
             "category": Category.objects.get(id=data['category']),
-            "price": data['price']
+            "price": data['price'],
+            "selling_price": data.get('selling_price', 0)
         }
 
         # Check if a product with the same attributes exists
@@ -205,14 +206,13 @@ def products_update_view(request, product_id):
                 "status": data['state'],
                 "description": data['description'],
                 "category": Category.objects.get(id=data['category']),
-                "price": data['price']
-            }
-
+                "price": data['price'],
+                "selling_price": data.get('selling_price', 0)
+}
             # Check if a product with the same attributes exists
-            if Product.objects.filter(**attributes).exists():
-                sweetify.error(request, 'Product already exists!',
-                               extra_tags="warning")
-                return redirect('products:products_add')
+            if Product.objects.filter(**attributes).exclude(id=product_id).exists():
+                sweetify.error(request, 'Product already exists!', extra_tags="warning")
+                return redirect('products:products_update', product_id=product_id)
 
             # Get the product to update
             product = Product.objects.filter(
@@ -262,7 +262,7 @@ def get_products_ajax_view(request):
     current_user = get_user_instance(request.user)
 
     # Ambil parameter pencarian dari GET
-    term = request.GET.get('term', '').strip()
+    term = request.POST.get('term', '').strip()
 
     # Filter produk berdasarkan nama dan user
     products = Product.objects.filter(
@@ -283,6 +283,11 @@ def get_products_ajax_view(request):
         ).aggregate(total=Sum('quantity'))['total'] or 0
 
         stock_qty = total_masuk - total_keluar
+
+        # Skip produk dengan stok habis (tidak muncul di pencarian)
+        # if stock_qty <= 0:
+        #     continue
+
         price_fmt = f"{product.price:,.0f}".replace(",", ".")
 
         # Hitung rata-rata harga beli (dari SaleDetail = Barang Masuk)
@@ -299,6 +304,7 @@ def get_products_ajax_view(request):
             'id': product.id,
             'name': product.name,
             'price': float(product.price),
+            'selling_price': float(product.selling_price),
             'last_price': float(last_price),
             'stock_qty': float(stock_qty),
             'total_bought': float(total_masuk),
@@ -308,6 +314,7 @@ def get_products_ajax_view(request):
             # Text yang akan ditampilkan di dropdown
             'text': f"{product.name} — Rp {price_fmt} (Stok: {stock_qty} kg)"
         })
+
 
     # Return List JSON
     return JsonResponse(data, safe=False)

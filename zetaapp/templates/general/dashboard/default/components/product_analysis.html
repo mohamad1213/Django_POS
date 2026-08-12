@@ -1,0 +1,228 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  .kpi-row { margin-bottom: 24px; }
+  .kpi-card-pa {
+    border-radius: 16px; padding: 22px 24px; border: none;
+    position: relative; overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .kpi-card-pa:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.18); }
+  .kpi-icon-pa {
+    width: 50px; height: 50px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 12px;
+  }
+  .kpi-card-pa .kpi-val { font-size: 1.5rem; font-weight: 800; margin: 0; line-height: 1.1; }
+  .kpi-card-pa .kpi-lbl { font-size: 0.75rem; opacity: .75; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+  .kpi-blue  { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; }
+  .kpi-green { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: #fff; }
+  .kpi-amber { background: linear-gradient(135deg, #7d4e00 0%, #f59e0b 100%); color: #fff; }
+
+  .chart-card-pa {
+    border-radius: 16px; border: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08); padding: 24px;
+  }
+  .chart-card-pa .chart-title-pa { font-weight: 700; font-size: 1rem; color: #1e3a5f; margin-bottom: 16px; }
+
+  .table-card-pa {
+    border-radius: 16px; border: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08); overflow: hidden;
+  }
+  .table-card-pa .card-header-pa {
+    padding: 18px 24px; background: #fff;
+    border-bottom: 2px solid #f0f4f8;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-card-pa .card-header-pa h6 { font-weight: 700; margin: 0; color: #1e3a5f; font-size: 1rem; }
+  .rank-badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; color: #fff;
+  }
+  .rank-1 { background: linear-gradient(135deg, #f59e0b, #f97316); }
+  .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+  .rank-3 { background: linear-gradient(135deg, #b45309, #92400e); }
+  .rank-default { background: #cbd5e1; color: #475569; }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="page-body">
+  {% include 'layout/breadcrumb.html' %}
+
+  <div class="container-fluid">
+
+    <!-- KPI BAR -->
+    <div class="row g-3 kpi-row">
+      <div class="col-sm-6 col-xl-4">
+        <div class="card kpi-card-pa kpi-blue">
+          <div class="kpi-icon-pa" style="background:rgba(255,255,255,.15);">
+            <i class="fas fa-boxes-stacked"></i>
+          </div>
+          <p class="kpi-val">{{ total_products }}</p>
+          <p class="kpi-lbl">Jenis Produk Terjual</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-4">
+        <div class="card kpi-card-pa kpi-green">
+          <div class="kpi-icon-pa" style="background:rgba(255,255,255,.15);">
+            <i class="fas fa-weight-hanging"></i>
+          </div>
+          <p class="kpi-val">{{ total_sold|floatformat:"0g" }} kg</p>
+          <p class="kpi-lbl">Total Terjual</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-4">
+        <div class="card kpi-card-pa kpi-amber">
+          <div class="kpi-icon-pa" style="background:rgba(255,255,255,.15);">
+            <i class="fas fa-coins"></i>
+          </div>
+          <p class="kpi-val">Rp {{ total_omzet|floatformat:"0g" }}</p>
+          <p class="kpi-lbl">Total Omzet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <div class="card chart-card-pa">
+          <p class="chart-title-pa"><i class="fas fa-chart-bar me-2 text-primary"></i>Top 10 Produk Terlaris (Berdasarkan Berat)</p>
+          <div id="analysisChart" style="min-height: 340px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card table-card-pa">
+      <div class="card-header-pa">
+        <h6><i class="fas fa-table me-2"></i>Detail Semua Produk</h6>
+        <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">
+          <i class="fas fa-arrow-left me-1"></i>Kembali
+        </a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="productTable">
+            <thead style="background:#f8fafc; border-bottom: 2px solid #e2e8f0;">
+              <tr>
+                <th class="text-center ps-4" style="width:60px;">Rank</th>
+                <th>Nama Produk</th>
+                <th class="text-end">Total Terjual (Kg)</th>
+                <th class="text-end pe-4">Omzet</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in products %}
+              <tr>
+                <td class="text-center ps-4">
+                  {% if forloop.counter == 1 %}
+                    <span class="rank-badge rank-1">1</span>
+                  {% elif forloop.counter == 2 %}
+                    <span class="rank-badge rank-2">2</span>
+                  {% elif forloop.counter == 3 %}
+                    <span class="rank-badge rank-3">3</span>
+                  {% else %}
+                    <span class="rank-badge rank-default">{{ forloop.counter }}</span>
+                  {% endif %}
+                </td>
+                <td style="font-weight:600;">{{ p.product__name }}</td>
+                <td class="text-end">{{ p.total_qty|floatformat:"0g" }} kg</td>
+                <td class="text-end pe-4" style="font-weight:600; color:#1e3a5f;">Rp {{ p.omzet|floatformat:0 }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-5 text-muted">
+                  <i class="fas fa-box-open fa-2x mb-2 opacity-25"></i>
+                  <p class="mb-0">Belum ada data penjualan produk.</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ApexCharts -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const names = {{ chart_names|safe }};
+  const qty = {{ chart_qty|safe }};
+  const omzet = {{ chart_omzet|safe }};
+
+  new ApexCharts(document.querySelector('#analysisChart'), {
+    chart: {
+      type: 'bar', height: 340,
+      toolbar: { show: false },
+      fontFamily: 'Rubik, sans-serif',
+    },
+    series: [
+      { name: 'Terjual (kg)', data: qty },
+      { name: 'Omzet (Rp)', data: omzet },
+    ],
+    colors: ['#2d6a9f', '#f59e0b'],
+    plotOptions: {
+      bar: {
+        horizontal: true, borderRadius: 6,
+        borderRadiusApplication: 'end',
+        barHeight: '65%',
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: function (val, { seriesIndex }) {
+        if (seriesIndex === 0) return val + ' kg';
+        return 'Rp ' + new Intl.NumberFormat('id-ID').format(val);
+      },
+      style: { fontSize: '11px' }
+    },
+    xaxis: {
+      categories: names,
+      labels: { style: { fontSize: '12px', colors: '#64748b' } }
+    },
+    yaxis: [
+      { labels: { style: { fontSize: '12px', colors: '#64748b' } } },
+    ],
+    tooltip: {
+      y: {
+        formatter: function(val, { seriesIndex }) {
+          if (seriesIndex === 0) return val + ' kg';
+          return 'Rp ' + new Intl.NumberFormat('id-ID').format(val);
+        }
+      }
+    },
+    grid: { borderColor: '#f0f4f8', strokeDashArray: 4 },
+    legend: { position: 'top', fontSize: '13px', fontWeight: 600 },
+  }).render();
+});
+</script>
+{% endblock content %}
+
+{% block scriptcontent %}
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script>
+$(document).ready(function () {
+  $('#productTable').DataTable({
+    pageLength: 25,
+    language: {
+      search: "Cari:", lengthMenu: "Tampilkan _MENU_ baris",
+      info: "Menampilkan _START_–_END_ dari _TOTAL_ produk",
+      emptyTable: "Tidak ada data produk.",
+      paginate: { previous: "‹", next: "›" }
+    },
+    order: [[2, 'desc']],
+  });
+});
+</script>
+{% endblock scriptcontent %}

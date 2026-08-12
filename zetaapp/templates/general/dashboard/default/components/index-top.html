@@ -64,9 +64,9 @@
           </div>
           <div class="text-start text-sm-end mt-3 mt-sm-0">
             <h3 class="mb-0">
-              <span class="text-muted me-1">Rp</span>{{sisa_saldo|floatformat:"0g"}}
+              <span class="text-muted me-1">Rp</span>{{saldo|floatformat:"0g"}}
             </h3>
-            {% if total_pengeluaran_harian > total_pemasukan_harian %}
+            {% if saldo < 0 %}
             <small>Dana Tidak tersedia</small>
             {% else %}
             <small>Dana tersedia</small>
@@ -120,7 +120,7 @@
           <div class="media-body">
             <h6 class="font-roboto">Pemasukan</h6>
             <br>
-            <h4 class="mb-0">Rp. {{total_pemasukan_tahunan|floatformat:"0g"}}</h4>
+            <h4 class="mb-0">Rp. {{total_pemasukan2|floatformat:"0g"}}</h4>
           </div>
           <svg class="fill-success" width="48" height="48" viewBox="0 0 48 48" fill="none"
             xmlns="http://www.w3.org/2000/svg">
@@ -156,7 +156,7 @@
           <div class="media-body">
             <h6 class="font-roboto">Pengeluaran</h6>
             <br>
-            <h4 class="mb-0">Rp. {{total_pengeluaran_tahunan|floatformat:"0g"}}</h4>
+            <h4 class="mb-0">Rp. {{total_pengeluaran2|floatformat:"0g"}}</h4>
           </div>
           <svg class="fill-danger" width="48" height="48" viewBox="0 0 48 48" fill="none"
             xmlns="http://www.w3.org/2000/svg">

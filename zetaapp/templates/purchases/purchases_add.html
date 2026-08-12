@@ -123,6 +123,37 @@
                         </div>
                     </div>
 
+                    <!-- Rincian Biaya Operasional & Tabungan -->
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-header bg-warning text-dark py-3">
+                            <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Biaya Operasional &amp; Tabungan</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label for="ongkos_muat" class="form-label small fw-bold">Ongkos Muat (Rp):</label>
+                                    <input type="text" class="form-control form-control-sm input-op-cost" id="ongkos_muat" placeholder="Rp 0" value="Rp 0">
+                                </div>
+                                <div class="col-6">
+                                    <label for="gaji_pegawai" class="form-label small fw-bold">Gaji Pegawai (Rp):</label>
+                                    <input type="text" class="form-control form-control-sm input-op-cost" id="gaji_pegawai" placeholder="Rp 0" value="Rp 0">
+                                </div>
+                                <div class="col-6">
+                                    <label for="biaya_lain" class="form-label small fw-bold">Biaya Lain (Solar/Karung):</label>
+                                    <input type="text" class="form-control form-control-sm input-op-cost" id="biaya_lain" placeholder="Rp 0" value="Rp 0">
+                                </div>
+                                <div class="col-6">
+                                    <label for="susutan_persen" class="form-label small fw-bold">Susutan (%):</label>
+                                    <input type="number" step="0.1" min="0" max="100" class="form-control form-control-sm input-op-rate" id="susutan_persen" value="0">
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label for="tabungan_persen" class="form-label small fw-bold">Alokasi Profit Ditabung (%):</label>
+                                    <input type="number" step="1" min="0" max="100" class="form-control form-control-sm input-op-rate" id="tabungan_persen" value="30">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Grand Total -->
                     <div class="card shadow-sm border-0 mb-3 bg-light">
                         <div class="card-body">
@@ -131,27 +162,66 @@
                         </div>
                     </div>
 
-                    <!-- Kartu Profit Estimasi -->
+                    <!-- Kartu Profit Optimasi Estimasi -->
                     <div class="profit-card mb-3">
-                        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:0.8;margin-bottom:14px;">
-                            <i class="fas fa-chart-line me-2"></i>Estimasi Profit Transaksi
+                        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:0.8;margin-bottom:12px;">
+                            <i class="fas fa-chart-pie me-2"></i>Kalkulasi Optimasi Profit
                         </div>
-                        <div class="pc-label">Total Pemasukan (Jual)</div>
-                        <div class="pc-value" id="pc_revenue">Rp 0</div>
-                        <div class="pc-label">Total Modal (Harga Beli Rata-rata)</div>
-                        <div class="pc-value" id="pc_cost">Rp 0</div>
+                        <div class="d-flex justify-content-between pc-label">
+                            <span>Pemasukan (Jual)</span>
+                            <span id="pc_revenue" class="fw-bold text-white">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between pc-label">
+                            <span>Modal Beli (HPP)</span>
+                            <span id="pc_cost" class="fw-bold text-white">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between pc-label border-top border-secondary pt-1 mt-1">
+                            <span>Profit Kotor</span>
+                            <span id="pc_gross_profit" class="fw-bold text-warning">Rp 0</span>
+                        </div>
+
                         <div class="pc-divider"></div>
-                        <div class="pc-label">Estimasi Profit</div>
-                        <div class="pc-profit-pos" id="pc_profit">Rp 0</div>
-                        <div class="mt-2" style="font-size:11px;opacity:0.65;">
-                            * Dihitung dari harga beli rata-rata vs harga jual input.
+                        <div class="small fw-bold text-uppercase mb-1 opacity-75" style="font-size:10px;">Potongan Biaya Operasional:</div>
+                        <div class="d-flex justify-content-between small opacity-90 mb-1">
+                            <span>- Ongkos Muat</span>
+                            <span id="pc_disp_muat">Rp 0</span>
                         </div>
+                        <div class="d-flex justify-content-between small opacity-90 mb-1">
+                            <span>- Gaji Pegawai</span>
+                            <span id="pc_disp_gaji">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between small opacity-90 mb-1">
+                            <span>- Biaya Lain (Solar/Karung)</span>
+                            <span id="pc_disp_lain">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between small opacity-90 mb-1">
+                            <span>- Impact Susut</span>
+                            <span id="pc_disp_susut">Rp 0</span>
+                        </div>
+
+                        <div class="pc-divider"></div>
+                        <div class="pc-label">Untung Bersih (Net Profit)</div>
+                        <div class="pc-profit-pos" id="pc_profit">Rp 0</div>
+
+                        <div class="d-flex justify-content-between align-middle mt-2 pt-2 border-top border-secondary">
+                            <span class="small">Yang Akan Ditabung (<span id="pc_tabung_pct">30</span>%):</span>
+                            <span id="pc_tabung_amt" class="fw-bold text-info">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-middle mt-1">
+                            <span class="small">Sisa Untung Bersih (Kas Net):</span>
+                            <span id="pc_net_cash" class="fw-bold text-success">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Alert Validasi Profit -->
+                    <div id="profit_alert_warning" class="alert alert-danger p-2 small mb-3 text-center" style="display:none;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Biaya operasional melebihi Profit Kotor! Untung bersih minus.
                     </div>
 
                     <!-- Tombol Aksi -->
                     <div class="d-grid gap-2">
                         <button type="button" id="btn_save_purchase" class="btn btn-success btn-lg">
-                            <i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Kurangi Stok
+                            <i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Catat Profit
                         </button>
                         <a href="{% url 'purchases:purchase_list' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i> Batal / Kembali
@@ -400,26 +470,80 @@
             return products_selected.reduce((sum, item) => sum + (item.avg_buy_price * item.quantity), 0);
         }
 
+        function getOpCost(id) {
+            return parseRawNumber($('#' + id).val()) || 0;
+        }
+        function getOpRate(id) {
+            return parseFloat($('#' + id).val()) || 0;
+        }
+
         function updateTotal() {
             let subTotal = calculateSubTotal();
             let totalCost = calculateTotalCost();
-            let profit = subTotal - totalCost;
+            let grossProfit = subTotal - totalCost;
+
+            let ongkosMuat   = getOpCost('ongkos_muat');
+            let gajiPegawai  = getOpCost('gaji_pegawai');
+            let biayaLain    = getOpCost('biaya_lain');
+            let susutPct     = getOpRate('susutan_persen');
+            let tabungPct    = getOpRate('tabungan_persen');
+
+            let susutVal     = subTotal * (susutPct / 100);
+            let totalBiayaOp = ongkosMuat + gajiPegawai + biayaLain + susutVal;
+            let netProfit    = grossProfit - totalBiayaOp;
+            let tabungAmt    = Math.max(0, netProfit) * (tabungPct / 100);
+            let netCash      = netProfit - tabungAmt;
 
             $('#display_grand_total').text(formatRp(subTotal));
             $('#pc_revenue').text(formatRp(subTotal));
             $('#pc_cost').text(formatRp(totalCost));
 
+            // Gross profit
+            let gpEl = $('#pc_gross_profit');
+            gpEl.text((grossProfit >= 0 ? '+' : '') + formatRp(grossProfit));
+            gpEl.css('color', grossProfit >= 0 ? '#fbbf24' : '#f87171');
+
+            // Biaya rincian
+            $('#pc_disp_muat').text(formatRp(ongkosMuat));
+            $('#pc_disp_gaji').text(formatRp(gajiPegawai));
+            $('#pc_disp_lain').text(formatRp(biayaLain));
+            $('#pc_disp_susut').text(formatRp(susutVal));
+
+            // Net Profit (Untung Bersih)
             let profitEl = $('#pc_profit');
-            if (profit >= 0) {
-                profitEl.removeClass('pc-profit-neg').addClass('pc-profit-pos').text('+' + formatRp(profit));
+            if (netProfit >= 0) {
+                profitEl.removeClass('pc-profit-neg').addClass('pc-profit-pos').text('+' + formatRp(netProfit));
             } else {
-                profitEl.removeClass('pc-profit-pos').addClass('pc-profit-neg').text(formatRp(profit));
+                profitEl.removeClass('pc-profit-pos').addClass('pc-profit-neg').text(formatRp(netProfit));
+            }
+
+            // Tabungan & Kas Net
+            $('#pc_tabung_pct').text(tabungPct);
+            $('#pc_tabung_amt').text(formatRp(tabungAmt));
+            $('#pc_net_cash').text((netCash >= 0 ? '+' : '') + formatRp(netCash));
+            $('#pc_net_cash').css('color', netCash >= 0 ? '#6ee89b' : '#f87171');
+
+            // Validasi alert
+            if (netProfit < 0) {
+                $('#profit_alert_warning').show();
+            } else {
+                $('#profit_alert_warning').hide();
             }
 
             products_selected.forEach((item, index) => {
                 $('#table_products tbody tr').eq(index).find('.total-detail').text(formatRp(item.total_product));
             });
         }
+
+        // Listener biaya operasional & rate
+        $(document).on('input', '.input-op-cost', function () {
+            let rawVal = parseRawNumber($(this).val());
+            $(this).val(rawVal > 0 ? formatRupiahText(rawVal) : 'Rp 0');
+            updateTotal();
+        });
+        $(document).on('input', '.input-op-rate', function () {
+            updateTotal();
+        });
 
         // Submit Direct AJAX tanpa SweetAlert
         $('#btn_save_purchase').on('click', function (e) {
@@ -442,7 +566,8 @@
                 name: item.name,
                 price: parseFloat(item.price) || 0,
                 quantity: parseFloat(item.quantity) || 0,
-                total_product: parseFloat(item.total_product) || 0
+                total_product: parseFloat(item.total_product) || 0,
+                avg_buy_price: parseFloat(item.avg_buy_price) || 0
             }));
 
             let subTotal = calculateSubTotal();
@@ -450,6 +575,11 @@
                 supplier_name: $('#supplier_name').val() || 'Umum',
                 note: $('#note').val() || '',
                 sub_total: subTotal,
+                ongkos_muat: getOpCost('ongkos_muat'),
+                gaji_pegawai: getOpCost('gaji_pegawai'),
+                biaya_lain: getOpCost('biaya_lain'),
+                susutan_persen: getOpRate('susutan_persen'),
+                tabungan_persen: getOpRate('tabungan_persen'),
                 products: cleanProducts
             };
             const csrfToken = $('input[name="csrfmiddlewaretoken"]').val() || '{{ csrf_token }}';
@@ -470,14 +600,14 @@
                         window.location.href = res.redirect_url || "/purchases/";
                     } else {
                         alert(res.message || 'Gagal menyimpan transaksi.');
-                        btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Kurangi Stok');
+                        btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Catat Profit');
                     }
                 },
                 error: function (xhr) {
                     let msg = 'Terjadi kesalahan server.';
                     if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
                     alert(msg);
-                    btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Kurangi Stok');
+                    btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i> Simpan Barang Keluar &amp; Catat Profit');
                 }
             });
         });

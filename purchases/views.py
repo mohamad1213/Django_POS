@@ -75,6 +75,11 @@ def purchase_add_view(request):
             note = data.get('note', '').strip()
 
             sub_total = clean_num(data.get('sub_total', 0.0))
+            ongkos_muat = clean_num(data.get('ongkos_muat', 0.0))
+            gaji_pegawai = clean_num(data.get('gaji_pegawai', 0.0))
+            biaya_lain = clean_num(data.get('biaya_lain', 0.0))
+            susutan_persen = clean_num(data.get('susutan_persen', 0.0))
+            tabungan_persen = clean_num(data.get('tabungan_persen', 30.0))
 
             if sub_total <= 0 or not data.get('products'):
                 return JsonResponse({
@@ -82,17 +87,16 @@ def purchase_add_view(request):
                     'message': 'Transaksi tidak valid (Total nol atau tanpa produk).'
                 }, status=400)
 
+            from zetaapp.models import Profito2
+
             with transaction.atomic():
-                new_purchase = Purchase.objects.create(
-                    supplier_name=supplier_name,
-                    note=note,
-                    sub_total=sub_total,
-                    grand_total=sub_total,
-                    owner=current_user
-                )
+                # Pre-process products to get buy prices and calculate totals
+                processed_items = []
+                total_qty = 0.0
+                total_modal = 0.0
 
                 for product in data['products']:
-                    price_float = clean_num(product.get('price'))
+                    price_float = clean_num(product.get('price')) # Selling price per kg/unit
                     qty_float = clean_num(product.get('quantity'))
                     if qty_float <= 0:
                         qty_float = 1.0
@@ -134,6 +138,47 @@ def purchase_add_view(request):
                         except (Product.DoesNotExist, ValueError):
                             raise ValueError(f'Produk dengan ID {product_id} tidak ditemukan.')
 
+                    avg_buy_price = clean_num(product.get('avg_buy_price')) or float(product_obj.price or 0.0)
+                    total_modal += avg_buy_price * qty_float
+                    total_qty += qty_float
+
+                    processed_items.append({
+                        'product_obj': product_obj,
+                        'price_float': price_float,
+                        'qty_float': qty_float,
+                        'total_det': total_det,
+                        'avg_buy_price': avg_buy_price,
+                    })
+
+                profit_kotor = sub_total - total_modal
+                susutan_val = sub_total * (susutan_persen / 100.0)
+                total_biaya_op = ongkos_muat + gaji_pegawai + biaya_lain + susutan_val
+                net_profit = profit_kotor - total_biaya_op
+                tabungan_amount = max(0.0, net_profit) * (tabungan_persen / 100.0)
+
+                new_purchase = Purchase.objects.create(
+                    supplier_name=supplier_name,
+                    note=note,
+                    sub_total=sub_total,
+                    grand_total=sub_total,
+                    owner=current_user,
+                    ongkos_muat=ongkos_muat,
+                    gaji_pegawai=gaji_pegawai,
+                    biaya_lain=biaya_lain,
+                    susutan_persen=susutan_persen,
+                    tabungan_persen=tabungan_persen,
+                    profit_kotor=profit_kotor,
+                    net_profit=net_profit,
+                    tabungan_amount=tabungan_amount
+                )
+
+                for item in processed_items:
+                    product_obj = item['product_obj']
+                    price_float = item['price_float']
+                    qty_float = item['qty_float']
+                    total_det = item['total_det']
+                    avg_buy_price = item['avg_buy_price']
+
                     PurchaseDetail.objects.create(
                         purchase=new_purchase,
                         product=product_obj,
@@ -150,9 +195,33 @@ def purchase_add_view(request):
                     stock_obj.quantity = float(stock_obj.quantity) - qty_float
                     stock_obj.save()
 
+                    # SYNC KE PROFIT MODULE (Profito2)
+                    portion = (qty_float / total_qty) if total_qty > 0 else (1.0 / len(processed_items))
+                    item_ongkos_muat = (ongkos_muat * portion) / qty_float if qty_float > 0 else 0
+                    item_gaji_pegawai = (gaji_pegawai * portion) / qty_float if qty_float > 0 else 0
+                    item_biaya_lain = (biaya_lain * portion) / qty_float if qty_float > 0 else 0
+
+                    Profito2.objects.create(
+                        nama_barang=product_obj.name,
+                        berat_input=qty_float,
+                        harga_beli_per_kg=avg_buy_price,
+                        harga_jual_per_kg=price_float,
+                        solar=item_biaya_lain,
+                        karung=0,
+                        ongkos_kirim=0,
+                        ongkos_sortir=0,
+                        ongkos_giling=0,
+                        ongkos_muat=item_ongkos_muat,
+                        gaji_pegawai=item_gaji_pegawai,
+                        susutan_persen=susutan_persen,
+                        tabungan_persen=tabungan_persen,
+                        keterangan=f"Otomatis dari Barang Keluar (Jual) #{new_purchase.transaction_number} (Pabrik: {supplier_name})",
+                        purchase=new_purchase
+                    )
+
             return JsonResponse({
                 'success': True,
-                'message': f'Transaksi Barang Keluar (Jual) #{new_purchase.id} berhasil disimpan!',
+                'message': f'Transaksi Barang Keluar #{new_purchase.transaction_number} berhasil disimpan dan dicatat ke Profit!',
                 'redirect_url': '/purchases/'
             })
 

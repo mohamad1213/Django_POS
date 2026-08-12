@@ -1,3 +1,4 @@
+from customers.models import Customer
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
@@ -162,6 +163,7 @@ class Profito2(models.Model):
     ongkos_sortir = models.DecimalField(max_digits=15, decimal_places=0, default=300)
     ongkos_giling = models.DecimalField(max_digits=15, decimal_places=0, default=300)
     ongkos_muat = models.DecimalField(max_digits=15, decimal_places=0, default=50)
+    gaji_pegawai = models.DecimalField(max_digits=15, decimal_places=0, default=0)
     susutan_persen = models.DecimalField(max_digits=5, decimal_places=2, default=5.00)  # susut 5%
 
     # Hasil otomatis
@@ -175,6 +177,8 @@ class Profito2(models.Model):
     tabungan_total = models.DecimalField(max_digits=15, decimal_places=0, blank=True, null=True)
     profit_saved = models.BooleanField(default=False)
     keterangan = models.TextField(blank=True, null=True)
+    purchase = models.ForeignKey('purchases.Purchase', on_delete=models.SET_NULL, null=True, blank=True, related_name='profit_entries')
+
     class Meta:
         ordering = ['-tanggal']
 
@@ -185,12 +189,13 @@ class Profito2(models.Model):
 
         # 2. Total biaya operasional per kg
         biaya_operasional_per_kg = (
-            float(self.solar) +
-            float(self.karung) +
-            float(self.ongkos_kirim) +
-            float(self.ongkos_sortir) +
-            float(self.ongkos_giling) +
-            float(self.ongkos_muat)
+            float(self.solar or 0) +
+            float(self.karung or 0) +
+            float(self.ongkos_kirim or 0) +
+            float(self.ongkos_sortir or 0) +
+            float(self.ongkos_giling or 0) +
+            float(self.ongkos_muat or 0) +
+            float(self.gaji_pegawai or 0)
         )
 
         # 3. HPP per kg
@@ -218,6 +223,7 @@ class Profito2(models.Model):
 
 class Tabungan(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='tabungans')
+    # customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     nominal = models.DecimalField(max_digits=20, decimal_places=2)
     description = models.TextField()
     date = models.DateField(auto_now_add=True)

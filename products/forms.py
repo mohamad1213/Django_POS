@@ -21,5 +21,6 @@ class ProductForm(ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control' ,'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
             'category': forms.Select(attrs={'class': 'form-control' ,'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
             'price': forms.NumberInput(attrs={'class': 'form-control' ,'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
+            'selling_price': forms.NumberInput(attrs={'class': 'form-control' ,'style':'padding:6px 10px ;border: 1px solid #ced4da'}),
             'description': forms.Textarea(attrs={'rows': 5, 'cols': 40, 'class': 'form-control' , 'type':'text','style':'padding:6px 10px ;border: 1px solid #ced4da'})
         }

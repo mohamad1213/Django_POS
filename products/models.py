@@ -51,6 +51,7 @@ class Product(models.Model):
         Category, related_name="category", on_delete=models.CASCADE, db_column='category')
 
     price = models.FloatField(default=0)
+    selling_price = models.FloatField(default=0, verbose_name="Harga Jual")
 
     class Meta:
         # Table's name
@@ -80,6 +81,8 @@ class Product(models.Model):
         item['id'] = self.id
         item['text'] = self.name
         item['category'] = self.category.name
+        item['price'] = self.price
+        item['selling_price'] = self.selling_price
         item['quantity'] = 1
         item['total_product'] = 0
         return item
