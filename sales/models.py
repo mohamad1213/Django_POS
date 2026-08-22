@@ -7,7 +7,7 @@ import random
 import string
 from django.db import models
 from django.utils import timezone
-from zetaapp.models import Transaksi
+from zetaapp.models import Transaksi, HutangPiutang
 from django.contrib.auth.models import User
 
 class Sale(models.Model):
@@ -40,6 +40,42 @@ class Sale(models.Model):
                 if 'ps kaca' in name or 'ps warna' in name:
                     return True
         return False
+
+    @property
+    def wa_link(self):
+        if not self.customer or not self.customer.phone:
+            return None
+        import re, urllib.parse
+        p = ''.join(re.findall(r'\d+', str(self.customer.phone)))
+        if not p:
+            return None
+        if p.startswith('0'):
+            p = '62' + p[1:]
+        elif not p.startswith('62'):
+            p = '62' + p
+
+        cust_name = self.customer.first_name or "Pelanggan"
+        paid_val = self.amount_payed or self.sub_total
+        subtotal_val = float(self.sub_total or 0)
+        paid_float = float(paid_val or 0)
+
+        msg = (
+            f"Halo {cust_name},\n\n"
+            f"Berikut rincian Nota Transaksi Barang Masuk #{self.transaction_number}:\n"
+            f"• Tanggal: {self.date_added.strftime('%d-%m-%Y')}\n"
+            f"• Subtotal Barang: Rp {int(subtotal_val):,}\n"
+            f"• Dibayar (Kas): Rp {int(paid_float):,}\n"
+        )
+        sisa = subtotal_val - paid_float
+        if sisa > 0:
+            msg += f"• Sisa (Hutang): Rp {int(sisa):,}\n"
+        else:
+            msg += f"• Status: LUNAS\n"
+
+        msg += "\nTerima kasih! — POS PPJ Pralon"
+        encoded_msg = urllib.parse.quote(msg)
+        return f"https://api.whatsapp.com/send?phone={p}&text={encoded_msg}"
+
     def save(self, *args, **kwargs):
         if not self.transaction_number:
             self.transaction_number = self.generate_invoice_number()
@@ -47,15 +83,32 @@ class Sale(models.Model):
         super().save(*args, **kwargs)  # Simpan sale dulu
 
         if creating:
-            # Buat transaksi pengeluaran otomatis (Barang Masuk / Beli = Pengeluaran Kas)
-            Transaksi.objects.create(
-                owner=self.owner,  # User yang membuat sale
-                jumlah=self.sub_total,  # Jumlah pengeluaran = total beli
-                tanggal=self.date_added.date(),
-                keterangan=f"Barang Masuk (Beli) {self.transaction_number}",
-                transaksi_choice=Transaksi.PENGELUARAN,
-                kategori=None,
-            )
+            try:
+                # 1. Catat Pengeluaran Kas HANYA sebesar nominal yang benar-benar DIBAYAR (amount_payed)
+                actual_paid = float(self.amount_payed or 0)
+                if actual_paid > 0:
+                    Transaksi.objects.create(
+                        owner=self.owner,
+                        jumlah=actual_paid,
+                        tanggal=self.date_added.date(),
+                        keterangan=f"Barang Masuk (Beli) {self.transaction_number}",
+                        transaksi_choice=Transaksi.PENGELUARAN,
+                        kategori=None,
+                    )
+
+                # 2. Jika Bayar < Subtotal, selisih menjadi HUTANG (POS belum melunasi ke Seller/Supplier)
+                unpaid_balance = float(self.sub_total or 0) - actual_paid
+                if unpaid_balance > 0:
+                    cust_name = self.customer.first_name if self.customer else "Umum"
+                    HutangPiutang.objects.create(
+                        owner=self.owner,
+                        jumlah=unpaid_balance,
+                        tanggal=self.date_added.date(),
+                        hutang_choice=HutangPiutang.HUTANG,
+                        keterangan=f"Hutang Pembelian Barang Masuk {self.transaction_number} ({cust_name})",
+                    )
+            except Exception as e:
+                print(f"Error saat membuat Kas Transaksi / Hutang: {e}")
 
     def generate_invoice_number(self):
         date_str = self.date_added.strftime('%Y%m%d')

@@ -13,7 +13,7 @@ urlpatterns = [
     path("sales/delete/<int:sale_id>/", views.delete_sale, name="delete_sale"),
 
     # Sale receipt PDF
-    path("pdf/<str:sale_id>/", views.ViewPDF, name="sales_receipt_pdf"),
+    path("pdf/<str:sale_id>/", views.ViewPDF.as_view(), name="sales_receipt_pdf"),
     path("upload/",views.upload_receipt,name="upload_receipt"),
     path("preview/",views.preview_receipt,name="preview_receipt"),
 ]

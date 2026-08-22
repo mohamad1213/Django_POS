@@ -95,9 +95,87 @@ def afkiran_create(request, sale_id):
         messages.success(request, f'Afkiran Nota #{sale.transaction_number} berhasil disimpan.')
         return redirect('afkiran:afkiran_detail', afkiran_id=afkiran.id)
 
+    items_data = [{'code': code, 'label': label, 'qty': 0, 'harga': 0} for code, label in JENIS_BARANG_CHOICES]
+
     context = {
         'sale': sale,
+        'items_data': items_data,
         'jenis_barang_choices': JENIS_BARANG_CHOICES,
+        'is_edit': False,
+    }
+    return render(request, 'afkiran/afkiran_form.html', context)
+
+
+@login_required
+def afkiran_update(request, afkiran_id):
+    afkiran = get_object_or_404(Afkiran, id=afkiran_id)
+    sale = afkiran.sale
+
+    if request.method == 'POST':
+        try:
+            dp_amount = float(request.POST.get('dp_amount', 0) or 0)
+        except ValueError:
+            dp_amount = 0.0
+
+        catatan = request.POST.get('catatan', '').strip()
+
+        afkiran.dp_amount = dp_amount
+        afkiran.total_nota = sale.sub_total
+        afkiran.catatan = catatan
+        afkiran.save(update_fields=['dp_amount', 'total_nota', 'catatan'])
+
+        for code, label in JENIS_BARANG_CHOICES:
+            qty_str = request.POST.get(f'qty_{code}', '0')
+            harga_str = request.POST.get(f'harga_{code}', '0')
+
+            try:
+                qty = float(qty_str or 0)
+            except ValueError:
+                qty = 0.0
+
+            try:
+                harga = float(harga_str or 0)
+            except ValueError:
+                harga = 0.0
+
+            detail, created = AfkiranDetail.objects.get_or_create(
+                afkiran=afkiran,
+                nama_barang=code,
+                defaults={'quantity': qty, 'harga': harga}
+            )
+            if not created:
+                detail.quantity = qty
+                detail.harga = harga
+                detail.save()
+
+        # Hitung kalkulasi akhir
+        afkiran.recalculate()
+
+        # Update model sale
+        sale.dp_amount = dp_amount
+        sale.save(update_fields=['dp_amount'])
+
+        sweetify.success(request, 'Berhasil!', text='Hasil afkiran berhasil diperbarui.')
+        messages.success(request, f'Afkiran Nota #{sale.transaction_number} berhasil diperbarui.')
+        return redirect('afkiran:afkiran_detail', afkiran_id=afkiran.id)
+
+    details_map = {d.nama_barang: d for d in afkiran.afkirandetail_set.all()}
+    items_data = []
+    for code, label in JENIS_BARANG_CHOICES:
+        d = details_map.get(code)
+        items_data.append({
+            'code': code,
+            'label': label,
+            'qty': d.quantity if d else 0,
+            'harga': d.harga if d else 0,
+        })
+
+    context = {
+        'sale': sale,
+        'afkiran': afkiran,
+        'items_data': items_data,
+        'jenis_barang_choices': JENIS_BARANG_CHOICES,
+        'is_edit': True,
     }
     return render(request, 'afkiran/afkiran_form.html', context)
 

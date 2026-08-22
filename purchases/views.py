@@ -75,6 +75,8 @@ def purchase_add_view(request):
             note = data.get('note', '').strip()
 
             sub_total = clean_num(data.get('sub_total', 0.0))
+            amount_payed = clean_num(data.get('amount_payed', 0.0))
+            amount_change = clean_num(data.get('amount_change', 0.0))
             ongkos_muat = clean_num(data.get('ongkos_muat', 0.0))
             gaji_pegawai = clean_num(data.get('gaji_pegawai', 0.0))
             biaya_lain = clean_num(data.get('biaya_lain', 0.0))
@@ -161,6 +163,8 @@ def purchase_add_view(request):
                     note=note,
                     sub_total=sub_total,
                     grand_total=sub_total,
+                    amount_payed=amount_payed,
+                    amount_change=amount_change,
                     owner=current_user,
                     ongkos_muat=ongkos_muat,
                     gaji_pegawai=gaji_pegawai,
@@ -236,11 +240,73 @@ def purchase_add_view(request):
             traceback.print_exc()
             return JsonResponse({'success': False, 'message': f'Terjadi kesalahan server: {str(e)}'}, status=500)
 
+    initial_items = []
+    from_sale_id = request.GET.get('from_sale') or request.GET.get('copy_from_sale')
+    source_sale = None
+    if from_sale_id:
+        from sales.models import Sale, SaleDetail
+        source_sale = Sale.objects.filter(id=from_sale_id, owner=request.user).first()
+        if source_sale:
+            for d in source_sale.saledetail_set.select_related('product').all():
+                p = d.product
+                total_masuk = SaleDetail.objects.filter(product=p, sale__owner=request.user).aggregate(total=Sum('quantity'))['total'] or 0
+                total_keluar = PurchaseDetail.objects.filter(product=p, purchase__owner=request.user).aggregate(total=Sum('quantity'))['total'] or 0
+                stock_qty = float(total_masuk) - float(total_keluar)
+
+                selling_p = float(p.selling_price) if p.selling_price and float(p.selling_price) > 0 else float(p.price or 0)
+                buy_p = float(d.price)
+
+                initial_items.append({
+                    'id': p.id,
+                    'name': p.name,
+                    'price': selling_p,
+                    'quantity': float(d.quantity),
+                    'total_product': selling_p * float(d.quantity),
+                    'stock_qty': stock_qty,
+                    'avg_buy_price': buy_p,
+                })
+
+    from sales.models import Sale
+    recent_sales = Sale.objects.filter(owner=request.user).order_by('-id')[:20]
+
     context = {
         "breadcrumb": {"parent": "Transaksi", "child": "Tambah Barang Keluar (Jual)"},
         "active_icon": "purchases",
+        "initial_items_json": json.dumps(initial_items),
+        "source_sale": source_sale,
+        "recent_sales": recent_sales,
     }
     return render(request, "purchases/purchases_add.html", context=context)
+
+
+@login_required(login_url="/accounts/login/")
+def get_sale_items_ajax_view(request, sale_id):
+    from sales.models import Sale, SaleDetail
+    sale = get_object_or_404(Sale, id=sale_id, owner=request.user)
+    items = []
+    for d in sale.saledetail_set.select_related('product').all():
+        p = d.product
+        total_masuk = SaleDetail.objects.filter(product=p, sale__owner=request.user).aggregate(total=Sum('quantity'))['total'] or 0
+        total_keluar = PurchaseDetail.objects.filter(product=p, purchase__owner=request.user).aggregate(total=Sum('quantity'))['total'] or 0
+        stock_qty = float(total_masuk) - float(total_keluar)
+
+        selling_p = float(p.selling_price) if p.selling_price and float(p.selling_price) > 0 else float(p.price or 0)
+        buy_p = float(d.price)
+
+        items.append({
+            'id': p.id,
+            'name': p.name,
+            'price': selling_p,
+            'quantity': float(d.quantity),
+            'total_product': selling_p * float(d.quantity),
+            'stock_qty': stock_qty,
+            'avg_buy_price': buy_p,
+        })
+    return JsonResponse({
+        'success': True, 
+        'items': items, 
+        'supplier_name': sale.customer.first_name if sale.customer else ''
+    })
 
 @login_required(login_url="/accounts/login/")
 def purchase_details_view(request, purchase_id):
@@ -305,5 +371,8 @@ class ViewPDF(View):
             "details": details
         }
 
-        pdf = render_to_pdf('purchases/purchases_receipt_pdf.html', data)
-        return HttpResponse(pdf, content_type='application/pdf')
+        pdf_response = render_to_pdf('purchases/purchases_receipt_pdf.html', data)
+        if pdf_response:
+            pdf_response['Content-Disposition'] = 'inline'
+            return pdf_response
+        return HttpResponse("Gagal membuat PDF nota.", status=500)

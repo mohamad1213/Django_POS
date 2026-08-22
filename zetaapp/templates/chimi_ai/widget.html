@@ -1,0 +1,533 @@
+{% load static %}
+<!-- CHIMIAI FLOATING ASSISTANT WIDGET -->
+<style>
+  :root {
+    --chimi-primary: #6366f1;
+    --chimi-primary-dark: #4f46e5;
+    --chimi-secondary: #06b6d4;
+    --chimi-bg-glass: rgba(255, 255, 255, 0.94);
+    --chimi-shadow: 0 20px 40px rgba(79, 70, 229, 0.22);
+  }
+
+  /* Floating Trigger Button */
+  .chimi-fab-button {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 22px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.45);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: chimiPulseAura 3s infinite;
+  }
+
+  .chimi-fab-button:hover {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 14px 30px rgba(99, 102, 241, 0.6);
+  }
+
+  .chimi-fab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 14px;
+    height: 14px;
+    background-color: #22c55e;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+  }
+
+  @keyframes chimiPulseAura {
+    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+    70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  }
+
+  /* Chat Window Drawer */
+  .chimi-widget-container {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    width: 420px;
+    max-width: calc(100vw - 32px);
+    height: 600px;
+    max-height: calc(100vh - 120px);
+    z-index: 99998;
+    background: var(--chimi-bg-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    box-shadow: var(--chimi-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .chimi-widget-container.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Header */
+  .chimi-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #ffffff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  }
+
+  .chimi-header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .chimi-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .chimi-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+    color: #ffffff;
+  }
+
+  .chimi-status {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .chimi-status-dot {
+    width: 7px;
+    height: 7px;
+    background-color: #4ade80;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .chimi-header-actions button {
+    background: rgba(255, 255, 255, 0.18);
+    border: none;
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chimi-header-actions button:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  /* Quick Bar */
+  .chimi-quick-stats {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    color: #475569;
+  }
+
+  .chimi-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+  }
+
+  /* Messages Area */
+  .chimi-messages-body {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #f1f5f9;
+  }
+
+  .chimi-msg {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+    position: relative;
+    animation: chimiMsgFade 0.3s ease forwards;
+  }
+
+  @keyframes chimiMsgFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chimi-msg.ai {
+    background: #ffffff;
+    color: #1e293b;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+  }
+
+  .chimi-msg.user {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  }
+
+  .chimi-msg-time {
+    font-size: 0.68rem;
+    opacity: 0.7;
+    margin-top: 4px;
+    text-align: right;
+    display: block;
+  }
+
+  /* Quick Prompt Chips */
+  .chimi-chips-container {
+    padding: 10px 14px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .chimi-chips-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chimi-chip {
+    background: #edf2f7;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.76rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .chimi-chip:hover {
+    background: #6366f1;
+    color: #ffffff;
+    border-color: #6366f1;
+    transform: translateY(-1px);
+  }
+
+  /* Input Footer */
+  .chimi-input-footer {
+    padding: 12px 14px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chimi-input-field {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 24px;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #f8fafc;
+  }
+
+  .chimi-input-field:focus {
+    border-color: #6366f1;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  .chimi-send-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+  }
+
+  .chimi-send-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 6px 14px rgba(99, 102, 241, 0.45);
+  }
+
+  .chimi-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Typing Dots */
+  .chimi-typing {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+  }
+
+  .chimi-typing-dot {
+    width: 6px;
+    height: 6px;
+    background: #94a3b8;
+    border-radius: 50%;
+    animation: chimiBounce 1.4s infinite ease-in-out both;
+  }
+
+  .chimi-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .chimi-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes chimiBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+  }
+</style>
+
+<!-- Floating Button Trigger -->
+<button type="button" class="chimi-fab-button" id="chimiFabBtn" onclick="toggleChimiWidget()">
+  <span class="chimi-fab-badge"></span>
+  <i class="fa-solid fa-wand-magic-sparkles"></i>
+  <span>ChimiAI</span>
+</button>
+
+<!-- Floating Widget Drawer -->
+<div class="chimi-widget-container" id="chimiWidget">
+  <!-- Header -->
+  <div class="chimi-header">
+    <div class="chimi-header-info">
+      <div class="chimi-avatar">✨</div>
+      <div>
+        <h4 class="chimi-title">ChimiAI Assistant</h4>
+        <span class="chimi-status">
+          <span class="chimi-status-dot"></span> Online • Analis POS Rosok
+        </span>
+      </div>
+    </div>
+    <div class="chimi-header-actions">
+      <button type="button" onclick="clearChimiHistory()" title="Bersihkan Percakapan"><i class="fa fa-rotate-right"></i></button>
+      <button type="button" onclick="toggleChimiWidget()" title="Tutup Widget"><i class="fa fa-times"></i></button>
+    </div>
+  </div>
+
+  <!-- Quick Stat Bar -->
+  <div class="chimi-quick-stats" id="chimiQuickStats">
+    <div class="chimi-stat-item"><i class="fa fa-wallet text-primary"></i> <span id="qKas">Kas: Rp -</span></div>
+    <div class="chimi-stat-item"><i class="fa fa-chart-line text-success"></i> <span id="qProfit">Profit: Rp -</span></div>
+    <div class="chimi-stat-item"><i class="fa fa-hand-holding-dollar text-warning"></i> <span id="qPiutang">Piutang: Rp -</span></div>
+  </div>
+
+  <!-- Chat Messages -->
+  <div class="chimi-messages-body" id="chimiChatBody">
+    <div class="chimi-msg ai">
+      👋 Halo Admin! Saya <strong>ChimiAI</strong>, asisten pintar POS Rosok Anda.<br><br>
+      Ada yang bisa saya bantu analisis hari ini? Anda bisa menanyakan tentang kesehatan keuangan, profit olahan barang, stok, atau sisa hutang.
+      <span class="chimi-msg-time">Baru saja</span>
+    </div>
+  </div>
+
+  <!-- Quick Chips -->
+  <div class="chimi-chips-container">
+    <button class="chimi-chip" onclick="sendChimiQuickPrompt('Bagaimana kesehatan keuangan toko saat ini?')">📊 Kesehatan Keuangan</button>
+    <button class="chimi-chip" onclick="sendChimiQuickPrompt('Berapa total omset dan profit bersih olahan rosok?')">💰 Omset & Profit</button>
+    <button class="chimi-chip" onclick="sendChimiQuickPrompt('Apakah ada stok barang yang menipis?')">📦 Cek Stok Barang</button>
+    <button class="chimi-chip" onclick="sendChimiQuickPrompt('Berapa sisa hutang dan piutang toko?')">⚠️ Hutang & Piutang</button>
+  </div>
+
+  <!-- Input Footer -->
+  <div class="chimi-input-footer">
+    <input type="text" id="chimiInput" class="chimi-input-field" placeholder="Tanya ChimiAI..." onkeydown="if(event.key === 'Enter') sendChimiMessage()">
+    <button type="button" class="chimi-send-btn" id="chimiSendBtn" onclick="sendChimiMessage()">
+      <i class="fa fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+  let chimiOpen = false;
+
+  function toggleChimiWidget() {
+    const widget = document.getElementById('chimiWidget');
+    chimiOpen = !chimiOpen;
+    if (chimiOpen) {
+      widget.classList.add('active');
+      fetchChimiSummary();
+      document.getElementById('chimiInput').focus();
+    } else {
+      widget.classList.remove('active');
+    }
+  }
+
+  function fetchChimiSummary() {
+    fetch("{% url 'chimi_ai_summary' %}")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('qKas').innerText = 'Kas: Rp ' + Number(data.kas_bersih || 0).toLocaleString('id-ID');
+        document.getElementById('qProfit').innerText = 'Profit: Rp ' + Number(data.total_profit || 0).toLocaleString('id-ID');
+        document.getElementById('qPiutang').innerText = 'Piutang: Rp ' + Number(data.total_piutang || 0).toLocaleString('id-ID');
+      })
+      .catch(err => console.error("Summary error:", err));
+  }
+
+  function formatChimiText(text) {
+    if (!text) return '';
+    // Format bold text
+    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Format bullet points
+    formatted = formatted.replace(/^\s*[\-\*]\s+(.*)$/gm, '• $1');
+    // Newlines to <br>
+    formatted = formatted.replace(/\n/g, '<br>');
+    return formatted;
+  }
+
+  function sendChimiQuickPrompt(promptText) {
+    document.getElementById('chimiInput').value = promptText;
+    sendChimiMessage();
+  }
+
+  function sendChimiMessage() {
+    const input = document.getElementById('chimiInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const chatBody = document.getElementById('chimiChatBody');
+    const sendBtn = document.getElementById('chimiSendBtn');
+    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Append User Message
+    const userBubble = document.createElement('div');
+    userBubble.className = 'chimi-msg user';
+    userBubble.innerHTML = formatChimiText(msg) + `<span class="chimi-msg-time">${nowStr}</span>`;
+    chatBody.appendChild(userBubble);
+
+    input.value = '';
+    sendBtn.disabled = true;
+
+    // Append Typing Indicator
+    const typingBubble = document.createElement('div');
+    typingBubble.className = 'chimi-msg ai';
+    typingBubble.id = 'chimiTypingBubble';
+    typingBubble.innerHTML = `<div class="chimi-typing"><div class="chimi-typing-dot"></div><div class="chimi-typing-dot"></div><div class="chimi-typing-dot"></div></div>`;
+    chatBody.appendChild(typingBubble);
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    // CSRF Helper
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    fetch("{% url 'chimi_ai_chat' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie('csrftoken')
+      },
+      body: JSON.stringify({ message: msg })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('chimiTypingBubble')?.remove();
+      sendBtn.disabled = false;
+
+      const aiBubble = document.createElement('div');
+      aiBubble.className = 'chimi-msg ai';
+
+      if (data.status === 'success') {
+        aiBubble.innerHTML = formatChimiText(data.reply) + `<span class="chimi-msg-time">${data.timestamp || nowStr}</span>`;
+      } else {
+        aiBubble.innerHTML = `⚠️ ${data.message || 'Maaf, terjadi masalah saat memproses pesan.'}<span class="chimi-msg-time">${nowStr}</span>`;
+      }
+
+      chatBody.appendChild(aiBubble);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    })
+    .catch(err => {
+      document.getElementById('chimiTypingBubble')?.remove();
+      sendBtn.disabled = false;
+
+      const errBubble = document.createElement('div');
+      errBubble.className = 'chimi-msg ai';
+      errBubble.innerHTML = `⚠️ Gagal terhubung ke pelayan ChimiAI.<span class="chimi-msg-time">${nowStr}</span>`;
+      chatBody.appendChild(errBubble);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
+  }
+
+  function clearChimiHistory() {
+    const chatBody = document.getElementById('chimiChatBody');
+    chatBody.innerHTML = `
+      <div class="chimi-msg ai">
+        👋 Percakapan dibersihkan. Ada lagi yang bisa <strong>ChimiAI</strong> bantu analisis?
+        <span class="chimi-msg-time">Baru saja</span>
+      </div>
+    `;
+  }
+</script>

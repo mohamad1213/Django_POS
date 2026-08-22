@@ -6,6 +6,7 @@ import openpyxl
 from datetime import datetime, date, time, timedelta
 from django.db import transaction
 import re
+import os
 from decimal import Decimal, InvalidOperation
 from .helpers import *
 from collections import defaultdict
@@ -121,19 +122,20 @@ def stockin_list(request):
         ).aggregate(total=Sum('quantity'))['total'] or 0
 
         stok = float(total_masuk) - float(total_keluar)
-        if stok > 0:
+        if total_masuk > 0 or total_keluar > 0 or stok > 0:
+            display_stok = max(0.0, stok)
             sell_price = float(product.selling_price) if product.selling_price else float(product.price)
             stock_data.append({
                 'product': product,
                 'total_masuk': float(total_masuk),
                 'total_keluar': float(total_keluar),
-                'stok': stok,
+                'stok': display_stok,
                 'selling_price': sell_price,
-                'nilai_estimasi': stok * sell_price,
+                'nilai_estimasi': display_stok * sell_price,
             })
 
-    # Sort by stok descending
-    stock_data.sort(key=lambda x: x['stok'], reverse=True)
+    # Sort by stok descending, then total_masuk descending
+    stock_data.sort(key=lambda x: (x['stok'], x['total_masuk']), reverse=True)
 
     # KPI
     total_jenis = len(stock_data)
@@ -404,7 +406,7 @@ def profit_create(request): # Nama view baru
 def profit(request):
     from purchases.models import PurchaseDetail, Purchase
     from decimal import Decimal
-    data = Profito2.objects.all().order_by('-tanggal')
+    data = Profito2.objects.all().select_related('purchase').order_by('-tanggal')
     profit_today = profit_today_value()
     formatted = format_currency(profit_today, 'IDR', locale='id_ID')
     datenow = timezone.now().strftime("%d-%m-%Y")
@@ -437,31 +439,39 @@ def profit(request):
     purch_net_profit = float(purch_agg.get('sum_net_profit') or 0)
     purch_tabungan = float(purch_agg.get('sum_tabungan') or 0)
 
-    # Hitung Estimasi Profit Margin Stok POS
+    # Hitung Estimasi Profit Margin Stok POS (Optimized: 2 queries instead of 2N queries)
     user_products = Product.objects.filter(owner=request.user, status='ACTIVE')
+    sales_map = dict(
+        SaleDetail.objects.filter(sale__owner=request.user, product__in=user_products)
+        .values('product_id')
+        .annotate(total=Sum('quantity'))
+        .values_list('product_id', 'total')
+    )
+    purchases_map = dict(
+        PurchaseDetail.objects.filter(purchase__owner=request.user, product__in=user_products)
+        .values('product_id')
+        .annotate(total=Sum('quantity'))
+        .values_list('product_id', 'total')
+    )
+
     pos_estimated_stock_profit = 0.0
     for product in user_products:
-        total_masuk = SaleDetail.objects.filter(
-            product=product, sale__owner=request.user
-        ).aggregate(total=Sum('quantity'))['total'] or 0
+        total_masuk = float(sales_map.get(product.id, 0) or 0)
+        total_keluar = float(purchases_map.get(product.id, 0) or 0)
 
-        total_keluar = PurchaseDetail.objects.filter(
-            product=product, purchase__owner=request.user
-        ).aggregate(total=Sum('quantity'))['total'] or 0
-
-        stok = float(total_masuk) - float(total_keluar)
+        stok = total_masuk - total_keluar
         if stok > 0:
             sell_price = float(product.selling_price) if product.selling_price else float(product.price)
             buy_price = float(product.price)
             margin = max(0.0, sell_price - buy_price)
             pos_estimated_stock_profit += stok * margin
 
-    # Hitung Realized POS Sales Profit Hari Ini
+    # Hitung Realized POS Sales Profit Hari Ini (Optimized with select_related)
     today = timezone.localtime(timezone.now()).date()
     sales_today_details = SaleDetail.objects.filter(
         sale__owner=request.user,
         sale__date_added__date=today
-    )
+    ).select_related('product')
     pos_profit_today = 0.0
     for detail in sales_today_details:
         buy_p = float(detail.product.price) if detail.product else 0.0
@@ -1438,3 +1448,271 @@ def tabungan(request):
         "breadcrumb":{"parent":"Tabungan","child":"Transaksi"},
     }
     return render(request, 'tabungan/tabung.html', context)
+
+
+# ==========================================
+# CHIMIAI ASSISTANT INTEGRATION
+# ==========================================
+
+import requests
+import json
+
+def build_pos_data_context(user=None):
+    """
+    Mengumpulkan dan meringkas data real-time POS Rosok untuk dijadikan konteks ChimiAI.
+    """
+    now = timezone.now()
+    today = now.date()
+    start_of_month = today.replace(day=1)
+
+    # 1. Kas Operasional
+    trans_qs = Transaksi.objects.all()
+    if user and user.is_authenticated:
+        trans_user = trans_qs.filter(owner=user)
+        if trans_user.exists():
+            trans_qs = trans_user
+
+    pemasukan_total = trans_qs.filter(transaksi_choice=Transaksi.PEMASUKAN).aggregate(s=Sum('jumlah'))['s'] or 0
+    pengeluaran_total = trans_qs.filter(transaksi_choice=Transaksi.PENGELUARAN).aggregate(s=Sum('jumlah'))['s'] or 0
+    kas_bersih = float(pemasukan_total) - float(pengeluaran_total)
+
+    pemasukan_bulan_ini = trans_qs.filter(transaksi_choice=Transaksi.PEMASUKAN, tanggal__gte=start_of_month).aggregate(s=Sum('jumlah'))['s'] or 0
+    pengeluaran_bulan_ini = trans_qs.filter(transaksi_choice=Transaksi.PENGELUARAN, tanggal__gte=start_of_month).aggregate(s=Sum('jumlah'))['s'] or 0
+
+    # 2. Profit & Olahan Rosok (Profito2)
+    profit_qs = Profito2.objects.all().order_by('-tanggal')
+    profit_count = profit_qs.count()
+    total_revenue_prof = profit_qs.aggregate(s=Sum('total_revenue'))['s'] or 0
+    total_hpp_prof = profit_qs.aggregate(s=Sum('total_hpp'))['s'] or 0
+    total_profit_prof = profit_qs.aggregate(s=Sum('profit'))['s'] or 0
+    total_tabungan_prof = profit_qs.aggregate(s=Sum('tabungan_total'))['s'] or 0
+
+    recent_profito = []
+    for item in profit_qs[:7]:
+        recent_profito.append(
+            f"- Barang: {item.nama_barang} | Tgl: {item.tanggal} | Berat In: {item.berat_input} kg | Berat Out: {item.berat_output or 0} kg | "
+            f"HPP/kg: Rp {int(item.hpp_per_kg or 0):,} | Jual/kg: Rp {int(item.harga_jual_per_kg or 0):,} | Revenue: Rp {int(item.total_revenue or 0):,} | "
+            f"Profit: Rp {int(item.profit or 0):,} (Margin: {item.profit_margin or 0}%) | Tabungan: Rp {int(item.tabungan_total or 0):,}"
+        )
+
+    # 3. Stok Barang
+    stocks = Stock.objects.select_related('product').all()
+    total_items_count = stocks.count()
+    total_stok_kg = 0
+    stock_summary = []
+    for st in stocks[:10]:
+        total_stok_kg += float(st.quantity or 0)
+        stock_summary.append(f"- {st.product.name} (Kode: {st.product.code or '-'}): {st.quantity} kg/pcs")
+
+    # 4. Transaksi Sales & Detail
+    sales_qs = Sale.objects.all()
+    if user and user.is_authenticated:
+        sales_user = sales_qs.filter(owner=user)
+        if sales_user.exists():
+            sales_qs = sales_user
+    sales_count = sales_qs.count()
+    total_penjualan_val = sales_qs.aggregate(s=Sum('sub_total'))['s'] or 0
+    total_dibayar_val = sales_qs.aggregate(s=Sum('amount_payed'))['s'] or 0
+
+    # 5. Hutang & Piutang
+    hutang_qs = HutangPiutang.objects.all()
+    if user and user.is_authenticated:
+        h_user = hutang_qs.filter(owner=user)
+        if h_user.exists():
+            hutang_qs = h_user
+
+    total_hutang_toko = hutang_qs.filter(hutang_choice=HutangPiutang.HUTANG).aggregate(s=Sum('jumlah'))['s'] or 0
+    total_piutang_toko = hutang_qs.filter(hutang_choice=HutangPiutang.PIUTANG).aggregate(s=Sum('jumlah'))['s'] or 0
+
+    hutpeg_qs = HutPegawai.objects.all()
+    total_hutang_pegawai = hutpeg_qs.filter(hutang_choice=HutPegawai.HUTANG).aggregate(s=Sum('jumlah'))['s'] or 0
+    total_piutang_pegawai = hutpeg_qs.filter(hutang_choice=HutPegawai.PIUTANG).aggregate(s=Sum('jumlah'))['s'] or 0
+
+    context_str = f"""
+[DATA PENJUALAN & KEUANGAN REAL-TIME POS ROSOK]
+Tanggal Laporan: {today.strftime('%d-%m-%Y')}
+
+1. KAS OPERASIONAL TOKO:
+- Total Pemasukan Kas: Rp {int(pemasukan_total):,}
+- Total Pengeluaran Kas: Rp {int(pengeluaran_total):,}
+- Saldo Kas Bersih: Rp {int(kas_bersih):,}
+- Pemasukan Bulan Ini: Rp {int(pemasukan_bulan_ini):,}
+- Pengeluaran Bulan Ini: Rp {int(pengeluaran_bulan_ini):,}
+
+2. OLAHAN ROSOK & ANALISIS PROFIT (PROFITO):
+- Total Olahan Selesai: {profit_count} transaksi batch
+- Total Revenue/Omset Olahan: Rp {int(total_revenue_prof):,}
+- Total HPP Olahan: Rp {int(total_hpp_prof):,}
+- Total Profit Bersih Olahan: Rp {int(total_profit_prof):,}
+- Total Akumulasi Tabungan Toko: Rp {int(total_tabungan_prof):,}
+- Data Olahan Rosok Terbaru:
+{chr(10).join(recent_profito) if recent_profito else '  (Belum ada data olahan)'}
+
+3. TRANSAKSI BARANG MASUK & KELUAR:
+- Total Transaksi Sale: {sales_count} transaksi
+- Total Nilai Transaksi (Subtotal): Rp {int(total_penjualan_val):,}
+- Total Pembayaran Cash Terima: Rp {int(total_dibayar_val):,}
+
+4. PERSEDIAAN STOK GUDANG:
+- Total Jenis Barang: {total_items_count} item
+- Total Estimasi Berat Stok: {total_stok_kg:.2f} kg
+- Rincian Stok Utama:
+{chr(10).join(stock_summary) if stock_summary else '  (Belum ada data stok)'}
+
+5. STATUS HUTANG & PIUTANG:
+- Total Hutang Toko (Kewajiban Bayar ke Supplier/Seller): Rp {int(total_hutang_toko):,}
+- Total Piutang Toko (Tagihan ke Pelanggan): Rp {int(total_piutang_toko):,}
+- Total Hutang Pegawai: Rp {int(total_hutang_pegawai):,}
+- Total Piutang Pegawai: Rp {int(total_piutang_pegawai):,}
+"""
+    return context_str.strip()
+
+
+@login_required(login_url="/accounts/login/")
+@require_POST
+def chimi_ai_chat(request):
+    """
+    API endpoint untuk memproses pertanyaan ke ChimiAI via Gemini Flash API.
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        user_message = data.get('message', '').strip()
+
+        if not user_message:
+            return JsonResponse({'status': 'error', 'message': 'Pesan tidak boleh kosong.'}, status=400)
+
+        # 1. Kumpulkan context data dari database
+        pos_context = build_pos_data_context(request.user)
+
+        # 2. Susun System Prompt & Prompt Utama
+        system_prompt = (
+            "Kamu adalah Asisten Pintar untuk Sistem Informasi POS Rosok (Kasir & Manajemen Barang Bekas) saya namakan kamu ChimiAI.\n\n"
+            "Tugas utama:\n"
+            "1. Membantu admin/pemilik toko menganalisis data penjualan, stok, dan transaksi berdasarkan DATA KONTEKS yang disediakan di setiap permintaan.\n"
+            "2. Jawablah pertanyaan pengguna secara singkat, padat, jelas, akurat, dan ramah menggunakan Bahasa Indonesia yang wajar.\n\n"
+            "Aturan Ketat:\n"
+            "- HANYA gunakan informasi yang ada di dalam [DATA PENJUALAN] yang diberikan.\n"
+            "- Jika jawaban tidak ada di dalam data yang diberikan, katakan dengan sopan: \"Maaf, data tersebut tidak tersedia dalam ringkasan penjualan saat ini.\"\n"
+            "- Jangan membuat asumsi, estimasi, atau jawaban fiktif sendiri yang tidak didukung data.\n"
+            "- Jika pengguna menanyakan unit barang (seperti kg, pcs, atau ton) atau mata uang (Rp), cantumkan dengan jelas.\n"
+            "- Hindari memberikan jawaban yang terlalu panjang atau bertele-tele."
+        )
+
+        full_prompt = (
+            f"{system_prompt}\n\n"
+            f"[DATA PENJUALAN]\n{pos_context}\n\n"
+            f"[PERTANYAAN PENGGUNA]\n{user_message}"
+        )
+
+        # 3. Request ke Gemini Flash API dengan Fallback
+        endpoints = [
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        ]
+        api_key = os.getenv("GEMINI_API_KEY")
+
+        headers = {
+            "Content-Type": "application/json",
+            "X-goog-api-key": api_key
+        }
+
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": full_prompt}
+                    ]
+                }
+            ]
+        }
+
+        reply_text = None
+        last_error = None
+
+        for endpoint_url in endpoints:
+            try:
+                response = requests.post(endpoint_url, headers=headers, json=payload, timeout=20)
+                if response.status_code == 200:
+                    res_json = response.json()
+                    candidates = res_json.get('candidates', [])
+                    if candidates and 'content' in candidates[0]:
+                        parts = candidates[0]['content'].get('parts', [])
+                        reply_text = "".join([p.get('text', '') for p in parts]).strip()
+                        break
+                else:
+                    last_error = f"Status {response.status_code}: {response.text[:150]}"
+            except Exception as req_err:
+                last_error = str(req_err)
+
+        if reply_text:
+            return JsonResponse({
+                'status': 'success',
+                'reply': reply_text,
+                'timestamp': timezone.now().strftime('%H:%M')
+            })
+        else:
+            print(f"Gemini API All Fallbacks Failed: {last_error}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Maaf, layanan AI sedang padat saat ini. Silakan coba 10 detik lagi.'
+            }, status=500)
+
+    except Exception as e:
+        print(f"ChimiAI Exception: {e}")
+        return JsonResponse({'status': 'error', 'message': f'Terjadi kesalahan internal: {str(e)}'}, status=500)
+
+
+@login_required(login_url="/accounts/login/")
+def chimi_ai_page(request):
+    """
+    Halaman utama workspace ChimiAI Assistant
+    """
+    now = timezone.now()
+    today = now.date()
+
+    # Stat ringkas untuk card atas
+    trans_qs = Transaksi.objects.all()
+    pemasukan = trans_qs.filter(transaksi_choice=Transaksi.PEMASUKAN).aggregate(s=Sum('jumlah'))['s'] or 0
+    pengeluaran = trans_qs.filter(transaksi_choice=Transaksi.PENGELUARAN).aggregate(s=Sum('jumlah'))['s'] or 0
+    kas_bersih = float(pemasukan) - float(pengeluaran)
+
+    profit_qs = Profito2.objects.all()
+    total_profit = profit_qs.aggregate(s=Sum('profit'))['s'] or 0
+    total_tabungan = profit_qs.aggregate(s=Sum('tabungan_total'))['s'] or 0
+
+    stok_count = Stock.objects.count()
+
+    context = {
+        'kas_bersih': kas_bersih,
+        'total_profit': total_profit,
+        'total_tabungan': total_tabungan,
+        'stok_count': stok_count,
+        'breadcrumb': {"parent": "Analisis AI", "child": "ChimiAI Assistant"},
+    }
+    return render(request, 'chimi_ai/page.html', context)
+
+
+@login_required(login_url="/accounts/login/")
+def get_chimi_ai_summary(request):
+    """
+    API ringan untuk mengambil quick stats yang dipakai oleh widget ChimiAI
+    """
+    trans_qs = Transaksi.objects.all()
+    pemasukan = trans_qs.filter(transaksi_choice=Transaksi.PEMASUKAN).aggregate(s=Sum('jumlah'))['s'] or 0
+    pengeluaran = trans_qs.filter(transaksi_choice=Transaksi.PENGELUARAN).aggregate(s=Sum('jumlah'))['s'] or 0
+    kas_bersih = float(pemasukan) - float(pengeluaran)
+
+    profit_qs = Profito2.objects.all()
+    total_profit = profit_qs.aggregate(s=Sum('profit'))['s'] or 0
+
+    hutang_qs = HutangPiutang.objects.all()
+    total_hutang = hutang_qs.filter(hutang_choice=HutangPiutang.HUTANG).aggregate(s=Sum('jumlah'))['s'] or 0
+    total_piutang = hutang_qs.filter(hutang_choice=HutangPiutang.PIUTANG).aggregate(s=Sum('jumlah'))['s'] or 0
+
+    return JsonResponse({
+        'kas_bersih': kas_bersih,
+        'total_profit': total_profit,
+        'total_hutang': total_hutang,
+        'total_piutang': total_piutang,
+    })
+

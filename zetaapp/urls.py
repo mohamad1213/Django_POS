@@ -68,6 +68,11 @@ urlpatterns = [
     path("api/products/", views.product_search_api, name="product_search_api"),
     
     
+    # ChimiAI Assistant
+    path('chimiai/', views.chimi_ai_page, name='chimi_ai_page'),
+    path('api/chimiai/chat/', views.chimi_ai_chat, name='chimi_ai_chat'),
+    path('api/chimiai/summary/', views.get_chimi_ai_summary, name='chimi_ai_summary'),
+
     #laporan
     path('laporan/', views.laporan, name='laporan'),
     path('chart-report/', views.ChartReport , name='chart-report'),

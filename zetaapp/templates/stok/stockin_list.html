@@ -113,6 +113,9 @@
                 </td>
                 <td class="text-end" style="font-weight:700; color:#1e3a5f;">
                   {{ s.stok|floatformat:"0g" }} kg
+                  {% if s.stok == 0 %}
+                    <span class="badge bg-secondary ms-1" style="font-size:0.68rem;">Habis</span>
+                  {% endif %}
                 </td>
                 <td>
                   <div style="background:#f0f4f8; border-radius:4px; height:8px; overflow:hidden;">
@@ -153,16 +156,27 @@
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
 <script>
 $(document).ready(function () {
-  $('#stokTable').DataTable({
+  var t = $('#stokTable').DataTable({
     pageLength: 25,
+    order: [], // Backend Python sudah mengurutkan stok terbanyak
     language: {
       search: "Cari:", lengthMenu: "Tampilkan _MENU_ baris",
       info: "Menampilkan _START_–_END_ dari _TOTAL_ produk",
       emptyTable: "Tidak ada stok tersedia.",
       paginate: { previous: "‹", next: "›" }
     },
-    order: [[4, 'desc']],
+    columnDefs: [
+      { orderable: false, targets: 0 } // Kolom nomor tidak perlu disort manual
+    ]
   });
+
+  // Otomatis penomoran berurutan 1, 2, 3... saat pencarian / pengurutan
+  t.on('order.dt search.dt', function () {
+    let i = 1;
+    t.cells(null, 0, { search: 'applied', order: 'applied' }).every(function (cell) {
+      this.data(i++);
+    });
+  }).draw();
 });
 </script>
 {% endblock scriptcontent %}

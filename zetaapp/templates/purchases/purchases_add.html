@@ -58,12 +58,26 @@
                                 Pabrik)</h5>
                         </div>
                         <div class="card-body">
-                            <div class="form-group mb-3">
-                                <label for="searchbox_products" class="fw-bold mb-1">Cari Barang (Tampil Nama, Harga &
-                                    Stok):</label>
-                                <select class="form-control select2" id="searchbox_products">
-                                    <option value="" selected disabled hidden>Ketik nama barang rosok...</option>
-                                </select>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-7">
+                                    <label for="searchbox_products" class="fw-bold mb-1">Cari / Tambah Barang Satuan:</label>
+                                    <select class="form-control select2" id="searchbox_products">
+                                        <option value="" selected disabled hidden>Ketik nama barang rosok...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="select_copy_sale" class="fw-bold mb-1 text-success">
+                                        <i class="fas fa-copy me-1"></i> Salin Semua Item dari Nota Beli:
+                                    </label>
+                                    <select class="form-select border-success" id="select_copy_sale">
+                                        <option value="">-- Salin dari Nota Beli (Barang Masuk) --</option>
+                                        {% for sale in recent_sales %}
+                                        <option value="{{ sale.id }}" {% if source_sale and source_sale.id == sale.id %}selected{% endif %}>
+                                            #{{ sale.transaction_number }} — {{ sale.customer.first_name|default:"Umum" }} ({{ sale.date_added|date:"d/m" }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -154,11 +168,27 @@
                         </div>
                     </div>
 
-                    <!-- Grand Total -->
+                    <!-- Grand Total & Payment Info -->
                     <div class="card shadow-sm border-0 mb-3 bg-light">
                         <div class="card-body">
-                            <h6 class="text-muted text-uppercase mb-1">Total Pemasukan (Kas Masuk)</h6>
-                            <h2 class="text-success fw-bold mb-0" id="display_grand_total">Rp 0</h2>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted text-uppercase small fw-bold">Nilai Transaksi (Subtotal)</span>
+                                <h4 class="text-dark fw-bold mb-0" id="display_grand_total">Rp 0</h4>
+                            </div>
+                            
+                            <div class="mb-3 mt-3">
+                                <label for="amount_payed" class="form-label fw-bold small text-muted text-uppercase">Uang Diterima / Dibayar (Bayar):</label>
+                                <input type="text" class="form-control form-control-lg fw-bold text-success" id="amount_payed" placeholder="Rp 0" value="Rp 0" data-user-edited="false">
+                                <small class="text-muted d-block mt-1" style="font-size:11px;">*Hanya nominal ini yang menambah saldo kas/ATM POS.</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <span class="small fw-bold text-muted text-uppercase" id="label_payment_balance">Sisa / Piutang:</span>
+                                <span class="fw-bold fs-6" id="display_payment_balance">Rp 0</span>
+                            </div>
+                            <div class="mt-2 text-end" id="container_payment_status">
+                                <span class="badge bg-success fs-6" id="badge_payment_status">LUNAS</span>
+                            </div>
                         </div>
                     </div>
 
@@ -239,7 +269,33 @@
 
 <script>
     $(document).ready(function () {
-        let products_selected = [];
+        let products_selected = {{ initial_items_json|safe|default:'[]' }};
+
+        // Salin item dari Nota Beli lewat dropdown
+        $('#select_copy_sale').on('change', function() {
+            let saleId = $(this).val();
+            if (!saleId) return;
+
+            $.ajax({
+                url: "/purchases/api/sale-items/" + saleId + "/",
+                type: "GET",
+                dataType: "json",
+                success: function(res) {
+                    if (res.success && res.items && res.items.length > 0) {
+                        products_selected = res.items;
+                        renderTable();
+                        if (res.supplier_name && !$('#supplier_name').val()) {
+                            $('#supplier_name').val(res.supplier_name);
+                        }
+                    } else {
+                        alert('Tidak ada produk dalam nota beli ini.');
+                    }
+                },
+                error: function() {
+                    alert('Gagal mengambil data dari nota beli.');
+                }
+            });
+        });
 
         // Helper Format Plaintext Rupiah
         function formatRupiahText(val) {
@@ -285,6 +341,7 @@
                                 text: item.text,
                                 name: item.name,
                                 price: item.price,
+                                selling_price: item.selling_price,
                                 stock_qty: item.stock_qty || 0,
                                 total_bought: item.total_bought || 0,
                                 total_sold: item.total_sold || 0,
@@ -302,7 +359,7 @@
         $('#searchbox_products').on('select2:select', function (e) {
             let sel = e.params.data;
             let isNew = !sel.id || isNaN(sel.id);
-            let priceVal = isNew ? 0 : parseFloat(sel.price || 0);
+            let priceVal = isNew ? 0 : parseFloat((sel.selling_price !== undefined && sel.selling_price !== null && parseFloat(sel.selling_price) > 0) ? sel.selling_price : (sel.price || 0));
             let stockQty = isNew ? 999999 : parseFloat(sel.stock_qty || 0);
 
             let productObj = {
@@ -408,6 +465,10 @@
             updateTotal();
         }
 
+        if (products_selected.length > 0) {
+            renderTable();
+        }
+
         // ── Listener Harga ─────────────────────────────────────────────
         $(document).on('input', '.input-price-plaintext', function () {
             let idx = $(this).data('index');
@@ -482,6 +543,30 @@
             let totalCost = calculateTotalCost();
             let grossProfit = subTotal - totalCost;
 
+            // Handle default & calculation for Uang Dibayarkan (Bayar)
+            let isUserEdited = $('#amount_payed').data('user-edited') === 'true' || $('#amount_payed').data('user-edited') === true;
+            if (!isUserEdited) {
+                $('#amount_payed').val(subTotal > 0 ? formatRupiahText(subTotal) : 'Rp 0');
+            }
+
+            let amountPayed = parseRawNumber($('#amount_payed').val());
+            let diff = amountPayed - subTotal;
+
+            if (diff === 0) {
+                $('#label_payment_balance').text('Sisa / Piutang:');
+                $('#display_payment_balance').text('Rp 0').removeClass('text-danger text-primary').addClass('text-success');
+                $('#badge_payment_status').removeClass('bg-warning bg-primary text-dark').addClass('bg-success').text('LUNAS');
+            } else if (diff < 0) {
+                let piutang = Math.abs(diff);
+                $('#label_payment_balance').text('Piutang Pabrik:');
+                $('#display_payment_balance').text(formatRp(piutang)).removeClass('text-success text-primary').addClass('text-danger');
+                $('#badge_payment_status').removeClass('bg-success bg-primary').addClass('bg-warning text-dark').text('BELUM LUNAS');
+            } else {
+                $('#label_payment_balance').text('Kembalian / Lebih:');
+                $('#display_payment_balance').text(formatRp(diff)).removeClass('text-success text-danger').addClass('text-primary');
+                $('#badge_payment_status').removeClass('bg-success bg-warning text-dark').addClass('bg-primary').text('LEBIH BAYAR');
+            }
+
             let ongkosMuat   = getOpCost('ongkos_muat');
             let gajiPegawai  = getOpCost('gaji_pegawai');
             let biayaLain    = getOpCost('biaya_lain');
@@ -535,6 +620,14 @@
             });
         }
 
+        // Listener input bayar
+        $(document).on('input', '#amount_payed', function () {
+            let rawVal = parseRawNumber($(this).val());
+            $(this).data('user-edited', 'true');
+            $(this).val(rawVal > 0 ? formatRupiahText(rawVal) : 'Rp 0');
+            updateTotal();
+        });
+
         // Listener biaya operasional & rate
         $(document).on('input', '.input-op-cost', function () {
             let rawVal = parseRawNumber($(this).val());
@@ -571,10 +664,15 @@
             }));
 
             let subTotal = calculateSubTotal();
+            let amountPayed = parseRawNumber($('#amount_payed').val());
+            let amountChange = Math.max(0, amountPayed - subTotal);
+
             let payload = {
                 supplier_name: $('#supplier_name').val() || 'Umum',
                 note: $('#note').val() || '',
                 sub_total: subTotal,
+                amount_payed: amountPayed,
+                amount_change: amountChange,
                 ongkos_muat: getOpCost('ongkos_muat'),
                 gaji_pegawai: getOpCost('gaji_pegawai'),
                 biaya_lain: getOpCost('biaya_lain'),

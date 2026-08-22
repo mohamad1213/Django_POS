@@ -18,6 +18,9 @@
                 <i class="fa fa-arrow-left me-2"></i>Kembali ke Riwayat
             </a>
             <div>
+                <a href="{% url 'purchases:purchase_add' %}?from_sale={{ sale.id }}" class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-truck-loading me-1"></i> Salin & Jual ke Pabrik
+                </a>
                 <a href="{% url 'sales:sales_receipt_pdf' sale.id %}" target="_blank"
                     class="btn btn-primary btn-sm me-2">
                     <i class="fa fa-print me-2"></i>Cetak Struk (PDF)

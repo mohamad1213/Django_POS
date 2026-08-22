@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-body">
+  <div class="container-fluid">
+    <div class="page-title">
+      <div class="row">
+        <div class="col-12 col-sm-6">
+          <h3><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>ChimiAI Financial & POS Assistant</h3>
+        </div>
+        <div class="col-12 col-sm-6">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i data-feather="home"></i></a></li>
+            <li class="breadcrumb-item">Analisis AI</li>
+            <li class="breadcrumb-item active">ChimiAI Workspace</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container-fluid starts -->
+  <div class="container-fluid">
+    <!-- Top Summary Cards -->
+    <div class="row">
+      <div class="col-sm-6 col-xl-3 col-lg-6">
+        <div class="card o-hidden border-0 shadow-sm" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+          <div class="card-body">
+            <div class="media flex-row align-items-center">
+              <div class="media-body">
+                <p class="mb-1 text-white-50 font-weight-bold">Kas Bersih Toko</p>
+                <h4 class="mb-0 font-weight-bold">Rp {{ kas_bersih|floatformat:0 }}</h4>
+              </div>
+              <div class="bg-white rounded-circle p-3 text-primary shadow-sm ms-2">
+                <i class="fa fa-wallet fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3 col-lg-6">
+        <div class="card o-hidden border-0 shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+          <div class="card-body">
+            <div class="media flex-row align-items-center">
+              <div class="media-body">
+                <p class="mb-1 text-white-50 font-weight-bold">Total Profit Olahan</p>
+                <h4 class="mb-0 font-weight-bold">Rp {{ total_profit|floatformat:0 }}</h4>
+              </div>
+              <div class="bg-white rounded-circle p-3 text-success shadow-sm ms-2">
+                <i class="fa fa-chart-line fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3 col-lg-6">
+        <div class="card o-hidden border-0 shadow-sm" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+          <div class="card-body">
+            <div class="media flex-row align-items-center">
+              <div class="media-body">
+                <p class="mb-1 text-white-50 font-weight-bold">Akumulasi Tabungan</p>
+                <h4 class="mb-0 font-weight-bold">Rp {{ total_tabungan|floatformat:0 }}</h4>
+              </div>
+              <div class="bg-white rounded-circle p-3 text-warning shadow-sm ms-2">
+                <i class="fa fa-piggy-bank fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3 col-lg-6">
+        <div class="card o-hidden border-0 shadow-sm" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+          <div class="card-body">
+            <div class="media flex-row align-items-center">
+              <div class="media-body">
+                <p class="mb-1 text-white-50 font-weight-bold">Stok Gudang Terdaftar</p>
+                <h4 class="mb-0 font-weight-bold">{{ stok_count }} Item</h4>
+              </div>
+              <div class="bg-white rounded-circle p-3 text-purple shadow-sm ms-2">
+                <i class="fa fa-boxes-stacked fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Workspace Main Area -->
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0" style="border-radius: 16px; overflow: hidden;">
+          <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-primary-light p-2 text-primary">
+                <i class="fa-solid fa-robot fa-lg"></i>
+              </div>
+              <div>
+                <h5 class="mb-0 font-weight-bold">ChimiAI Conversational Hub</h5>
+                <small class="text-muted"><i class="fa fa-circle text-success me-1"></i> Gemini Flash Engine Connected</small>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="clearPageChat()">
+              <i class="fa fa-rotate-right me-1"></i> Reset Sesi
+            </button>
+          </div>
+
+          <div class="card-body p-4" id="pageChatBody" style="height: 480px; overflow-y: auto; background: #f8fafc;">
+            <div class="d-flex align-items-start mb-4">
+              <div class="avatar bg-primary text-white rounded-circle me-3 p-2 text-center" style="width: 40px; height: 40px;">
+                ✨
+              </div>
+              <div class="bg-white p-3 rounded-3 shadow-sm border text-dark" style="max-width: 80%; border-top-left-radius: 0 !important;">
+                <strong>ChimiAI:</strong><br>
+                Selamat datang di Workspace Analisis AI. Saya telah menghubungkan data real-time POS Rosok Anda.<br>
+                Silakan tanyakan analisa keuangan, omset olahan rosok, margin profit, stok barang, atau rekapan hutang/piutang toko Anda!
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer bg-white border-top p-3">
+            <div class="input-group">
+              <input type="text" id="pageChatInput" class="form-control border-end-0 py-2 ps-3" placeholder="Ketik pertanyaan untuk ChimiAI..." onkeydown="if(event.key==='Enter') sendPageMessage()">
+              <button class="btn btn-primary px-4" type="button" id="pageSendBtn" onclick="sendPageMessage()">
+                <i class="fa fa-paper-plane me-1"></i> Kirim
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Preset Recommendations & Tips -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px;">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="mb-0 font-weight-bold"><i class="fa fa-lightbulb text-warning me-2"></i>Rekomendasi Pertanyaan Cepat</h6>
+          </div>
+          <div class="card-body p-3">
+            <div class="list-group list-group-flush">
+              <button class="list-group-item list-group-item-action border-0 mb-2 rounded p-3 bg-light hover-shadow" onclick="sendPagePrompt('Bagaimana ringkasan kesehatan keuangan toko saya saat ini?')">
+                <i class="fa fa-chart-pie text-info me-2"></i> <strong>Kesehatan Keuangan Toko</strong>
+                <p class="small text-muted mb-0 mt-1">Analisis saldo kas bersih & arus kas harian.</p>
+              </button>
+
+              <button class="list-group-item list-group-item-action border-0 mb-2 rounded p-3 bg-light hover-shadow" onclick="sendPagePrompt('Berapa total omset dan profit dari hasil olahan rosok?')">
+                <i class="fa fa-coins text-success me-2"></i> <strong>Analisis Olahan Rosok & Profit</strong>
+                <p class="small text-muted mb-0 mt-1">Cek HPP, Total Revenue, dan Margin % Profito.</p>
+              </button>
+
+              <button class="list-group-item list-group-item-action border-0 mb-2 rounded p-3 bg-light hover-shadow" onclick="sendPagePrompt('Bagaimana status stok gudang rosok kita saat ini?')">
+                <i class="fa fa-boxes-stacked text-purple me-2"></i> <strong>Persediaan & Stok Gudang</strong>
+                <p class="small text-muted mb-0 mt-1">Cek total ketersediaan stok barang rosok.</p>
+              </button>
+
+              <button class="list-group-item list-group-item-action border-0 rounded p-3 bg-light hover-shadow" onclick="sendPagePrompt('Berapa total hutang toko dan total piutang pelanggan?')">
+                <i class="fa fa-file-invoice-dollar text-danger me-2"></i> <strong>Status Hutang & Piutang</strong>
+                <p class="small text-muted mb-0 mt-1">Cek sisa tagihan & kewajiban bayar.</p>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
+          <div class="card-body p-4">
+            <h6 class="font-weight-bold text-white mb-2"><i class="fa fa-shield-halved text-success me-2"></i>Garansi Keakuratan Data</h6>
+            <p class="small text-white-50 mb-0">
+              ChimiAI beroperasi sesuai aturan ketat: HANYA menganalisis data riil dari database POS Rosok Anda tanpa melakukan asumsi fiktif.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function formatPageText(text) {
+    if (!text) return '';
+    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/^\s*[\-\*]\s+(.*)$/gm, '• $1');
+    formatted = formatted.replace(/\n/g, '<br>');
+    return formatted;
+  }
+
+  function sendPagePrompt(text) {
+    document.getElementById('pageChatInput').value = text;
+    sendPageMessage();
+  }
+
+  function sendPageMessage() {
+    const input = document.getElementById('pageChatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const chatBody = document.getElementById('pageChatBody');
+    const sendBtn = document.getElementById('pageSendBtn');
+    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Append User Msg
+    const userDiv = document.createElement('div');
+    userDiv.className = 'd-flex align-items-start justify-content-end mb-4';
+    userDiv.innerHTML = `
+      <div class="bg-primary text-white p-3 rounded-3 shadow-sm" style="max-width: 80%; border-top-right-radius: 0 !important;">
+        ${formatPageText(msg)}
+        <div class="text-white-50 text-end small mt-1" style="font-size: 0.68rem;">${nowStr}</div>
+      </div>
+    `;
+    chatBody.appendChild(userDiv);
+
+    input.value = '';
+    sendBtn.disabled = true;
+
+    // Append Typing
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'd-flex align-items-start mb-4';
+    typingDiv.id = 'pageTyping';
+    typingDiv.innerHTML = `
+      <div class="avatar bg-primary text-white rounded-circle me-3 p-2 text-center" style="width: 40px; height: 40px;">✨</div>
+      <div class="bg-white p-3 rounded-3 shadow-sm border text-muted">
+        <i class="fa fa-circle-notch fa-spin me-2"></i> ChimiAI sedang menganalisis data POS...
+      </div>
+    `;
+    chatBody.appendChild(typingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    fetch("{% url 'chimi_ai_chat' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie('csrftoken')
+      },
+      body: JSON.stringify({ message: msg })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('pageTyping')?.remove();
+      sendBtn.disabled = false;
+
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'd-flex align-items-start mb-4';
+
+      if (data.status === 'success') {
+        aiDiv.innerHTML = `
+          <div class="avatar bg-primary text-white rounded-circle me-3 p-2 text-center" style="width: 40px; height: 40px;">✨</div>
+          <div class="bg-white p-3 rounded-3 shadow-sm border text-dark" style="max-width: 80%; border-top-left-radius: 0 !important;">
+            ${formatPageText(data.reply)}
+            <div class="text-muted text-end small mt-2" style="font-size: 0.68rem;">${data.timestamp || nowStr}</div>
+          </div>
+        `;
+      } else {
+        aiDiv.innerHTML = `
+          <div class="avatar bg-danger text-white rounded-circle me-3 p-2 text-center" style="width: 40px; height: 40px;">⚠️</div>
+          <div class="bg-white p-3 rounded-3 shadow-sm border text-danger" style="max-width: 80%;">
+            ${data.message || 'Terjadi kesalahan.'}
+          </div>
+        `;
+      }
+
+      chatBody.appendChild(aiDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    })
+    .catch(err => {
+      document.getElementById('pageTyping')?.remove();
+      sendBtn.disabled = false;
+
+      const errDiv = document.createElement('div');
+      errDiv.className = 'd-flex align-items-start mb-4';
+      errDiv.innerHTML = `
+        <div class="avatar bg-danger text-white rounded-circle me-3 p-2 text-center" style="width: 40px; height: 40px;">⚠️</div>
+        <div class="bg-white p-3 rounded-3 shadow-sm border text-danger">Gagal menghubungi ChimiAI API.</div>
+      `;
+      chatBody.appendChild(errDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
+  }
+
+  function clearPageChat() {
+    const chatBody = document.getElementById('pageChatBody');
+    chatBody.innerHTML = `
+      <div class="d-flex align-items-start mb-4">
+        <div class="avatar bg-primary text-white rounded-circle me-3 p-2 text-center" style="width: 40px; height: 40px;">✨</div>
+        <div class="bg-white p-3 rounded-3 shadow-sm border text-dark" style="max-width: 80%; border-top-left-radius: 0 !important;">
+          <strong>ChimiAI:</strong><br>
+          Percakapan telah direset. Silakan tanyakan hal lain yang ingin Anda analisis.
+        </div>
+      </div>
+    `;
+  }
+</script>
+{% endblock content %}

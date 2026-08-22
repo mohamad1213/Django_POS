@@ -67,6 +67,7 @@ def sales_list_view(request):
         total_transactions=Count('id'),
         total_items=Sum('saledetail__quantity'),
         total_revenue=Sum('sub_total'),
+        total_paid=Sum('amount_payed'),
     )
 
     # Pagination – 20 transaksi per halaman
@@ -318,10 +319,9 @@ def render_to_pdf(template_src, context_dict={}):
 		return HttpResponse(result.getvalue(), content_type='application/pdf')
 	return None
 
-@login_required(login_url="/accounts/login/")
 class ViewPDF(View):
-    def get(self, request, sale_id, *args, **kwargs,):
-        sale = Sale.objects.get(id=sale_id)
+    def get(self, request, sale_id, *args, **kwargs):
+        sale = get_object_or_404(Sale, id=sale_id, owner=request.user)
         details = SaleDetail.objects.filter(sale=sale)
 
         data = {
@@ -329,6 +329,8 @@ class ViewPDF(View):
             "details": details
         }
 
-
-        pdf = render_to_pdf('sales/sales_receipt_pdf.html', data)
-        return HttpResponse(pdf, content_type='application/pdf')
+        pdf_response = render_to_pdf('sales/sales_receipt_pdf.html', data)
+        if pdf_response:
+            pdf_response['Content-Disposition'] = 'inline'
+            return pdf_response
+        return HttpResponse("Gagal membuat PDF nota.", status=500)

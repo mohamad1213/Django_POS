@@ -9,4 +9,5 @@ urlpatterns = [
     path('details/<int:purchase_id>/', views.purchase_details_view, name='purchase_details'),
     path('delete/<int:purchase_id>/', views.delete_purchase, name='delete_purchase'),
     path('pdf/<int:purchase_id>/', views.ViewPDF.as_view(), name='purchase_receipt_pdf'),
+    path('api/sale-items/<int:sale_id>/', views.get_sale_items_ajax_view, name='get_sale_items_ajax'),
 ]

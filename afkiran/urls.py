@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.afkiran_list, name='afkiran_list'),
     path('create/<int:sale_id>/', views.afkiran_create, name='afkiran_create'),
     path('<int:afkiran_id>/', views.afkiran_detail, name='afkiran_detail'),
+    path('<int:afkiran_id>/update/', views.afkiran_update, name='afkiran_update'),
     path('<int:afkiran_id>/settle/', views.afkiran_settle, name='afkiran_settle'),
     path('<int:afkiran_id>/recipe/', views.ViewPDF.as_view(), name='afkiran_recipe'),
 ]

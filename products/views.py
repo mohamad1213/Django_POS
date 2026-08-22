@@ -189,11 +189,24 @@ def products_update_view(request, product_id):
         print(e)
         return redirect('products:products_list')
 
+    # Pre-fill harga beli dari rata-rata transaksi jika harga beli di produk masih 0
+    avg_buy = SaleDetail.objects.filter(
+        product=product, sale__owner=request.user
+    ).aggregate(avg=Avg('price'))['avg'] or 0
+
+    buy_price_val = float(product.price) if product.price and float(product.price) > 0 else float(avg_buy)
+    formatted_price = int(buy_price_val) if buy_price_val.is_integer() else buy_price_val
+    
+    sell_price_val = float(product.selling_price or 0)
+    formatted_selling_price = int(sell_price_val) if sell_price_val.is_integer() else sell_price_val
+
     context = {
         "active_icon": "products",
         "product_status": Product.status.field.choices,
         "product": product,
-        "categories": Category.objects.all()
+        "categories": Category.objects.all(),
+        "formatted_price": formatted_price,
+        "formatted_selling_price": formatted_selling_price,
     }
 
     if request.method == 'POST':
@@ -303,8 +316,8 @@ def get_products_ajax_view(request):
         data.append({
             'id': product.id,
             'name': product.name,
-            'price': float(product.price),
-            'selling_price': float(product.selling_price),
+            'price': float(product.price or 0),
+            'selling_price': float(product.selling_price or 0),
             'last_price': float(last_price),
             'stock_qty': float(stock_qty),
             'total_bought': float(total_masuk),
