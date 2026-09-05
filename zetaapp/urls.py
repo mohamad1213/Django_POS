@@ -59,6 +59,13 @@ urlpatterns = [
     path('profit/<pk>/view/', views.ViewProf,name='viewprof'),
     path('profit/<pk>/tabung/', views.profit_mark_tabung,name='profit_mark_tabung'),
     # path('profit_today_json/', views.profit_today_json, name='profit_today_json'),
+
+    # Biaya Bulanan
+    path('biaya-bulanan/', views.biaya_bulanan_list, name='biaya_bulanan_list'),
+    path('biaya-bulanan/create/', views.biaya_bulanan_create, name='biaya_bulanan_create'),
+    path('biaya-bulanan/<int:pk>/update/', views.biaya_bulanan_update, name='biaya_bulanan_update'),
+    path('biaya-bulanan/<int:pk>/delete/', views.biaya_bulanan_delete, name='biaya_bulanan_delete'),
+
     
     
     path('stok/', views.stockin_list,name='stockin_list'),

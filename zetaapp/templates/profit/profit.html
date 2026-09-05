@@ -104,9 +104,15 @@
             <span><i class="fas fa-gas-pump me-2 text-warning"></i> Biaya Lain (Solar, Karung, dll)</span>
             <span class="bp-red">- Rp {{ purch_biaya_lain|floatformat:"0g" }}</span>
           </div>
+          <div class="bp-row">
+            <span><i class="fas fa-file-invoice-dollar me-2 text-danger"></i> Biaya Bulanan Bulan Ini</span>
+            <span class="bp-red">- Rp {{ biaya_bulanan_bulan_ini|floatformat:"0g" }}</span>
+          </div>
           <div class="bp-row mt-2 pt-2" style="border-top: 2px solid rgba(255,255,255,0.2) !important;">
-            <span class="fw-bold">Untung Bersih (dari Purchases)</span>
-            <span class="bp-total">Rp {{ purch_net_profit|floatformat:"0g" }}</span>
+            <span class="fw-bold">Profit Bersih Bulan Ini (Setelah Biaya Bulanan)</span>
+            <span class="bp-total" style="color:{% if profit_bersih_bulan_ini >= 0 %}#6ee89b{% else %}#f87171{% endif %};">
+              Rp {{ profit_bersih_bulan_ini|floatformat:"0g" }}
+            </span>
           </div>
           <div class="bp-row">
             <span class="fw-bold">Nominal Ditabung</span>

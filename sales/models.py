@@ -33,6 +33,10 @@ class Sale(models.Model):
         details = SaleDetail.objects.filter(sale=self.id)
         return sum([d.quantity for d in details])
 
+    @property
+    def is_lunas(self):
+        return (self.amount_payed or 0) >= (self.sub_total or 0)
+
     def has_afkiran_items(self):
         for detail in self.saledetail_set.select_related('product').all():
             if detail.product and detail.product.name:

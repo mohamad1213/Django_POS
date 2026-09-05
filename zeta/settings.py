@@ -14,10 +14,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n)ltk01zv+8&&u2z)7o&vh)_2g3h6wk#_u(g*fwt*hl1s!n748'
-DEBUG = True
+# SECRET_KEY = 'django-insecure-n)ltk01zv+8&&u2z)7o&vh)_2g3h6wk#_u(g*fwt*hl1s!n748'
+# DEBUG = True
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost"
+).split(",")
+# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 # ALLOWED_HOSTS = ['*']
 
@@ -46,7 +53,7 @@ INSTALLED_APPS = [
     'sweetify'
 ]
 
-TESSERACT_CMD = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+TESSERACT_CMD = os.getenv("TESSERACT_CMD", "")
 SWEETIFY_SWEETALERT_LIBRARY = 'sweetalert2'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -84,21 +91,36 @@ WSGI_APPLICATION = 'zeta.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASE_URL = 'postgresql://postgres:aSkLFmBFFBUTcTtiIprzLvZOAuUqAbZX@monorail.proxy.rlwy.net:15409/railway'
-DATABASES = {
-    "default": {
-        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.getenv("DB_NAME", "sqlite3"),
-        # "USER": os.getenv("DB_USER"),
-        # "PASSWORD": os.getenv("DB_PASSWORD"),
-        # "HOST": os.getenv("DB_HOST"),
-        # "PORT": os.getenv("DB_PORT"),
-        "OPTIONS": {
-            "timeout": 20,   # detik tunggu sebelum raise 'database is locked'
-        },
-    }
-}
+# DATABASE_URL = 'postgresql://postgres:aSkLFmBFFBUTcTtiIprzLvZOAuUqAbZX@monorail.proxy.rlwy.net:15409/railway'
+# DATABASES = {
+#     "default": {
+#         "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+#         "NAME": os.getenv("DB_NAME", "sqlite3"),
+#         # "USER": os.getenv("DB_USER"),
+#         # "PASSWORD": os.getenv("DB_PASSWORD"),
+#         # "HOST": os.getenv("DB_HOST"),
+#         # "PORT": os.getenv("DB_PORT"),
+#         "OPTIONS": {
+#             "timeout": 20,   # detik tunggu sebelum raise 'database is locked'
+#         },
+#         "TEST": {
+#             # Gunakan database in-memory terpisah untuk test agar tidak konflik
+#             "NAME": ":memory:",
+#         },
+#     }
+# }
 
+# Database
+DATABASES = {
+    "default": dj_database_url.config(
+        default=os.getenv(
+            "DATABASE_URL",
+            f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+        ),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
@@ -169,3 +191,20 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'error',
 }
+
+# ==============================================================================
+# TEST CONFIGURATION
+# Menonaktifkan migration history saat test dan langsung pakai syncdb
+# (solusi untuk migration history yang konflik di app 'sales')
+# ==============================================================================
+import sys
+
+if 'test' in sys.argv:
+    # Gunakan DisableMigrations agar test DB dibuat via syncdb (bukan migration)
+    class DisableMigrations:
+        def __contains__(self, item):
+            return True
+        def __getitem__(self, item):
+            return None
+
+    MIGRATION_MODULES = DisableMigrations()

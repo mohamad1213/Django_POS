@@ -15,7 +15,7 @@ from .forms import *
 from django.contrib import messages
 import locale
 from babel.numbers import format_currency
-from django.db.models import Q, Sum, F, Value, DecimalField, ExpressionWrapper
+from django.db.models import Q, Sum, F, Value, DecimalField, ExpressionWrapper, Count
 from django.template.loader import get_template
 from io import BytesIO
 from django.views.decorators.http import require_POST, require_GET
@@ -478,6 +478,17 @@ def profit(request):
         sell_p = float(detail.price)
         pos_profit_today += (sell_p - buy_p) * float(detail.quantity)
 
+    # Hitung Total Biaya Bulanan Bulan Berjalan (Bulan & Tahun yang sama)
+    biaya_bulanan_bulan_ini = BiayaBulanan.objects.filter(
+        owner=request.user,
+        tanggal__year=today.year,
+        tanggal__month=today.month
+    ).aggregate(total=Sum('nominal'))['total'] or Decimal('0.00')
+
+    # Profit Bersih Bulan Ini = Profit Kotor Bulan Ini - Total Biaya Bulanan Bulan Ini
+    profit_kotor_bulan_ini = get_monthly_profit_kotor(request.user, today.year, today.month)
+    profit_bersih_bulan_ini = float(profit_kotor_bulan_ini) - float(biaya_bulanan_bulan_ini)
+
     context = {
         'data': data,
         'datenow': datenow,
@@ -489,6 +500,10 @@ def profit(request):
         'total_tabungan': total_tabungan,
         'total_profit_kotor': total_profit_kotor,
         'total_biaya_op': total_biaya_op,
+        # KPI Biaya Bulanan
+        'biaya_bulanan_bulan_ini': biaya_bulanan_bulan_ini,
+        'profit_kotor_bulan_ini': profit_kotor_bulan_ini,
+        'profit_bersih_bulan_ini': profit_bersih_bulan_ini,
         # KPI Purchases
         'purch_ongkos_muat': purch_ongkos_muat,
         'purch_gaji_pegawai': purch_gaji_pegawai,
@@ -1586,16 +1601,16 @@ def chimi_ai_chat(request):
 
         # 2. Susun System Prompt & Prompt Utama
         system_prompt = (
-            "Kamu adalah Asisten Pintar untuk Sistem Informasi POS Rosok (Kasir & Manajemen Barang Bekas) saya namakan kamu ChimiAI.\n\n"
+            "Kamu adalah Asisten Pintar untuk Sistem Informasi POS Rosok (Kasir & Manajemen Barang Bekas) bernama ChimiAI.\n\n"
             "Tugas utama:\n"
-            "1. Membantu admin/pemilik toko menganalisis data penjualan, stok, dan transaksi berdasarkan DATA KONTEKS yang disediakan di setiap permintaan.\n"
-            "2. Jawablah pertanyaan pengguna secara singkat, padat, jelas, akurat, dan ramah menggunakan Bahasa Indonesia yang wajar.\n\n"
-            "Aturan Ketat:\n"
-            "- HANYA gunakan informasi yang ada di dalam [DATA PENJUALAN] yang diberikan.\n"
-            "- Jika jawaban tidak ada di dalam data yang diberikan, katakan dengan sopan: \"Maaf, data tersebut tidak tersedia dalam ringkasan penjualan saat ini.\"\n"
-            "- Jangan membuat asumsi, estimasi, atau jawaban fiktif sendiri yang tidak didukung data.\n"
-            "- Jika pengguna menanyakan unit barang (seperti kg, pcs, atau ton) atau mata uang (Rp), cantumkan dengan jelas.\n"
-            "- Hindari memberikan jawaban yang terlalu panjang atau bertele-tele."
+            "1. Membantu admin/pemilik toko menganalisis data penjualan, stok, transaksi, dan keuangan berdasarkan [DATA PENJUALAN] yang disediakan.\n"
+            "2. Memberikan saran bisnis, tips operasional POS, dan konsultasi manajemen toko rosok secara bijak, ramah, dan ramah pengguna.\n"
+            "3. Jawablah pertanyaan secara singkat, padat, jelas, akurat, dan ramah menggunakan Bahasa Indonesia yang santun.\n\n"
+            "Panduan Respon:\n"
+            "- Jika pertanyaan tentang angka/data angka spesifik (kas, profit, stok, hutang), gunakan data tepat di dalam [DATA PENJUALAN]. Jika data angka spesifik yang diminta tidak ada, sampaikan dengan sopan.\n"
+            "- Jika pertanyaan berupa saran bisnis, opini operasional (seperti absensi pegawai, tips manajemen, dll.), berikan jawaban dan konsultasi cerdas yang membantu pemilik toko.\n"
+            "- Selalu cantumkan unit (kg, pcs, ton) dan mata uang (Rp) dengan jelas jika membahas nominal data.\n"
+            "- Hindari jawaban yang terlalu panjang atau bertele-tele."
         )
 
         full_prompt = (
@@ -1609,7 +1624,7 @@ def chimi_ai_chat(request):
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
         ]
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("GOOGLE_API_KEY")
 
         headers = {
             "Content-Type": "application/json",
@@ -1715,4 +1730,210 @@ def get_chimi_ai_summary(request):
         'total_hutang': total_hutang,
         'total_piutang': total_piutang,
     })
+
+
+# ==========================================
+# BIAYA BULANAN & INTEGRASI PROFIT BERSIH
+# ==========================================
+
+def get_monthly_profit_kotor(user, year, month):
+    """
+    Menghitung Profit Kotor penjualan pada bulan dan tahun tertentu untuk user.
+    """
+    from purchases.models import Purchase, PurchaseDetail
+    from sales.models import Sale, SaleDetail
+
+    # 1. Profit kotor dari Transaksi Barang Keluar (Jual ke Pabrik)
+    purch_qs = Purchase.objects.filter(
+        owner=user,
+        date_added__year=year,
+        date_added__month=month
+    )
+    purch_profit_agg = purch_qs.aggregate(total=Sum('profit_kotor'))['total'] or 0.0
+
+    # 2. Profit margin dari POS Transaksi Sales
+    sales_details = SaleDetail.objects.filter(
+        sale__owner=user,
+        sale__date_added__year=year,
+        sale__date_added__month=month
+    ).select_related('product')
+    
+    pos_sales_profit = 0.0
+    for d in sales_details:
+        buy_p = float(d.product.price) if d.product and d.product.price else 0.0
+        sell_p = float(d.price or 0.0)
+        qty = float(d.quantity or 0.0)
+        margin = max(0.0, sell_p - buy_p)
+        pos_sales_profit += margin * qty
+
+    # 3. Profito2 olahan
+    profito_qs = Profito2.objects.filter(
+        tanggal__year=year,
+        tanggal__month=month
+    )
+    profito_total = profito_qs.aggregate(total=Sum('profit'))['total'] or 0.0
+
+    # Total profit kotor dari semua aktivitas penjualan pada bulan yang sama
+    total_profit_kotor = float(purch_profit_agg)
+    if total_profit_kotor == 0 and pos_sales_profit > 0:
+        total_profit_kotor = float(pos_sales_profit)
+    elif total_profit_kotor == 0 and profito_total > 0:
+        total_profit_kotor = float(profito_total)
+
+    return total_profit_kotor
+
+
+@login_required(login_url="/accounts/login/")
+def biaya_bulanan_list(request):
+    """
+    Menampilkan daftar Biaya Bulanan, filter berdasarkan bulan dan tahun,
+    menghitung Total Biaya Bulanan, serta integrasi Profit Bersih:
+    Profit Bersih = Profit Kotor - Total Biaya Bulanan
+    """
+    now = timezone.localtime(timezone.now())
+    try:
+        selected_month = int(request.GET.get('bulan', now.month))
+        if selected_month < 1 or selected_month > 12:
+            selected_month = now.month
+    except (ValueError, TypeError):
+        selected_month = now.month
+
+    try:
+        selected_year = int(request.GET.get('tahun', now.year))
+        if selected_year < 2000 or selected_year > 2100:
+            selected_year = now.year
+    except (ValueError, TypeError):
+        selected_year = now.year
+
+    kategori_filter = request.GET.get('kategori', '').strip()
+
+    # Query queryset BiayaBulanan terisolasi per user
+    biaya_qs = BiayaBulanan.objects.filter(
+        owner=request.user,
+        tanggal__year=selected_year,
+        tanggal__month=selected_month
+    )
+
+    if kategori_filter:
+        biaya_qs = biaya_qs.filter(kategori=kategori_filter)
+
+    # 1. Total Biaya Bulanan pada bulan dan tahun yang dipilih
+    total_biaya = biaya_qs.aggregate(total=Sum('nominal'))['total'] or Decimal('0.00')
+
+    # Total semua biaya bulan tersebut (tanpa filter kategori) untuk KPI
+    total_biaya_bulan_penuh = BiayaBulanan.objects.filter(
+        owner=request.user,
+        tanggal__year=selected_year,
+        tanggal__month=selected_month
+    ).aggregate(total=Sum('nominal'))['total'] or Decimal('0.00')
+
+    # 2. Profit Kotor pada bulan yang sama
+    profit_kotor = get_monthly_profit_kotor(request.user, selected_year, selected_month)
+
+    # 3. Integrasi Profit Bersih = Profit Kotor - Total Biaya Bulanan
+    profit_bersih = float(profit_kotor) - float(total_biaya_bulan_penuh)
+
+    # Breakdown per kategori
+    kategori_breakdown = (
+        BiayaBulanan.objects.filter(
+            owner=request.user,
+            tanggal__year=selected_year,
+            tanggal__month=selected_month
+        )
+        .values('kategori')
+        .annotate(total=Sum('nominal'), count=Count('id'))
+        .order_by('-total')
+    )
+
+    # Daftar bulan dalam Bahasa Indonesia
+    BULAN_CHOICES = [
+        (1, 'Januari'), (2, 'Februari'), (3, 'Maret'), (4, 'April'),
+        (5, 'Mei'), (6, 'Juni'), (7, 'Juli'), (8, 'Agustus'),
+        (9, 'September'), (10, 'Oktober'), (11, 'November'), (12, 'Desember')
+    ]
+    nama_bulan_terpilih = dict(BULAN_CHOICES).get(selected_month, '')
+
+    # Range tahun untuk filter (3 tahun ke belakang sampai 1 tahun ke depan)
+    current_year = now.year
+    years_choices = list(range(current_year - 4, current_year + 2))
+
+    form = BiayaBulananForm(initial={'tanggal': now.date()})
+
+    context = {
+        'breadcrumb': {'parent': 'Keuangan', 'child': 'Biaya Bulanan'},
+        'biaya_list': biaya_qs,
+        'total_biaya': total_biaya,
+        'total_biaya_bulan_penuh': total_biaya_bulan_penuh,
+        'profit_kotor': profit_kotor,
+        'profit_bersih': profit_bersih,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'nama_bulan_terpilih': nama_bulan_terpilih,
+        'kategori_filter': kategori_filter,
+        'kategori_choices': BiayaBulanan.KATEGORI_CHOICES,
+        'kategori_breakdown': kategori_breakdown,
+        'bulan_choices': BULAN_CHOICES,
+        'years_choices': years_choices,
+        'form': form,
+    }
+    return render(request, 'biaya/biaya_bulanan.html', context)
+
+
+@login_required(login_url="/accounts/login/")
+def biaya_bulanan_create(request):
+    """
+    Tambah data Biaya Bulanan baru.
+    """
+    if request.method == 'POST':
+        form = BiayaBulananForm(request.POST)
+        if form.is_valid():
+            biaya = form.save(commit=False)
+            biaya.owner = request.user
+            biaya.save()
+            messages.success(request, f"Biaya '{biaya.nama_biaya}' sebesar Rp {biaya.nominal:,.0f} berhasil ditambahkan!")
+            
+            # Redirect ke list dengan filter bulan dan tahun sesuai tanggal biaya
+            return redirect(f"/biaya-bulanan/?bulan={biaya.tanggal.month}&tahun={biaya.tanggal.year}")
+        else:
+            messages.error(request, "Gagal menambahkan biaya. Mohon periksa input formulir.")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    return redirect('biaya_bulanan_list')
+
+
+@login_required(login_url="/accounts/login/")
+def biaya_bulanan_update(request, pk):
+    """
+    Edit data Biaya Bulanan yang dimiliki oleh user.
+    """
+    biaya = get_object_or_404(BiayaBulanan, pk=pk, owner=request.user)
+
+    if request.method == 'POST':
+        form = BiayaBulananForm(request.POST, instance=biaya)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Data biaya '{biaya.nama_biaya}' berhasil diperbarui!")
+            return redirect(f"/biaya-bulanan/?bulan={biaya.tanggal.month}&tahun={biaya.tanggal.year}")
+        else:
+            messages.error(request, "Gagal memperbarui biaya. Mohon periksa input formulir.")
+    return redirect(f"/biaya-bulanan/?bulan={biaya.tanggal.month}&tahun={biaya.tanggal.year}")
+
+
+@login_required(login_url="/accounts/login/")
+def biaya_bulanan_delete(request, pk):
+    """
+    Hapus data Biaya Bulanan yang dimiliki oleh user.
+    """
+    biaya = get_object_or_404(BiayaBulanan, pk=pk, owner=request.user)
+    if request.method == 'POST' or request.method == 'GET':
+        month = biaya.tanggal.month
+        year = biaya.tanggal.year
+        nama = biaya.nama_biaya
+        nominal = biaya.nominal
+        biaya.delete()
+        messages.success(request, f"Data biaya '{nama}' (Rp {nominal:,.0f}) berhasil dihapus!")
+        return redirect(f"/biaya-bulanan/?bulan={month}&tahun={year}")
+    return redirect('biaya_bulanan_list')
+
 

@@ -224,3 +224,30 @@ class TabunganForms(ModelForm):
         }
 
 
+class BiayaBulananForm(forms.ModelForm):
+    class Meta:
+        model = BiayaBulanan
+        fields = ['tanggal', 'kategori', 'nama_biaya', 'nominal', 'keterangan']
+        widgets = {
+            'tanggal': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'kategori': forms.Select(attrs={'class': 'form-select'}),
+            'nama_biaya': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: Sewa Gudang / Listrik'}),
+            'nominal': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0', 'step': '0.01', 'min': '0'}),
+            'keterangan': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Catatan tambahan (opsional)'}),
+        }
+        labels = {
+            'tanggal': 'Tanggal Biaya',
+            'kategori': 'Kategori Biaya',
+            'nama_biaya': 'Nama Biaya',
+            'nominal': 'Nominal (Rp)',
+            'keterangan': 'Keterangan',
+        }
+
+    def clean_nominal(self):
+        nominal = self.cleaned_data.get('nominal')
+        if nominal is None or nominal < 0:
+            raise forms.ValidationError('Nominal biaya tidak boleh negatif.')
+        return nominal
+
+
+

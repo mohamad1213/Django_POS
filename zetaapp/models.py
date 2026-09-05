@@ -238,3 +238,36 @@ class Pegawai(models.Model):
 
     def __str__(self):
         return self.nama
+
+
+class BiayaBulanan(models.Model):
+    KATEGORI_CHOICES = [
+        ('Operasional', 'Operasional'),
+        ('Gaji Pegawai', 'Gaji Pegawai'),
+        ('Sewa Tempat', 'Sewa Tempat'),
+        ('Listrik & Air', 'Listrik & Air'),
+        ('Transportasi & BBM', 'Transportasi & BBM'),
+        ('Pemeliharaan & Servis', 'Pemeliharaan & Servis'),
+        ('Internet & Komunikasi', 'Internet & Komunikasi'),
+        ('Administrasi & Pajak', 'Administrasi & Pajak'),
+        ('Lain-lain', 'Lain-lain'),
+    ]
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='biaya_bulanan')
+    tanggal = models.DateField(default=timezone.now)
+    kategori = models.CharField(max_length=100, choices=KATEGORI_CHOICES, default='Operasional')
+    nama_biaya = models.CharField(max_length=200, verbose_name="Nama Biaya")
+    nominal = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Nominal (Rp)")
+    keterangan = models.TextField(blank=True, null=True, verbose_name="Keterangan")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'biaya_bulanan'
+        ordering = ['-tanggal', '-id']
+        verbose_name = 'Biaya Bulanan'
+        verbose_name_plural = 'Biaya Bulanan'
+
+    def __str__(self):
+        return f"{self.nama_biaya} - Rp {self.nominal} ({self.tanggal})"
+

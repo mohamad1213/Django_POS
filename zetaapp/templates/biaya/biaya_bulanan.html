@@ -1,0 +1,537 @@
+{% extends 'base.html' %}{% load static %}
+{% load sass_tags %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/scrollbar.scss' %}">
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  /* ─── FILTER BAR ─────────────────────────────────────── */
+  .filter-box {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 16px;
+    padding: 20px 24px;
+    color: #fff;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+  }
+  .filter-box label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin-bottom: 6px;
+  }
+  .filter-box .form-select,
+  .filter-box .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+  .filter-box .form-select option {
+    background: #1e293b;
+    color: #fff;
+  }
+  .filter-box .form-select:focus,
+  .filter-box .form-control:focus {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #60a5fa;
+    box-shadow: none;
+    color: #fff;
+  }
+
+  /* ─── KPI CARDS ──────────────────────────────────────── */
+  .kpi-stat-card {
+    border-radius: 16px;
+    border: none;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: #fff;
+    height: 100%;
+  }
+  .kpi-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  }
+  .kpi-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: rgba(255, 255, 255, 0.2);
+    margin-bottom: 12px;
+  }
+  .kpi-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.85;
+    margin-bottom: 4px;
+  }
+  .kpi-number {
+    font-size: 1.55rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+  }
+  .kpi-sub {
+    font-size: 0.78rem;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+
+  .bg-kpi-expense { background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%); }
+  .bg-kpi-gross   { background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%); }
+  .bg-kpi-net-pos { background: linear-gradient(135deg, #15803d 0%, #22c55e 100%); }
+  .bg-kpi-net-neg { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); }
+  .bg-kpi-count   { background: linear-gradient(135deg, #475569 0%, #64748b 100%); }
+
+  /* ─── CATEGORY BADGES ────────────────────────────────── */
+  .badge-cat {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .cat-operasional { background: #fef3c7; color: #92400e; }
+  .cat-gaji        { background: #e0e7ff; color: #3730a3; }
+  .cat-sewa        { background: #ede9fe; color: #5b21b6; }
+  .cat-listrik     { background: #fef9c3; color: #854d0e; }
+  .cat-trans       { background: #ffedd5; color: #9a3412; }
+  .cat-servis      { background: #f1f5f9; color: #334155; }
+  .cat-lain        { background: #f3f4f6; color: #4b5563; }
+
+  /* ─── FORMULA BANNER ─────────────────────────────────── */
+  .formula-banner {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="page-body">
+  {% include 'layout/breadcrumb.html' %}
+  {% include 'messages.html' %}
+
+  <div class="container-fluid">
+
+    <!-- ══════════════ 1. FILTER PERIODE (BULAN & TAHUN) ══════════════ -->
+    <div class="filter-box">
+      <form method="GET" action="{% url 'biaya_bulanan_list' %}" id="filterForm">
+        <div class="row g-3 align-items-end">
+          
+          <!-- Filter Bulan -->
+          <div class="col-md-3 col-sm-6">
+            <label><i class="fas fa-calendar-alt me-1"></i> Bulan</label>
+            <select name="bulan" class="form-select" onchange="this.form.submit()">
+              {% for b_num, b_name in bulan_choices %}
+              <option value="{{ b_num }}" {% if b_num == selected_month %}selected{% endif %}>
+                {{ b_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Filter Tahun -->
+          <div class="col-md-2 col-sm-6">
+            <label><i class="fas fa-calendar me-1"></i> Tahun</label>
+            <select name="tahun" class="form-select" onchange="this.form.submit()">
+              {% for yr in years_choices %}
+              <option value="{{ yr }}" {% if yr == selected_year %}selected{% endif %}>
+                {{ yr }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Filter Kategori -->
+          <div class="col-md-3 col-sm-6">
+            <label><i class="fas fa-tags me-1"></i> Kategori (Opsional)</label>
+            <select name="kategori" class="form-select" onchange="this.form.submit()">
+              <option value="">Semua Kategori</option>
+              {% for kat_val, kat_label in kategori_choices %}
+              <option value="{{ kat_val }}" {% if kat_val == kategori_filter %}selected{% endif %}>
+                {{ kat_label }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Tombol Aksi Filter & Tambah -->
+          <div class="col-md-4 col-sm-6 d-flex gap-2 justify-content-md-end">
+            <a href="{% url 'biaya_bulanan_list' %}" class="btn btn-outline-light btn-sm px-3" title="Reset ke Bulan Berjalan">
+              <i class="fas fa-redo me-1"></i> Reset
+            </a>
+            <button type="button" class="btn btn-primary btn-sm px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalTambahBiaya">
+              <i class="fas fa-plus me-1"></i> Tambah Biaya
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <!-- ══════════════ 2. KPI RINGKASAN & INTEGRASI PROFIT ══════════════ -->
+    <div class="row g-3 mb-4">
+
+      <!-- Total Biaya Bulanan -->
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-stat-card bg-kpi-expense">
+          <div class="kpi-icon-wrap"><i class="fas fa-file-invoice-dollar"></i></div>
+          <div class="kpi-title">Total Biaya Bulanan</div>
+          <div class="kpi-number">Rp {{ total_biaya|floatformat:"0g" }}</div>
+          <div class="kpi-sub">
+            Periode: <strong>{{ nama_bulan_terpilih }} {{ selected_year }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profit Kotor Penjualan Bulan Terpilih -->
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-stat-card bg-kpi-gross">
+          <div class="kpi-icon-wrap"><i class="fas fa-chart-line"></i></div>
+          <div class="kpi-title">Profit Kotor Penjualan</div>
+          <div class="kpi-number">Rp {{ profit_kotor|floatformat:"0g" }}</div>
+          <div class="kpi-sub">
+            Total laba kotor penjualan {{ nama_bulan_terpilih }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Profit Bersih (Profit Kotor - Total Biaya Bulanan) -->
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-stat-card {% if profit_bersih >= 0 %}bg-kpi-net-pos{% else %}bg-kpi-net-neg{% endif %}">
+          <div class="kpi-icon-wrap">
+            {% if profit_bersih >= 0 %}
+            <i class="fas fa-wallet"></i>
+            {% else %}
+            <i class="fas fa-exclamation-triangle"></i>
+            {% endif %}
+          </div>
+          <div class="kpi-title">Profit Bersih</div>
+          <div class="kpi-number">
+            {% if profit_bersih >= 0 %}
+            + Rp {{ profit_bersih|floatformat:"0g" }}
+            {% else %}
+            Rp {{ profit_bersih|floatformat:"0g" }}
+            {% endif %}
+          </div>
+          <div class="kpi-sub">
+            Profit Kotor &minus; Total Biaya Bulanan
+          </div>
+        </div>
+      </div>
+
+      <!-- Jumlah Catatan Biaya -->
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-stat-card bg-kpi-count">
+          <div class="kpi-icon-wrap"><i class="fas fa-receipt"></i></div>
+          <div class="kpi-title">Catatan Biaya</div>
+          <div class="kpi-number">{{ biaya_list.count }} Transaksi</div>
+          <div class="kpi-sub">
+            Dalam {{ nama_bulan_terpilih }} {{ selected_year }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════ 3. FORMULA EXPLANATION BANNER ══════════════ -->
+    <div class="formula-banner">
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-primary px-2 py-1"><i class="fas fa-calculator me-1"></i> Rumus Profit Bersih</span>
+        <span class="fw-bold text-dark" style="font-size: 0.9rem;">
+          Profit Bersih = Profit Kotor (Rp {{ profit_kotor|floatformat:"0g" }}) &minus; Total Biaya Bulanan (Rp {{ total_biaya_bulan_penuh|floatformat:"0g" }})
+          = <span class="{% if profit_bersih >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">Rp {{ profit_bersih|floatformat:"0g" }}</span>
+        </span>
+      </div>
+      <small class="text-muted">
+        <i class="fas fa-shield-alt text-success me-1"></i> Biaya hanya dihitung pada bulan &amp; tahun yang sama dan terisolasi per akun user.
+      </small>
+    </div>
+
+    <!-- ══════════════ 4. BREAKDOWN KATEGORI (JIKA ADA) ══════════════ -->
+    {% if kategori_breakdown %}
+    <div class="row g-2 mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <span class="small fw-bold text-muted text-uppercase"><i class="fas fa-chart-pie me-1"></i> Rincian Kategori:</span>
+              {% for k in kategori_breakdown %}
+              <div class="badge bg-light text-dark border px-3 py-2">
+                <span class="fw-bold">{{ k.kategori }}:</span>
+                <span class="text-danger ms-1 fw-bold">Rp {{ k.total|floatformat:"0g" }}</span>
+                <span class="text-muted ms-1">({{ k.count }})</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ══════════════ 5. TABEL DAFTAR BIAYA BULANAN ══════════════ -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between py-3 border-bottom">
+        <h5 class="mb-0 fw-bold text-dark">
+          <i class="fas fa-list-alt me-2 text-primary"></i>Daftar Biaya Bulanan &mdash; {{ nama_bulan_terpilih }} {{ selected_year }}
+        </h5>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahBiaya">
+          <i class="fas fa-plus me-1"></i> Tambah Biaya Baru
+        </button>
+      </div>
+      <div class="card-body p-0">
+        {% if biaya_list %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="tabelBiaya">
+            <thead class="table-light" style="font-size: 0.85rem;">
+              <tr>
+                <th class="text-center" style="width: 50px;">No</th>
+                <th style="width: 120px;">Tanggal</th>
+                <th style="width: 160px;">Kategori</th>
+                <th>Nama Biaya</th>
+                <th class="text-end" style="width: 180px;">Nominal (Rp)</th>
+                <th>Keterangan</th>
+                <th class="text-center" style="width: 130px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in biaya_list %}
+              <tr>
+                <td class="text-center text-muted">{{ forloop.counter }}</td>
+                <td>
+                  <span class="fw-semibold text-dark">{{ item.tanggal|date:"d M Y" }}</span>
+                </td>
+                <td>
+                  <span class="badge-cat cat-operasional">
+                    <i class="fas fa-tag me-1"></i>{{ item.kategori }}
+                  </span>
+                </td>
+                <td>
+                  <strong class="text-dark">{{ item.nama_biaya }}</strong>
+                </td>
+                <td class="text-end">
+                  <span class="fw-bold text-danger" style="font-size: 0.95rem;">
+                    Rp {{ item.nominal|floatformat:"0g" }}
+                  </span>
+                </td>
+                <td>
+                  <small class="text-muted">{{ item.keterangan|default:"—" }}</small>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <!-- Edit Button -->
+                    <button type="button" class="btn btn-outline-warning" 
+                      data-bs-toggle="modal" data-bs-target="#modalEditBiaya_{{ item.id }}"
+                      title="Edit Biaya">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <!-- Delete Button -->
+                    <button type="button" class="btn btn-outline-danger"
+                      data-bs-toggle="modal" data-bs-target="#modalHapusBiaya_{{ item.id }}"
+                      title="Hapus Biaya">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light" style="font-size: 0.9rem;">
+              <tr>
+                <td colspan="4" class="text-end fw-bold">TOTAL BIAYA {{ nama_bulan_terpilih|upper }} {{ selected_year }}:</td>
+                <td class="text-end fw-bold text-danger">Rp {{ total_biaya|floatformat:"0g" }}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-receipt fa-3x text-muted opacity-25 mb-3"></i>
+          <h6 class="fw-bold text-secondary">Belum ada data biaya bulanan</h6>
+          <p class="text-muted small mb-3">Tidak ada pengeluaran biaya yang dicatat pada bulan {{ nama_bulan_terpilih }} {{ selected_year }}.</p>
+          <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahBiaya">
+            <i class="fas fa-plus me-1"></i> Catat Biaya Sekarang
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- /container-fluid -->
+</div><!-- /page-body -->
+
+
+<!-- ══════════════ MODAL TAMBAH BIAYA ══════════════ -->
+<div class="modal fade" id="modalTambahBiaya" tabindex="-1" aria-labelledby="modalTambahBiayaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="{% url 'biaya_bulanan_create' %}">
+        {% csrf_token %}
+        <div class="modal-header bg-primary text-white py-3">
+          <h5 class="modal-title fw-bold" id="modalTambahBiayaLabel">
+            <i class="fas fa-plus-circle me-2"></i>Tambah Biaya Bulanan
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-calendar-alt me-1 text-primary"></i> Tanggal</label>
+            {{ form.tanggal }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-tags me-1 text-primary"></i> Kategori Biaya</label>
+            {{ form.kategori }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-file-signature me-1 text-primary"></i> Nama Biaya</label>
+            {{ form.nama_biaya }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-coins me-1 text-primary"></i> Nominal (Rp)</label>
+            {{ form.nominal }}
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-comment-alt me-1 text-primary"></i> Keterangan (Opsional)</label>
+            {{ form.keterangan }}
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold">
+            <i class="fas fa-save me-1"></i> Simpan Biaya
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════ MODAL EDIT & HAPUS (PER ITEM) ══════════════ -->
+{% for item in biaya_list %}
+
+<!-- Modal Edit -->
+<div class="modal fade" id="modalEditBiaya_{{ item.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="{% url 'biaya_bulanan_update' item.id %}">
+        {% csrf_token %}
+        <div class="modal-header bg-warning text-dark py-3">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-edit me-2"></i>Edit Biaya Bulanan
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-calendar-alt me-1 text-primary"></i> Tanggal</label>
+            <input type="date" name="tanggal" class="form-control" value="{{ item.tanggal|date:'Y-m-d' }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-tags me-1 text-primary"></i> Kategori Biaya</label>
+            <select name="kategori" class="form-select" required>
+              {% for kat_val, kat_label in kategori_choices %}
+              <option value="{{ kat_val }}" {% if kat_val == item.kategori %}selected{% endif %}>
+                {{ kat_label }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-file-signature me-1 text-primary"></i> Nama Biaya</label>
+            <input type="text" name="nama_biaya" class="form-control" value="{{ item.nama_biaya }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-coins me-1 text-primary"></i> Nominal (Rp)</label>
+            <input type="number" step="0.01" min="0" name="nominal" class="form-control" value="{{ item.nominal }}" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-bold text-dark"><i class="fas fa-comment-alt me-1 text-primary"></i> Keterangan</label>
+            <textarea name="keterangan" class="form-control" rows="3">{{ item.keterangan|default:'' }}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-warning btn-sm px-3 fw-bold">
+            <i class="fas fa-save me-1"></i> Simpan Perubahan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Hapus -->
+<div class="modal fade" id="modalHapusBiaya_{{ item.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white py-2">
+        <h6 class="modal-title fw-bold"><i class="fas fa-trash me-2"></i>Konfirmasi Hapus</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+        <p class="mb-1 fw-bold text-dark">Hapus biaya ini?</p>
+        <p class="small text-muted mb-0"><strong>{{ item.nama_biaya }}</strong> (Rp {{ item.nominal|floatformat:"0g" }}) pada tanggal {{ item.tanggal|date:"d M Y" }}.</p>
+      </div>
+      <div class="modal-footer bg-light justify-content-center">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <a href="{% url 'biaya_bulanan_delete' item.id %}" class="btn btn-danger btn-sm px-3">
+          <i class="fas fa-trash me-1"></i> Ya, Hapus
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+
+{% endblock content %}
+
+{% block scriptcontent %}
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/dataTables.custom.js' %}"></script>
+<script>
+  $(document).ready(function () {
+    if ($('#tabelBiaya').length) {
+      $('#tabelBiaya').DataTable({
+        pageLength: 20,
+        language: {
+          search: "Cari:",
+          lengthMenu: "Tampilkan _MENU_ baris",
+          info: "Menampilkan _START_–_END_ dari _TOTAL_ data biaya",
+          paginate: { previous: "‹", next: "›" },
+          emptyTable: "Tidak ada data biaya pada bulan ini."
+        },
+        order: [[1, 'desc']],
+      });
+    }
+  });
+</script>
+{% endblock scriptcontent %}

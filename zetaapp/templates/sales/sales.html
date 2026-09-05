@@ -122,24 +122,25 @@
                                         {% for s in sales %}
                                         <tr>
                                             <td class="text-center">{{ forloop.counter }}</td>
-                                            <td class="text-center"><span
-                                                    class="badge bg-outline-danger text-danger font-weight-bold">{{s.transaction_number }}</span></td>
+                                            <td class="text-center"><span class="badge bg-outline-danger text-danger font-weight-bold">{{s.transaction_number }}</span></td>
                                             <td class="text-center">{{ s.date_added|date:"d-m-Y" }}</td>
                                             <td class="text-center">
                                                 {{ s.customer|default:"Pemulung / Umum" }}
-                                                {% if s.customer and s.customer.wa_link %}
-                                                <a href="{{ s.customer.wa_link }}" target="_blank"
-                                                    class="badge bg-success text-white text-decoration-none ms-1"
-                                                    data-bs-toggle="tooltip"
-                                                    title="Chat WhatsApp {{ s.customer.phone }}">
-                                                    <i class="fab fa-whatsapp me-1"></i> WA
+                                                {% if s.wa_link or s.customer.wa_link %}
+                                                <a href="{{ s.wa_link|default:s.customer.wa_link }}" target="_blank"
+                                                    class="text-decoration-none me-1">
+                                                    <button type="button" class="btn btn-success btn-sm"
+                                                        data-bs-toggle="tooltip"
+                                                        title="Kirim Nota via WhatsApp ({{ s.customer.phone }})">
+                                                        <i class="fab fa-whatsapp"></i>
+                                                    </button>
                                                 </a>
                                                 {% endif %}
                                             </td>
                                             <td class="text-end font-weight-bold text-dark">Rp. {{s.sub_total|floatformat:"0g" }}</td>
                                             <td class="text-end font-weight-bold text-danger">Rp. {{s.amount_payed|default:s.sub_total|floatformat:"0g" }}</td>
                                             <td class="text-center">
-                                                {% if s.amount_payed >= s.sub_total or s.amount_payed == 0 %}
+                                                {% if s.is_lunas %}
                                                     <span class="badge bg-success">LUNAS</span>
                                                 {% else %}
                                                     <span class="badge bg-warning text-dark">BELUM LUNAS</span>
@@ -158,7 +159,7 @@
                                                 <a href="{% url 'purchases:purchase_add' %}?from_sale={{ s.id }}"
                                                     class="btn btn-success btn-sm text-white me-1"
                                                     data-bs-toggle="tooltip" title="Salin Item Nota ini & Jual ke Pabrik">
-                                                    <i class="fas fa-truck-loading me-1"></i> Jual ke Pabrik
+                                                    <i class="fas fa-truck-loading me-1"></i>
                                                 </a>
                                                 <!--Print receipt-->
                                                 <a href="{% url 'sales:sales_receipt_pdf' s.id %}"
@@ -168,40 +169,32 @@
                                                         <i class="fas fa-receipt"></i>
                                                     </button>
                                                 </a>
-                                                {% if s.wa_link or s.customer.wa_link %}
-                                                <a href="{{ s.wa_link|default:s.customer.wa_link }}" target="_blank"
-                                                    class="text-decoration-none me-1">
-                                                    <button type="button" class="btn btn-success btn-sm"
-                                                        data-bs-toggle="tooltip"
-                                                        title="Kirim Nota via WhatsApp ({{ s.customer.phone }})">
-                                                        <i class="fab fa-whatsapp"></i>
-                                                    </button>
-                                                </a>
-                                                {% endif %}
-                                                <!--Afkir Button / Edit Afkir-->
-                                                {% if s.is_afkiran and s.afkiran %}
-                                                <a href="{% url 'afkiran:afkiran_update' s.afkiran.id %}"
-                                                    class="text-decoration-none me-1">
-                                                    <button type="button"
-                                                        class="btn btn-warning btn-sm text-dark font-weight-bold"
-                                                        data-bs-toggle="tooltip" title="Edit Hasil Sortir Afkiran">
-                                                        <i class="fas fa-edit me-1"></i>
-                                                    </button>
-                                                </a>
-                                                {% elif s.is_afkiran %}
-                                                <span class="badge bg-success text-white py-2 px-2 me-1"
-                                                    data-bs-toggle="tooltip" title="Nota ini sudah di-afkir">
-                                                    <i class="fas fa-check-circle"></i> Sudah Afkir
-                                                </span>
-                                                {% elif s.has_afkiran_items %}
-                                                <a href="{% url 'afkiran:afkiran_create' s.id %}"
-                                                    class="text-decoration-none me-1">
-                                                    <button type="button"
-                                                        class="btn btn-warning btn-sm text-dark font-weight-bold"
-                                                        data-bs-toggle="tooltip" title="Input Sortir Afkiran">
-                                                        <i class="fas fa-recycle me-1"></i> Afkir
-                                                    </button>
-                                                </a>
+                                                <!--Afkir Button / Edit Afkir (Hanya jika belum lunas)-->
+                                                {% if not s.is_lunas %}
+                                                    {% if s.is_afkiran and s.afkiran %}
+                                                    <a href="{% url 'afkiran:afkiran_update' s.afkiran.id %}"
+                                                        class="text-decoration-none me-1">
+                                                        <button type="button"
+                                                            class="btn btn-warning btn-sm text-dark font-weight-bold"
+                                                            data-bs-toggle="tooltip" title="Edit Hasil Sortir Afkiran">
+                                                            <i class="fas fa-edit me-1"></i>
+                                                        </button>
+                                                    </a>
+                                                    {% elif s.is_afkiran %}
+                                                    <span class="badge bg-success text-white py-2 px-2 me-1"
+                                                        data-bs-toggle="tooltip" title="Nota ini sudah di-afkir">
+                                                        <i class="fas fa-check-circle"></i> Sudah Afkir
+                                                    </span>
+                                                    {% elif s.has_afkiran_items %}
+                                                    <a href="{% url 'afkiran:afkiran_create' s.id %}"
+                                                        class="text-decoration-none me-1">
+                                                        <button type="button"
+                                                            class="btn btn-warning btn-sm text-dark font-weight-bold"
+                                                            data-bs-toggle="tooltip" title="Input Sortir Afkiran">
+                                                            <i class="fas fa-recycle me-1"></i> Afkir
+                                                        </button>
+                                                    </a>
+                                                    {% endif %}
                                                 {% endif %}
                                                 <form method="post" action="{% url 'sales:delete_sale' s.id %}"
                                                     style="display:inline;">
